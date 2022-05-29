@@ -9,4 +9,4 @@
         console.log(arr);
         e.textContent = arr[1];
     }
-})
+}())
