@@ -25,6 +25,19 @@ Ctrl + r：进入寄存器模式
 "：（记得用shift）y复制的内容默认在这个寄存器
 Enter：查找了
 
-###### visual block
+##### visual block
 
 Ctrl + V
+
+###### 编辑多行
+
+在 visual block下
+I：进入编辑
+输入
+esc：退出编辑
+
+###### delete a word
+
+Ctrl + W
+
+###### 
