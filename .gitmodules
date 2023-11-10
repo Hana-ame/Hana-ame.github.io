@@ -1,0 +1,8 @@
+[submodule "murmur"]
+	path = murmur
+	url = https://github.com/Hana-ame/Hana-ame.git
+	branch = murmur
+[submodule "git"]
+	path = git
+	url = https://github.com/Hana-ame/Hana-ame.git
+	branch = git
