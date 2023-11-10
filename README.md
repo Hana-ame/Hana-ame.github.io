@@ -30,6 +30,9 @@
 - [ ] sim
   - 这个可以没事的时候想一想
   - 其实花了很多时间在这个上面了
+  - [ ] 在想api的部分怎么实现
+    - [ ] 不如就用spring boot加入到kafka然后用python读出？去计算经过了网络之后的行为。
+    - [ ] 说起来能用java算pytorch，[ref](https://docs.djl.ai/jupyter/load_pytorch_model.html)
 - [ ] Spring Boot
 
 ### 回家用笔记
