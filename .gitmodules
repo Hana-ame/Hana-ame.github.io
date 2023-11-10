@@ -6,3 +6,7 @@
 	path = git
 	url = https://github.com/Hana-ame/Hana-ame.git
 	branch = git
+[submodule "fedi"]
+	path = fedi
+	url = https://github.com/moonchan-xyz/moonchan.git
+	branch = readme
