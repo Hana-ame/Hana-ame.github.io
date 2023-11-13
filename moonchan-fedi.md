@@ -14,3 +14,12 @@
   - TODO
 
 这里写完前不更新
+
+去[readme](/fedi/)那个branch里看。
+
+[swaggo](fedi/swaggo.md)
+[gin](fedi/gin.md)
+[misc]
+
+## TODO
+- 在[parser](javascript/mastodon-api-phaser.md#todo)里面找一下key是不是对的

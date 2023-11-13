@@ -22,3 +22,17 @@ https://leetcode.cn/problems/subarrays-distinct-element-sum-of-squares-ii/soluti
 不太懂
 
 但是通过set成了 
+
+## (https://leetcode.cn/problems/range-sum-query-mutable/description/?envType=daily-question&envId=2023-11-13)
+
+
+    . .
+  .   .
+0 1 2 3
+
+记得推。
+sum数组怎么组，状态分别代表谁。
+应该更新谁。
+
+奶奶的.jpg
+

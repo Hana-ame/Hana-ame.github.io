@@ -20,8 +20,8 @@
   - [ ] 前端也不是不行？
 - [ ] 毕业
   - [ ] 论文
-    - [ ] 被拒稿了
-    - [ ] 但是问到了只要录用就可以
+    - [x] 被拒稿了
+    - [x] 但是问到了只要录用就可以
     - [ ] 刷也行么。
     - [ ] 看一下下篇投哪个地方。
   - [ ] 论文
@@ -53,9 +53,6 @@
   - [ ] 你学校里买的一堆没吃完。。。
 
 ### 回宿舍用笔记
-
-好饿，带着**咸蛋**回去吃粥，**买两个蛋**回去就着**辣椒油吃**
-**八个蒸饺**稍微垫一下一天就过去了，如果有**豆腐花**的话再吃吃
 
 ## projects
 
@@ -97,4 +94,5 @@ from time earlist to latest. if i really interested in it, there will be sub rec
 - llama本地部署
   - ran这人真的很有意思
 - 弄个家庭的多媒体中心吧。。
+- 说不定可以用https部署git [ref1](https://stackoverflow.com/questions/15687677/what-is-the-best-way-to-use-git-with-https-or-with-ssh) [ref2](https://docs.github.com/en/get-started/quickstart/set-up-git#password-caching)
 - 
