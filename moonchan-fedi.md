@@ -23,3 +23,6 @@
 
 ## TODO
 - 在[parser](javascript/mastodon-api-phaser.md#todo)里面找一下key是不是对的
+
+- 额啊取参数取了半年. 用map吧.
+- 不marshal没有乱序需要的

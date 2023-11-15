@@ -9,8 +9,9 @@
   - [ ] 你题目都还没刷
   - [ ] 单词也没背
   - [ ] 考的出么。。
-  - [ ] 虽然说裸考有一定概率能上的
-  - [ ] 各种题型至少联系一下吧。
+  - [ ] 各种题型至少练习一下吧。
+  - [ ] 真题和模拟题 
+  - [ ] 听力
 - [ ] 工作
   - [ ] 不要放走应届生身份啊
   - [ ] 大概会走java后端
@@ -28,8 +29,10 @@
   - [ ] 毕设
 
 
-- [ ] 新月岛
+- [ ] [新月岛](/moonchan-fedi.md)
   - 虽然不推荐但是可以抽空写一下api还有接下来怎么做
+    - 额啊取参数取了半年. 用map吧.
+    - 不marshal没有乱序需要的
   - 就这么想保持轻松的状态么
 - [ ] sim
   - 这个可以没事的时候想一想
@@ -95,4 +98,6 @@ from time earlist to latest. if i really interested in it, there will be sub rec
   - ran这人真的很有意思
 - 弄个家庭的多媒体中心吧。。
 - 说不定可以用https部署git [ref1](https://stackoverflow.com/questions/15687677/what-is-the-best-way-to-use-git-with-https-or-with-ssh) [ref2](https://docs.github.com/en/get-started/quickstart/set-up-git#password-caching)
-- 
+- [hackMD](https://github.com/hackmdio/codimd) 多人在线markdown
+
+

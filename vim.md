@@ -41,3 +41,23 @@ esc：退出编辑
 Ctrl + W
 
 ###### 
+
+
+## in terminal
+
+### :ter
+
+打开terminal
+
+
+[Ctrl + W]:quit!
+
+退出
+
+### :tabnew
+
+新建tab
+
+[Ctrl + PageUp]
+
+[Ctrl + PageDown]
