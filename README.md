@@ -99,5 +99,9 @@ from time earlist to latest. if i really interested in it, there will be sub rec
 - 弄个家庭的多媒体中心吧。。
 - 说不定可以用https部署git [ref1](https://stackoverflow.com/questions/15687677/what-is-the-best-way-to-use-git-with-https-or-with-ssh) [ref2](https://docs.github.com/en/get-started/quickstart/set-up-git#password-caching)
 - [hackMD](https://github.com/hackmdio/codimd) 多人在线markdown
+- [开源类GPT4多模态模型项目-OpenFlamingo-转型开源模型项目集合页](https://bbs.saraba1st.com/2b/thread-2126390-1-1.html)
+- 未明子，记得在kf写一些文章，大概讲述流行的意识形
+- 开一个telegrame的channel发色图
+  - https://www.one-tab.com/page/BMdCxK3HQrS1FXheoHjNhQ
 
 

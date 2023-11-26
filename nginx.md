@@ -26,3 +26,15 @@ see nginx-config 80
 好像行了，测试下来稳定性是不怎么样。
 
 
+**测试上传的时候的**
+
+/upload -> 上传api
+/upload/xxx -> 上传的文件
+
+```
+完全一致: = /path
+前方一致: ^/prefix
+後方一致:  docs$
+正規表示: ~ \.pdf$
+```
+
