@@ -49,11 +49,17 @@
 
 要带回来的
 - [ ] 数位板笔的替换用笔尖
-- [ ] 耳塞 
-- [ ] 比较厚的羽绒服一件
-- [ ] 崩溃了，好想回家吃好吃的。。
+- [x] 耳塞 
+- [x] 比较厚的羽绒服一件
+- [x] 崩溃了，好想回家吃好吃的。。
   - 而且算了一下二十多块钱能买二十根鸭翅根了，很好吃吧可能
-  - [ ] 你学校里买的一堆没吃完。。。
+  - [x] 你学校里买的一堆没吃完。。。
+
+镍氢电池不知道去哪里了
+应该是6节6节
+家里4节7五节5
+学校一节7一节5,确实有一节7找不到了.
+没有线索,姑且不在实验室8楼
 
 ### 回宿舍用笔记
 
@@ -103,5 +109,8 @@ from time earlist to latest. if i really interested in it, there will be sub rec
 - 未明子，记得在kf写一些文章，大概讲述流行的意识形
 - 开一个telegrame的channel发色图
   - https://www.one-tab.com/page/BMdCxK3HQrS1FXheoHjNhQ
-
-
+- https://github.com/ophub/amlogic-s9xxx-armbian/blob/main/README.cn.md
+  - S905, 机顶盒系统, 刷机
+  - 想着往监控系统里面刷
+- https://www.bilibili.com/video/BV1Mg4y1d79w/?spm_id_from=333.1007.tianma.13-4-50.click&vd_source=24bb70c2b6dd1ed56ce52cee12837b54
+  - inline
