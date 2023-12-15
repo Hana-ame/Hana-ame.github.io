@@ -1,0 +1,6 @@
+#
+
+- godotenv
+
+- gin
+- swagger-go

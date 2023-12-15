@@ -32,3 +32,10 @@ e站我打不开，这里有个备份，还有禁漫上流出的河南雌小鬼�
 https://exhentai.org/g/2407724/ab71e4a34a/
 
 https://south-plus.org//attachment/Mon_2310/11_4_80241efd7fb7006.png
+
+
+## qiita
+
+[llm](https://zine.qiita.com/topics/udemy-202311/?utm_source=Qiita%E3%83%8B%E3%83%A5%E3%83%BC%E3%82%B9&utm_campaign=f661f1c305-Qiita_newsletter_593_11_22&utm_medium=email&utm_term=0_e44feaa081-f661f1c305-43326954)
+it costs money. i dont have money
+
