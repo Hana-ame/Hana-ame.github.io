@@ -35,3 +35,9 @@ https://south-plus.org//attachment/Mon_2310/11_4_80241efd7fb7006.png
 
 
 0.07 HVL:/ q@R.KW 05/14 复制打开抖音，看看【清欢·的作品】# 扭一扭 # 完美身材  https://v.douyin.com/iRKrPpb9/
+
+## qiita
+
+[llm](https://zine.qiita.com/topics/udemy-202311/?utm_source=Qiita%E3%83%8B%E3%83%A5%E3%83%BC%E3%82%B9&utm_campaign=f661f1c305-Qiita_newsletter_593_11_22&utm_medium=email&utm_term=0_e44feaa081-f661f1c305-43326954)
+it costs money. i dont have money
+
