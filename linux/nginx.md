@@ -1,3 +1,10 @@
+## debug
+
+azure 那个repo
+部署到nginx后面post就没法用了
+我晕倒
+可能还有body的问题
+
 # nginx
 
 配配置。

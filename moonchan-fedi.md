@@ -1,3 +1,29 @@
+for the time being.
+
+controller/mastodon write the api
+
+fedi-anntena write chan api first.
+that contains.
+- activitypub/core(recv/post)
+  - follow/unfollow
+  - block/unblock
+  - statues
+    - post/delete/edit
+      - format
+    - favourite/reblog
+- for user
+  - regist
+  - login
+  - follow/unfollow
+  - statues
+- for board
+  - create(regist)
+  - post(reblog)
+  - @
+
+
+
+
 # 月岛
 
 在用go写mastodon api
