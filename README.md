@@ -5,13 +5,8 @@
 ## 现生版 TODO list
 
 会变成非常优先级
-- [ ] 12月要考试的N2
-  - [ ] 你题目都还没刷
-  - [ ] 单词也没背
-  - [ ] 考的出么。。
-  - [ ] 各种题型至少练习一下吧。
-  - [ ] 真题和模拟题 
-  - [ ] 听力
+- [x] 12月要考试的N2
+  - 确实简单，听力可能稍微准备一下
 - [ ] 工作
   - [ ] 不要放走应届生身份啊
   - [ ] 大概会走java后端
@@ -24,10 +19,40 @@
     - [x] 被拒稿了
     - [x] 但是问到了只要录用就可以
     - [ ] 刷也行么。
-    - [ ] 看一下下篇投哪个地方。
+    - [x] 看一下下篇投哪个地方。
+      - 半导体技术 或者 计算机仿真
   - [ ] 论文
+    - 仿真还没搭起来
   - [ ] 毕设
+    - 至少有底了
 
+### 玩具
+
+- [ ] xjbdh
+  - 用vercel搭建一个导航站。
+  - 用nextjs+tailwind
+  - (可选)加一个redis的接口
+  - (可选)渲染markdown当博客用
+- 新月岛
+  - react前端+golang后端?
+  - ~~用nextjs吧。~~用router 
+  - 前端没人写
+- sim
+  - springboot的
+- ai
+  - 。。。
+
+react
+tailwind
+prisma
+gorm
+hibernate
+spring boot
+restful api
+test
+
+
+### 自家的 project
 
 - [ ] [新月岛](/moonchan-fedi.md)
   - 虽然不推荐但是可以抽空写一下api还有接下来怎么做
@@ -41,19 +66,17 @@
     - [ ] 不如就用spring boot加入到kafka然后用python读出？去计算经过了网络之后的行为。
     - [ ] 说起来能用java算pytorch，[ref](https://docs.djl.ai/jupyter/load_pytorch_model.html)
 - [ ] Spring Boot
+  - 在看视频捏
 
 ### 回家用笔记
 
 要带回去的
-- [ ] 辣椒油拆过了带回去 
+- 准备不住学校了
 
 要带回来的
 - [ ] 数位板笔的替换用笔尖
-- [x] 耳塞 
-- [x] 比较厚的羽绒服一件
-- [x] 崩溃了，好想回家吃好吃的。。
-  - 而且算了一下二十多块钱能买二十根鸭翅根了，很好吃吧可能
-  - [x] 你学校里买的一堆没吃完。。。
+- [ ] 耳塞 
+  - 没带来啊
 
 镍氢电池不知道去哪里了
 应该是6节6节
@@ -61,7 +84,6 @@
 学校一节7一节5,确实有一节7找不到了.
 没有线索,姑且不在实验室8楼
 
-### 回宿舍用笔记
 
 ## projects
 
@@ -71,13 +93,19 @@
 
 [check it here](/flow.md)
 
+### azure-go
+
+用来对接azure-driver的api的上传
+反正做好了。
+同一个function不能从多个path访问?回头确认一下
+
 ### 新月岛
 
 工事中
 
 
 ### 待补完
-- eh web viewer
+- eh-web-viewer
 - udp-tun
 - ddns
 - sim
