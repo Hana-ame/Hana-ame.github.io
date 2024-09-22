@@ -1,4 +1,6 @@
-# [godotenv](https://github.com/joho/godotenv)
+# godotenv
+
+[godotenv](https://github.com/joho/godotenv)
 
 ## install
 ```sh
