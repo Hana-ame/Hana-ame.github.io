@@ -1,4 +1,4 @@
-#
+# 啥
 
 ----
 apt install can't connect to ip
