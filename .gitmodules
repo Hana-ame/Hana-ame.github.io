@@ -19,3 +19,6 @@
 [submodule "买东西"]
 	path = 买东西
 	url = https://gist.github.com/37e2f6ffe357d4bbb3edaff1e618f60e.git
+[submodule "heymind.github.io"]
+	path = heymind.github.io
+	url = https://github.com/heymind/heymind.github.io.git
