@@ -13,12 +13,6 @@
 [submodule "three.js"]
 	path = three.js
 	url = https://gist.github.com/692c6822a4007ae0c54f683a0c9d213e.git
-[submodule "键政"]
-	path = 键政
-	url = https://gist.github.com/573fd742e864bc7694a144a2ca570f39.git
-[submodule "买东西"]
-	path = 买东西
-	url = https://gist.github.com/37e2f6ffe357d4bbb3edaff1e618f60e.git
 [submodule "heymind.github.io"]
 	path = heymind.github.io
 	url = https://github.com/heymind/heymind.github.io.git
