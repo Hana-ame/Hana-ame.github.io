@@ -1,6 +1,6 @@
 {
-  "short_name": "❀",
-  "name": "又一个blog",
+  "short_name": "月桂树",
+  "name": "月桂树",
   "icons": [
     {
       "src": "https://avemujica.bang-dream.com/wordpress/wp-content/themes/avemujica/img/moon-r.svg",
@@ -9,7 +9,7 @@
     }
   ],
   "start_url": ".",
-  "display": "standalone",
+  "display": "fullscreen",
   "theme_color": "#000000",
   "background_color": "#ffffff"
 }
