@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>股市量价关系 & 盘口撮合深度模拟器 (Order Book Simulator)</title>
+<style>
+  /* ==========================================================================
+     1. 全局样式与配色变量 (采用专业暗色交易终端风格)
+     ========================================================================== */
+  :root {
+    --bg: #0b1120;          /* 页面主背景 */
+    --panel: #131c31;       /* 卡片面板背景 */
+    --border: #243047;      /* 边框颜色 */
+    --text: #e2e8f0;        /* 主文字颜色 */
+    --muted: #8b9bb4;       /* 次要说明文字 */
+    --up: #10b981;          /* 涨/买盘 (美股绿) */
+    --up-bg: rgba(16, 185, 129, 0.14);
+    --down: #ef4444;        /* 跌/卖盘 (美股红) */
+    --down-bg: rgba(239, 68, 68, 0.14);
+    --gold: #f59e0b;        /* 绿鞋护盘/重点提示 */
+    --accent: #3b82f6;      /* 按钮高亮蓝 */
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 16px;
+    line-height: 1.45;
+  }
+
+  .container { max-width: 1280px; margin: 0 auto; }
+
+  /* 顶部标题与核心行情栏 */
+  header {
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 18px; margin-bottom: 14px; gap: 12px;
+  }
+  .title-group h1 { font-size: 1.2rem; font-weight: 700; }
+  .title-group p { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+
+  .ticker-bar { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+  .ticker-item { text-align: right; }
+  .ticker-label { font-size: 0.72rem; color: var(--muted); }
+  .ticker-val { font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* 主体三栏网格布局：左(图表+控制台) | 中(五档盘口) | 右(逐笔成交+状态解说) */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr 0.95fr;
+    gap: 14px;
+  }
+  @media (max-width: 1024px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px; display: flex; flex-direction: column;
+  }
+  .panel-header {
+    font-size: 0.9rem; font-weight: 600; margin-bottom: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--border); padding-bottom: 8px;
+  }
+
+  /* 画布区域 */
+  canvas {
+    width: 100%; height: 320px; background: #080d19;
+    border-radius: 8px; border: 1px solid var(--border); display: block;
+  }
+
+  /* 控制台样式 */
+  .control-section { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .control-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .control-label { font-size: 0.8rem; color: var(--muted); min-width: 72px; }
+
+  .btn {
+    background: #1e293b; color: var(--text); border: 1px solid var(--border);
+    padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 0.84rem;
+    transition: all 0.15s; font-weight: 500;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.buy { background: var(--up-bg); border-color: var(--up); color: var(--up); font-weight: 700; }
+  .btn.buy:hover { background: var(--up); color: #052e16; }
+  .btn.sell { background: var(--down-bg); border-color: var(--down); color: var(--down); font-weight: 700; }
+  .btn.sell:hover { background: var(--down); color: #fff; }
+  .btn.gold { background: rgba(245, 158, 11, 0.15); border-color: var(--gold); color: var(--gold); }
+  .btn.gold.active { background: var(--gold); color: #0b1120; font-weight: 700; }
+
+  /* 五档盘口样式 */
+  .orderbook { display: flex; flex-direction: column; gap: 4px; font-variant-numeric: tabular-nums; }
+  .ob-header {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    font-size: 0.74rem; color: var(--muted); padding: 0 6px 4px;
+  }
+  .ob-row {
+    position: relative; display: grid; grid-template-columns: 1fr 1fr 1fr;
+    padding: 5px 6px; font-size: 0.84rem; border-radius: 4px; overflow: hidden;
+  }
+  .ob-bar {
+    position: absolute; top: 0; bottom: 0; right: 0; z-index: 0;
+    transition: width 0.25s ease;
+  }
+  .ob-row span { position: relative; z-index: 1; }
+  .ob-ask .ob-bar { background: rgba(239, 68, 68, 0.22); }
+  .ob-bid .ob-bar { background: rgba(16, 185, 129, 0.22); }
+  .ob-bid.greenshoe-wall .ob-bar { background: rgba(245, 158, 11, 0.35); }
+
+  .ob-spread {
+    text-align: center; padding: 8px 0; margin: 4px 0;
+    background: #080d19; border-radius: 6px; border: 1px dashed var(--border);
+    font-size: 0.82rem; color: var(--muted);
+  }
+  .ob-spread strong { font-size: 1.05rem; margin: 0 6px; }
+
+  /* 逐笔成交明细 */
+  .tape {
+    height: 250px; overflow-y: auto; font-size: 0.8rem;
+    font-variant-numeric: tabular-nums; display: flex; flex-direction: column; gap: 4px;
+  }
+  .tape-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    padding: 4px 6px; border-radius: 4px; background: #080d19;
+  }
+
+  /* 实时教学解说框 */
+  .explain-box {
+    margin-top: 12px; padding: 10px 12px; background: #080d19;
+    border-left: 3px solid var(--accent); border-radius: 6px;
+    font-size: 0.82rem; color: #cbd5e1; flex-grow: 1;
+  }
+  .explain-box strong { color: #fff; }
+  .badge {
+    font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- ==================== 顶部行情栏 ==================== -->
+  <header>
+    <div class="title-group">
+      <h1>量价关系 & 五档盘口撮合模拟器</h1>
+      <p>核心原理：成交量本身没有方向，真正推动价格的是“主动单”吃掉盘口挂单的速度与深度。</p>
+    </div>
+    <div class="ticker-bar">
+      <div class="ticker-item">
+        <div class="ticker-label">最新成交价 (发行价 $100)</div>
+        <div class="ticker-val" id="uiPrice" style="color:var(--up)">$100.00</div>
+      </div>
+      <div class="ticker-item">
+        <div class="ticker-label">涨跌幅</div>
+        <div class="ticker-val" id="uiChange">0.00%</div>
+      </div>
+      <div class="ticker-item">
+        <div class="ticker-label">累计成交量</div>
+        <div class="ticker-val" id="uiTotalVol">0 股</div>
+      </div>
+      <div class="ticker-item">
+        <div class="ticker-label">绿鞋剩余护盘资金</div>
+        <div class="ticker-val" id="uiGsBudget" style="color:var(--gold)">$50,000</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== 主体三栏 ==================== -->
+  <div class="main-grid">
+
+    <!-- 左栏：分时价格 + 成交量柱状图 + 交互控制台 -->
+    <div class="panel">
+      <div class="panel-header">
+        <span>实时价格走势（上） & 成交量柱（下）</span>
+        <span id="uiRegimeBadge" class="badge" style="background:rgba(59,130,246,0.2); color:#60a5fa;">手动模式</span>
+      </div>
+
+      <!-- Canvas 画布：同时绘制价格折线与下方成交量柱 -->
+      <canvas id="chartCanvas" width="700" height="320"></canvas>
+
+      <!-- 交互控制台 -->
+      <div class="control-section">
+        <!-- 1. 手动下单区 -->
+        <div class="control-row">
+          <span class="control-label">下单股数:</span>
+          <button class="btn active" id="qty-20" onclick="setOrderQty(20)">20 股 (小单)</button>
+          <button class="btn" id="qty-80" onclick="setOrderQty(80)">80 股 (中单)</button>
+          <button class="btn" id="qty-200" onclick="setOrderQty(200)">200 股 (大单扫货/砸盘)</button>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">手动撮合:</span>
+          <button class="btn buy" onclick="executeMarketOrder('buy', state.orderQty)">▲ 市价主动买入 (吃卖盘)</button>
+          <button class="btn sell" onclick="executeMarketOrder('sell', state.orderQty)">▼ 市价主动卖出 (砸买盘)</button>
+          <button class="btn" onclick="resetSimulator()">↺ 重置市场</button>
+        </div>
+
+        <!-- 2. 盘口厚度（筹码结构）与绿鞋开关 -->
+        <div class="control-row">
+          <span class="control-label">筹码结构:</span>
+          <button class="btn active" id="liq-thin" onclick="setLiquidity('thin')">薄盘口 (机构锁仓/浮筹少)</button>
+          <button class="btn" id="liq-thick" onclick="setLiquidity('thick')">厚盘口 (全流通/浮筹多)</button>
+          <button class="btn gold active" id="btnGs" onclick="toggleGreenshoe()">🛡️ 绿鞋护盘: 开启 ($100托底)</button>
+        </div>
+
+        <!-- 3. 自动行情模式（一键体验四种经典量价关系） -->
+        <div class="control-row">
+          <span class="control-label">自动模拟:</span>
+          <button class="btn" id="auto-stop" onclick="setAutoMode('stop')">⏸ 停止</button>
+          <button class="btn" id="auto-vu" onclick="setAutoMode('vu')">量增价涨</button>
+          <button class="btn" id="auto-su" onclick="setAutoMode('su')">量缩价涨</button>
+          <button class="btn" id="auto-vd" onclick="setAutoMode('vd')">量增价跌</button>
+          <button class="btn" id="auto-sd" onclick="setAutoMode('sd')">量缩价跌</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 中栏：实时五档盘口 (Order Book) -->
+    <div class="panel">
+      <div class="panel-header">
+        <span>五档买卖盘 (Order Book)</span>
+        <span style="font-size:0.75rem; color:var(--muted);">每档挂单决定价格阻力</span>
+      </div>
+
+      <div class="orderbook">
+        <div class="ob-header">
+          <span>档位</span>
+          <span style="text-align:center;">价格</span>
+          <span style="text-align:right;">挂单量(股)</span>
+        </div>
+
+        <!-- 卖五 ~ 卖一 (由高到低渲染) -->
+        <div id="askList"></div>
+
+        <!-- 最新价分隔条 -->
+        <div class="ob-spread">
+          最新价 <strong id="obLastPrice">$100.00</strong>
+          <span id="obSlippage" style="font-size:0.75rem;"></span>
+        </div>
+
+        <!-- 买一 ~ 买五 (由高到低渲染) -->
+        <div id="bidList"></div>
+      </div>
+    </div>
+
+    <!-- 右栏：逐笔成交明细 + 实时教学解说 -->
+    <div class="panel">
+      <div class="panel-header">
+        <span>逐笔成交 (Time & Sales)</span>
+        <span style="font-size:0.75rem; color:var(--muted);">方向 · 价格 · 股数</span>
+      </div>
+
+      <div class="tape" id="tapeList">
+        <div style="color:var(--muted); text-align:center; padding-top:20px;">等待第一笔成交...</div>
+      </div>
+
+      <!-- 实时解说区：每次成交后解释背后的量价力学 -->
+      <div class="explain-box" id="explainBox">
+        <strong>💡 怎么玩这个模拟器？</strong><br><br>
+        1. 先选<strong>“薄盘口”</strong>，点一次<strong>200股买入</strong>，看它如何一口气吃穿好几档卖盘把价格拉飞。<br>
+        2. 切换到<strong>“厚盘口”</strong>，同样买200股，你会发现价格几乎纹丝不动。<br>
+        3. 疯狂点击<strong>卖出</strong>把价格砸到 <strong>$100</strong>，观察开启/关闭<strong>绿鞋护盘</strong>时，买一档位出现的金色巨量托底墙！
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/**
+ * ============================================================================
+ * 股市量价与盘口撮合模拟器 - 核心引擎
+ * ============================================================================
+ * 设计思路：
+ * 1. 维护一个真实的五档卖盘 (asks) 和五档买盘 (bids)。
+ * 2. 价格涨跌不是随机生成的，而是由“市价单”真实消耗盘口挂单量驱动的：
+ *    - 市价买单：从最低卖价 (卖一) 开始往上吃，吃完一档价格就跳升一档。
+ *    - 市价卖单：从最高买价 (买一) 开始往下砸，砸穿一档价格就下跌一档。
+ * 3. “筹码结构”决定了每档挂单的厚度：
+ *    - 薄盘口 (机构锁仓)：每档只有 15~35 股 -> 很小成交量就能引起剧烈波动。
+ *    - 厚盘口 (全流通)  ：每档有 180~300 股 -> 需要巨额成交量才能推动价格。
+ * 4. “绿鞋机制”：当价格跌至 $100.00 发行价时，承销商在买一位置自动挂出巨额托底买单，
+ *    吸收市场抛压，直到绿鞋资金耗尽。
+ */
+
+const IPO_PRICE = 100.00; // 发行价基准线
+const TICK_SIZE = 0.25;   // 最小价格变动单位 ($0.25)
+
+// 全局状态对象
+const state = {
+  lastPrice: IPO_PRICE,
+  totalVolume: 0,
+  orderQty: 20,           // 当前手动下单股数
+  liquidity: 'thin',      // 'thin' (薄盘口/锁仓) 或 'thick' (厚盘口/浮筹多)
+  greenshoeOn: true,      // 是否开启绿鞋护盘
+  greenshoeBudget: 50000, // 绿鞋护盘剩余资金 ($50,000，约可托底 500 股)
+  asks: [],               // 卖盘数组：[{ price, qty }, ...] 按价格升序排列 (asks[0] 是卖一)
+  bids: [],               // 买盘数组：[{ price, qty }, ...] 按价格降序排列 (bids[0] 是买一)
+  history: [],            // 历史K线/分时点：[{ price, vol, side }]
+  tape: [],               // 逐笔成交记录
+  autoTimer: null,        // 自动模拟定时器
+  autoMode: 'stop'
+};
+
+/**
+ * 辅助函数：根据当前筹码结构（薄/厚盘口）生成一个合理的单档挂单量
+ */
+function generateLevelQty() {
+  if (state.liquidity === 'thin') {
+    // 机构锁仓，活跃浮筹少：每档仅 15 ~ 40 股
+    return Math.floor(15 + Math.random() * 25);
+  } else {
+    // 全流通，浮筹泛滥：每档高达 180 ~ 320 股
+    return Math.floor(180 + Math.random() * 140);
+  }
+}
+
+/**
+ * 初始化/重建五档买卖盘
+ * 以当前最新价为中心，向上生成 5 档卖盘，向下生成 5 档买盘
+ */
+function rebuildOrderBook() {
+  state.asks = [];
+  state.bids = [];
+
+  // 生成卖一到卖五 (价格高于最新价)
+  for (let i = 1; i <= 5; i++) {
+    state.asks.push({
+      price: +(state.lastPrice + i * TICK_SIZE).toFixed(2),
+      qty: generateLevelQty()
+    });
+  }
+
+  // 生成买一到买五 (价格低于最新价)
+  for (let i = 1; i <= 5; i++) {
+    state.bids.push({
+      price: +(Math.max(1, state.lastPrice - i * TICK_SIZE)).toFixed(2),
+      qty: generateLevelQty()
+    });
+  }
+
+  applyGreenshoeWall();
+}
+
+/**
+ * 绿鞋护盘逻辑：
+ * 如果开启了绿鞋且还有剩余资金，当盘口买单触及或低于 $100.00 发行价时，
+ * 承销商会在 $100.00 价位强行注入大额买单托底。
+ */
+function applyGreenshoeWall() {
+  // 先清除旧的绿鞋标记
+  state.bids.forEach(b => b.isGreenshoe = false);
+
+  if (!state.greenshoeOn || state.greenshoeBudget < IPO_PRICE) return;
+
+  // 计算剩余资金在 $100 价位最多能买多少股
+  const maxGsShares = Math.floor(state.greenshoeBudget / IPO_PRICE);
+  if (maxGsShares <= 0) return;
+
+  // 如果当前买一价格 <= $100.00，说明已经逼近或跌破发行价，承销商进场托底
+  if (state.bids.length > 0 && state.bids[0].price <= IPO_PRICE) {
+    // 检查买盘里是否已经有 $100.00 这一档
+    const existing = state.bids.find(b => b.price === IPO_PRICE);
+    if (existing) {
+      existing.qty = Math.max(existing.qty, maxGsShares);
+      existing.isGreenshoe = true;
+    } else {
+      // 直接在买一位置插入 $100.00 的护盘墙
+      state.bids.unshift({
+        price: IPO_PRICE,
+        qty: maxGsShares,
+        isGreenshoe: true
+      });
+      state.bids = state.bids.slice(0, 5); // 保持五档
+    }
+  }
+}
+
+/**
+ * ============================================================================
+ * 核心撮合引擎：执行一笔市价买单或卖单
+ * ============================================================================
+ * @param {'buy'|'sell'} side - 主动买入（吃卖盘）或主动卖出（砸买盘）
+ * @param {number} qty        - 下单总股数
+ */
+function executeMarketOrder(side, qty) {
+  let remaining = qty;        // 尚未成交的剩余股数
+  let totalCost = 0;          // 累计成交金额（用于计算成交均价与滑点）
+  let levelsConsumed = 0;     // 吃穿了几个档位
+  let startPrice = state.lastPrice;
+  let gsAbsorbed = 0;         // 记录本笔卖单中被绿鞋资金吸收了多少股
+
+  if (side === 'buy') {
+    // 【主动买入】：从卖一 (asks[0]) 开始一层一层往上吃
+    while (remaining > 0) {
+      if (state.asks.length === 0) {
+        // 如果五档全吃空了，动态在上方补充新的一档
+        const nextP = +(state.lastPrice + TICK_SIZE).toFixed(2);
+        state.asks.push({ price: nextP, qty: generateLevelQty() });
+      }
+
+      const bestAsk = state.asks[0];
+      const fillQty = Math.min(remaining, bestAsk.qty);
+
+      // 撮合成交
+      bestAsk.qty -= fillQty;
+      remaining -= fillQty;
+      totalCost += fillQty * bestAsk.price;
+      state.lastPrice = bestAsk.price;
+
+      // 如果该档位被吃光，移除它并计数
+      if (bestAsk.qty <= 0) {
+        state.asks.shift();
+        levelsConsumed++;
+      }
+    }
+  } else {
+    // 【主动卖出】：从买一 (bids[0]) 开始一层一层往下砸
+    while (remaining > 0) {
+      if (state.bids.length === 0) {
+        const nextP = +(Math.max(1, state.lastPrice - TICK_SIZE)).toFixed(2);
+        state.bids.push({ price: nextP, qty: generateLevelQty() });
+      }
+
+      const bestBid = state.bids[0];
+      const fillQty = Math.min(remaining, bestBid.qty);
+
+      // 撮合成交
+      bestBid.qty -= fillQty;
+      remaining -= fillQty;
+      totalCost += fillQty * bestBid.price;
+      state.lastPrice = bestBid.price;
+
+      // 如果砸在了绿鞋护盘墙上，扣除承销商的绿鞋预算
+      if (bestBid.isGreenshoe) {
+        state.greenshoeBudget = Math.max(0, state.greenshoeBudget - fillQty * bestBid.price);
+        gsAbsorbed += fillQty;
+      }
+
+      if (bestBid.qty <= 0) {
+        state.bids.shift();
+        levelsConsumed++;
+      }
+    }
+  }
+
+  // 撮合完成后，补充盘口使其保持完整五档（模拟做市商/新挂单流入）
+  replenishBook();
+
+  // 更新全局统计
+  state.totalVolume += qty;
+  const avgPrice = totalCost / qty;
+  const priceDelta = +(state.lastPrice - startPrice).toFixed(2);
+
+  // 记录历史分时数据（最多保留 45 个点）
+  state.history.push({ price: state.lastPrice, vol: qty, side });
+  if (state.history.length > 45) state.history.shift();
+
+  // 记录逐笔成交明细（最多保留 30 条）
+  const now = new Date();
+  const timeStr = now.toTimeString().slice(0, 8);
+  state.tape.unshift({ time: timeStr, side, price: state.lastPrice, qty });
+  if (state.tape.length > 30) state.tape.pop();
+
+  // 更新界面与教学解说
+  updateExplain(side, qty, levelsConsumed, priceDelta, avgPrice, gsAbsorbed);
+  renderAll();
+}
+
+/**
+ * 撮合后补充盘口，确保买卖盘始终维持 5 档
+ */
+function replenishBook() {
+  // 补齐卖盘（向上延伸）
+  while (state.asks.length < 5) {
+    const base = state.asks.length > 0 ? state.asks[state.asks.length - 1].price : state.lastPrice;
+    state.asks.push({ price: +(base + TICK_SIZE).toFixed(2), qty: generateLevelQty() });
+  }
+  // 清理低于等于最新价的无效卖单，保持盘口合理
+  state.asks = state.asks.filter(a => a.price > state.lastPrice);
+  while (state.asks.length < 5) {
+    const base = state.asks.length > 0 ? state.asks[state.asks.length - 1].price : state.lastPrice;
+    state.asks.push({ price: +(base + TICK_SIZE).toFixed(2), qty: generateLevelQty() });
+  }
+
+  // 补齐买盘（向下延伸）
+  state.bids = state.bids.filter(b => b.price <= state.lastPrice);
+  while (state.bids.length < 5) {
+    const base = state.bids.length > 0 ? state.bids[state.bids.length - 1].price : state.lastPrice;
+    state.bids.push({ price: +(Math.max(1, base - TICK_SIZE)).toFixed(2), qty: generateLevelQty() });
+  }
+
+  // 检查是否需要触发绿鞋托底
+  applyGreenshoeWall();
+}
+
+/**
+ * 动态生成教学解说：把刚刚那笔交易背后的“量价逻辑”讲清楚
+ */
+function updateExplain(side, qty, levels, delta, avgPrice, gsAbsorbed) {
+  const box = document.getElementById('explainBox');
+  const action = side === 'buy' ? '<span style="color:var(--up)">主动买入</span>' : '<span style="color:var(--down)">主动卖出</span>';
+  const dirWord = delta > 0 ? `拉升了 <strong>+$${delta.toFixed(2)}</strong>` :
+                  delta < 0 ? `砸低了 <strong>-$${Math.abs(delta).toFixed(2)}</strong>` :
+                  `<strong>价格纹丝不动</strong>`;
+
+  let extra = '';
+  if (gsAbsorbed > 0) {
+    extra = `<br><br>🛡️ <strong style="color:var(--gold)">绿鞋护盘生效！</strong>承销商在 $100.00 发行价硬接了你砸出的 <strong>${gsAbsorbed} 股</strong>，阻止了破发踩踏。剩余资金：$${state.greenshoeBudget.toLocaleString()}。`;
+  } else if (levels >= 3) {
+    extra = `<br><br>⚡ <strong>流动性冲击（高滑点）：</strong>由于当前盘口较薄，这笔 ${qty} 股的大单一口气打穿了 <strong>${levels} 个档位</strong>，成交均价为 $${avgPrice.toFixed(2)}。这就是为什么“机构锁仓时，少量资金就能把股价拉飞或砸穿”。`;
+  } else if (levels === 0) {
+    extra = `<br><br>🧱 <strong>盘口阻力极厚：</strong>${qty} 股全部被第一档挂单吸收，连一档都没打穿。在全流通大盘股里，需要巨量资金才能撬动价格。`;
+  }
+
+  box.innerHTML = `<strong>最新撮合解析：</strong><br>一笔 <strong>${qty} 股</strong> 的${action}，消耗了 <strong>${levels}</strong> 档挂单，将价格${dirWord}。${extra}`;
+}
+
+/**
+ * ============================================================================
+ * 渲染函数：更新顶部行情、五档盘口、逐笔成交、以及 Canvas 价格+成交量图
+ * ============================================================================
+ */
+function renderAll() {
+  // 1. 顶部行情栏
+  const priceEl = document.getElementById('uiPrice');
+  const changeEl = document.getElementById('uiChange');
+  const pct = ((state.lastPrice - IPO_PRICE) / IPO_PRICE) * 100;
+  const color = state.lastPrice >= IPO_PRICE ? 'var(--up)' : 'var(--down)';
+
+  priceEl.textContent = `$${state.lastPrice.toFixed(2)}`;
+  priceEl.style.color = color;
+  changeEl.textContent = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+  changeEl.style.color = color;
+  document.getElementById('uiTotalVol').textContent = `${state.totalVolume.toLocaleString()} 股`;
+  document.getElementById('uiGsBudget').textContent = `$${state.greenshoeBudget.toLocaleString()}`;
+
+  // 2. 五档盘口渲染
+  const maxQty = Math.max(
+    ...state.asks.map(a => a.qty),
+    ...state.bids.map(b => b.qty),
+    100
+  );
+
+  // 卖盘从卖五到卖一（反转数组渲染）
+  const askHtml = [...state.asks].reverse().map((a, idx) => {
+    const levelNum = 5 - idx;
+    const barW = Math.min(100, (a.qty / maxQty) * 100);
+    return `
+      <div class="ob-row ob-ask">
+        <div class="ob-bar" style="width:${barW}%"></div>
+        <span style="color:var(--muted)">卖${levelNum}</span>
+        <span style="text-align:center; color:var(--down); font-weight:600;">$${a.price.toFixed(2)}</span>
+        <span style="text-align:right;">${a.qty}</span>
+      </div>`;
+  }).join('');
+  document.getElementById('askList').innerHTML = askHtml;
+
+  document.getElementById('obLastPrice').textContent = `$${state.lastPrice.toFixed(2)}`;
+  document.getElementById('obLastPrice').style.color = color;
+
+  // 买盘从买一到买五
+  const bidHtml = state.bids.map((b, idx) => {
+    const barW = Math.min(100, (b.qty / maxQty) * 100);
+    const gsTag = b.isGreenshoe ? ' 🛡️绿鞋' : '';
+    const gsClass = b.isGreenshoe ? 'greenshoe-wall' : '';
+    return `
+      <div class="ob-row ob-bid ${gsClass}">
+        <div class="ob-bar" style="width:${barW}%"></div>
+        <span style="color:${b.isGreenshoe ? 'var(--gold)' : 'var(--muted)'}">买${idx + 1}${gsTag}</span>
+        <span style="text-align:center; color:var(--up); font-weight:600;">$${b.price.toFixed(2)}</span>
+        <span style="text-align:right;">${b.qty}</span>
+      </div>`;
+  }).join('');
+  document.getElementById('bidList').innerHTML = bidHtml;
+
+  // 3. 逐笔成交明细
+  if (state.tape.length > 0) {
+    document.getElementById('tapeList').innerHTML = state.tape.map(t => `
+      <div class="tape-row">
+        <span style="color:var(--muted)">${t.time}</span>
+        <span style="color:${t.side === 'buy' ? 'var(--up)' : 'var(--down)'}; font-weight:600;">
+          ${t.side === 'buy' ? '▲ 买' : '▼ 卖'} $${t.price.toFixed(2)}
+        </span>
+        <span style="text-align:right;">${t.qty} 股</span>
+      </div>`).join('');
+  }
+
+  // 4. 绘制 Canvas 分时图 + 成交量柱
+  drawChart();
+}
+
+/**
+ * 绘制双层图表：上半部分是价格折线，下半部分是成交量柱状图
+ */
+function drawChart() {
+  const canvas = document.getElementById('chartCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 52, padR = 16, padT = 18, padB = 18;
+  const priceH = (H - padT - padB) * 0.65; // 上方 65% 画价格
+  const volTop = padT + priceH + 16;       // 下方画成交量
+  const volH = H - padB - volTop;
+
+  const data = state.history;
+  const prices = data.map(d => d.price);
+  const minP = Math.min(...prices, IPO_PRICE - 2) - 1;
+  const maxP = Math.max(...prices, IPO_PRICE + 2) + 1;
+  const maxV = Math.max(...data.map(d => d.vol), 50);
+
+  const yOfPrice = p => padT + (maxP - p) / (maxP - minP || 1) * priceH;
+
+  // 绘制横向价格网格与刻度
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const val = minP + (maxP - minP) * (i / 4);
+    const y = yOfPrice(val);
+    ctx.strokeStyle = '#162033';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('$' + val.toFixed(1), padL - 6, y + 4);
+  }
+
+  // 绘制 $100.00 发行价金色虚线
+  const yIpo = yOfPrice(IPO_PRICE);
+  ctx.strokeStyle = 'rgba(245, 158, 11, 0.7)';
+  ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(padL, yIpo); ctx.lineTo(W - padR, yIpo); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 分隔线
+  ctx.strokeStyle = '#243047';
+  ctx.beginPath(); ctx.moveTo(padL, volTop - 8); ctx.lineTo(W - padR, volTop - 8); ctx.stroke();
+
+  if (data.length === 0) return;
+
+  const slots = Math.max(data.length - 1, 20);
+  const xStep = (W - padL - padR) / slots;
+  const barW = Math.max(5, Math.min(18, xStep * 0.65));
+
+  // 绘制成交量柱状图
+  data.forEach((d, i) => {
+    const x = padL + i * xStep;
+    const h = (d.vol / maxV) * volH;
+    ctx.fillStyle = d.side === 'buy' ? 'rgba(16, 185, 129, 0.75)' : 'rgba(239, 68, 68, 0.75)';
+    ctx.fillRect(x - barW / 2, volTop + volH - h, barW, h);
+  });
+
+  // 绘制价格折线
+  ctx.strokeStyle = state.lastPrice >= IPO_PRICE ? '#10b981' : '#ef4444';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  data.forEach((d, i) => {
+    const x = padL + i * xStep;
+    const y = yOfPrice(d.price);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // 标注文字
+  ctx.fillStyle = '#8b9bb4';
+  ctx.textAlign = 'left';
+  ctx.fillText('成交量 (股)', padL, volTop + 10);
+}
+
+/**
+ * ============================================================================
+ * 交互控制函数
+ * ============================================================================
+ */
+function setOrderQty(q) {
+  state.orderQty = q;
+  [20, 80, 200].forEach(v => document.getElementById('qty-' + v).classList.toggle('active', v === q));
+}
+
+function setLiquidity(mode) {
+  state.liquidity = mode;
+  document.getElementById('liq-thin').classList.toggle('active', mode === 'thin');
+  document.getElementById('liq-thick').classList.toggle('active', mode === 'thick');
+  rebuildOrderBook();
+  renderAll();
+}
+
+function toggleGreenshoe() {
+  state.greenshoeOn = !state.greenshoeOn;
+  const btn = document.getElementById('btnGs');
+  btn.classList.toggle('active', state.greenshoeOn);
+  btn.textContent = state.greenshoeOn ? '🛡️ 绿鞋护盘: 开启 ($100托底)' : '🛡️ 绿鞋护盘: 关闭';
+  applyGreenshoeWall();
+  renderAll();
+}
+
+/**
+ * 自动行情模拟：一键演示 4 种经典量价关系
+ */
+function setAutoMode(mode) {
+  if (state.autoTimer) clearInterval(state.autoTimer);
+  state.autoTimer = null;
+  state.autoMode = mode;
+
+  ['stop', 'vu', 'su', 'vd', 'sd'].forEach(m => {
+    document.getElementById('auto-' + m).classList.toggle('active', m === mode);
+  });
+
+  const badge = document.getElementById('uiRegimeBadge');
+  if (mode === 'stop') {
+    badge.textContent = '手动模式';
+    return;
+  }
+
+  const labels = {
+    vu: '自动: 量增价涨 (大单抢筹)',
+    su: '自动: 量缩价涨 (锁仓惜售)',
+    vd: '自动: 量增价跌 (恐慌砸盘)',
+    sd: '自动: 量缩价跌 (阴跌冷清)'
+  };
+  badge.textContent = labels[mode];
+
+  // 根据模式自动调整盘口厚度以逼真还原量价特征
+  if (mode === 'su' || mode === 'sd') setLiquidity('thin');
+  if (mode === 'vu' || mode === 'vd') setLiquidity('thick');
+
+  state.autoTimer = setInterval(() => {
+    if (mode === 'vu') {
+      // 放量上涨：买多卖少，且单笔股数大
+      const side = Math.random() < 0.78 ? 'buy' : 'sell';
+      executeMarketOrder(side, Math.floor(150 + Math.random() * 180));
+    } else if (mode === 'su') {
+      // 缩量上涨：薄盘口下，少量买单就能推高价格
+      const side = Math.random() < 0.75 ? 'buy' : 'sell';
+      executeMarketOrder(side, Math.floor(10 + Math.random() * 20));
+    } else if (mode === 'vd') {
+      // 放量下跌：卖多买少，大单疯狂砸盘
+      const side = Math.random() < 0.78 ? 'sell' : 'buy';
+      executeMarketOrder(side, Math.floor(150 + Math.random() * 180));
+    } else if (mode === 'sd') {
+      // 缩量下跌：买盘稀缺，零星小卖单慢慢压低价格
+      const side = Math.random() < 0.75 ? 'sell' : 'buy';
+      executeMarketOrder(side, Math.floor(8 + Math.random() * 18));
+    }
+  }, 850);
+}
+
+function resetSimulator() {
+  setAutoMode('stop');
+  state.lastPrice = IPO_PRICE;
+  state.totalVolume = 0;
+  state.greenshoeBudget = 50000;
+  state.history = [{ price: IPO_PRICE, vol: 0, side: 'buy' }];
+  state.tape = [];
+  rebuildOrderBook();
+  renderAll();
+}
+
+// 页面加载时初始化
+resetSimulator();
+</script>
+</body>
+</html>

@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>调和分析四大猜想与四元数蒙日-安培证明：交互式数学工作台</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    :root { color-scheme: dark; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Noto Sans SC', sans-serif;
+      background-color: #060913;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+    .font-mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace; }
+    .math {
+      font-family: 'Cambria Math', 'STIX Two Math', 'Times New Roman', Georgia, serif;
+      letter-spacing: 0.01em;
+    }
+    .math i { font-style: italic; }
+    .math-display {
+      font-family: 'Cambria Math', 'STIX Two Math', 'Times New Roman', Georgia, serif;
+      font-size: 1.05rem;
+      line-height: 1.8;
+      text-align: center;
+      overflow-x: auto;
+    }
+    .frac {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      vertical-align: middle;
+      margin: 0 0.14em;
+      font-size: 0.88em;
+      line-height: 1.1;
+    }
+    .frac > span:first-child {
+      border-bottom: 1px solid currentColor;
+      padding: 0 0.18em 0.06em;
+    }
+    .frac > span:last-child {
+      padding: 0.06em 0.18em 0;
+    }
+    .panel-card {
+      background: linear-gradient(160deg, rgba(15, 23, 42, 0.92), rgba(9, 13, 26, 0.96));
+      border: 1px solid rgba(148, 163, 184, 0.16);
+    }
+    .math-box {
+      background: rgba(2, 6, 23, 0.78);
+      border: 1px solid rgba(56, 189, 248, 0.24);
+    }
+    .tab-btn { transition: all 0.18s ease; }
+    .tab-btn.active {
+      background: linear-gradient(135deg, #0284c7, #4f46e5);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
+    }
+    .step-btn.active {
+      border-color: #38bdf8;
+      background: rgba(14, 165, 233, 0.14);
+    }
+    .dim-btn.active {
+      background: #0284c7;
+      color: #fff;
+      border-color: #38bdf8;
+    }
+    input[type="range"] { accent-color: #38bdf8; }
+    canvas { display: block; touch-action: manipulation; }
+  </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-sky-500/30">
+  <!-- Sticky Header -->
+  <header class="sticky top-0 z-30 border-b border-slate-800/90 bg-[#060913]/95 backdrop-blur-md">
+    <div class="mx-auto max-w-6xl px-4 py-2.5 sm:px-6">
+      <div class="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
+        <div class="flex items-center gap-2.5">
+          <span class="shrink-0 rounded bg-sky-500/20 px-2 py-0.5 font-mono text-[11px] font-bold text-sky-300">PDE / HA</span>
+          <h1 class="text-sm font-bold text-white sm:text-base">
+            局部光滑性、四元数蒙日-安培与挂谷猜想：数学结构工作台
+          </h1>
+        </div>
+        <nav class="flex flex-wrap gap-1.5" aria-label="主导航">
+          <button type="button" data-tab="exponents" class="tab-btn active whitespace-nowrap rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white">
+            1. 临界指数与蕴含链
+          </button>
+          <button type="button" data-tab="mechanism" class="tab-btn whitespace-nowrap rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white">
+            2. 波包 vs 四元数蒙日-安培
+          </button>
+          <button type="button" data-tab="kakeya" class="tab-btn whitespace-nowrap rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white">
+            3. Perron 树与维数界
+          </button>
+          <button type="button" data-tab="frontiers" class="tab-btn whitespace-nowrap rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white">
+            4. Lean 边界与前沿
+          </button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-5 sm:px-6">
+    <!-- ==================== TAB 1: EXPONENTS & IMPLICATION CHAIN ==================== -->
+    <section id="panel-exponents" class="tab-panel space-y-5">
+      <div class="panel-card rounded-2xl p-5">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div class="space-y-2.5">
+            <h2 class="text-lg font-bold text-white sm:text-xl">
+              为什么临界指数 <span class="math text-emerald-300"><i>p</i><sub><i>n</i></sub> = <span class="frac"><span>2<i>n</i></span><span><i>n</i> − 1</span></span></span> 是整条蕴含链的“锁眼”？
+            </h2>
+            <p class="max-w-3xl text-xs leading-relaxed text-slate-300 sm:text-sm">
+              对欧氏半波算子 <span class="math"><i>u</i>(<i>x</i>,<i>t</i>) = <i>e</i><sup><i>it</i>√(−Δ)</sup><i>f</i>(<i>x</i>)</span>，固定时刻 <span class="math"><i>t</i></span> 下的最优 <span class="math"><i>L</i><sup><i>p</i></sup></span> 估计（Peral 1980 / Miyachi 1980）必然损失 <span class="math text-rose-300"><i>s</i><sub>fixed</sub>(<i>p</i>) = (<i>n</i> − 1)|1/2 − 1/<i>p</i>|</span> 阶导数。Sogge (1991) 的<strong class="text-sky-300">局部光滑性猜想</strong>断言：只需在时间区间 <span class="math"><i>t</i> ∈ [1, 2]</span> 上做 <span class="math"><i>L</i><sup><i>p</i></sup><sub><i>t</i></sub></span> 平均，就能净赚 <span class="math text-emerald-300">1/<i>p</i> − ε</span> 阶光滑度：
+            </p>
+            <div class="math-box math-display rounded-xl px-4 py-2.5 text-sky-100">
+              ‖<i>e</i><sup><i>it</i>√(−Δ)</sup><i>f</i>‖<sub><i>L</i><sup><i>p</i></sup>(ℝ<sup><i>n</i></sup> × [1,2])</sub> ≲<sub>ε</sub> ‖<i>f</i>‖<sub><i>W</i><sup><i>s</i>,<i>p</i></sup>(ℝ<sup><i>n</i></sup>)</sub>,&nbsp;&nbsp;&nbsp;
+              <i>s</i> &gt; max(0,&nbsp; <span class="frac"><span><i>n</i> − 1</span><span>2</span></span> − <span class="frac"><span><i>n</i></span><span><i>p</i></span></span>) &nbsp;&nbsp;(<i>p</i> ≥ 2)
+            </div>
+          </div>
+
+          <!-- Dimension Selector -->
+          <div class="shrink-0 rounded-xl border border-slate-800 bg-slate-950/85 p-3.5">
+            <div class="text-xs font-semibold text-slate-400">选择空间维数 <span class="math"><i>n</i></span></div>
+            <div class="mt-2 flex gap-1.5">
+              <button type="button" data-dim="2" class="dim-btn rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-mono text-xs font-bold text-slate-300">n=2</button>
+              <button type="button" data-dim="3" class="dim-btn active rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-mono text-xs font-bold text-slate-300">n=3</button>
+              <button type="button" data-dim="4" class="dim-btn rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-mono text-xs font-bold text-slate-300">n=4</button>
+              <button type="button" data-dim="5" class="dim-btn rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-mono text-xs font-bold text-slate-300">n=5</button>
+              <button type="button" data-dim="6" class="dim-btn rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-mono text-xs font-bold text-slate-300">n=6</button>
+            </div>
+            <div class="mt-3 space-y-1 font-mono text-xs">
+              <div class="flex justify-between gap-4">
+                <span class="text-slate-400">临界点 pₙ = 2n/(n−1):</span>
+                <span id="readout-pn" class="font-bold text-emerald-300">3.000 (6/2)</span>
+              </div>
+              <div class="flex justify-between gap-4">
+                <span class="text-slate-400">固定时刻损失 s_fixed(pₙ):</span>
+                <span id="readout-sfixed-pn" class="font-bold text-rose-300">0.333</span>
+              </div>
+              <div class="flex justify-between gap-4">
+                <span class="text-slate-400">时间平均增益 1/pₙ:</span>
+                <span id="readout-gain-pn" class="font-bold text-sky-300">0.333</span>
+              </div>
+              <div class="flex justify-between gap-4 border-t border-slate-800 pt-1">
+                <span class="text-slate-300">净导数损失 s_LS(pₙ):</span>
+                <span class="font-bold text-emerald-300">0 + ε (临界无损!)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive (1/p, s) Diagram + Rigorous 4-Step Implications -->
+      <div class="grid grid-cols-1 gap-5 lg:grid-cols-12">
+        <div class="panel-card rounded-2xl p-4 sm:p-5 lg:col-span-7">
+          <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-sm font-bold text-white">实时 <span class="math">(1/<i>p</i>, <i>s</i>)</span> 正则性图谱（拖动滑块检验任意 <span class="math"><i>p</i></span>）</h3>
+            <span id="p-cursor-label" class="rounded bg-sky-500/20 px-2.5 py-0.5 font-mono text-xs text-sky-200">
+              当前 p = 3.00 (1/p = 0.333)
+            </span>
+          </div>
+          <div class="relative h-64 w-full overflow-hidden rounded-xl border border-slate-800 bg-[#04070f]">
+            <canvas id="exponentCanvas" class="h-full w-full"></canvas>
+          </div>
+          <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <label for="slider-invp" class="whitespace-nowrap text-xs font-semibold text-sky-300">拖动 1/p ∈ [0.05, 0.50]:</label>
+            <input id="slider-invp" type="range" min="5" max="50" value="33" class="w-full" />
+            <button type="button" id="btn-snap-pn" class="shrink-0 rounded-lg border border-emerald-500/50 bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-200 hover:bg-emerald-500/25">
+              吸附至临界点 pₙ
+            </button>
+          </div>
+          <div class="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+            <div class="rounded-lg border border-slate-800 bg-slate-900/80 p-2.5">
+              <div class="text-[11px] text-slate-400">固定时刻 s_fixed</div>
+              <div id="val-sfixed" class="mt-0.5 font-mono text-sm font-bold text-rose-300">0.333</div>
+            </div>
+            <div class="rounded-lg border border-slate-800 bg-slate-900/80 p-2.5">
+              <div class="text-[11px] text-slate-400">局部光滑 s_LS</div>
+              <div id="val-sls" class="mt-0.5 font-mono text-sm font-bold text-emerald-300">0.000+ε</div>
+            </div>
+            <div class="rounded-lg border border-slate-800 bg-slate-900/80 p-2.5">
+              <div class="text-[11px] text-slate-400">Bochner-Riesz δ(p)</div>
+              <div id="val-br" class="mt-0.5 font-mono text-sm font-bold text-indigo-300">0.000+</div>
+            </div>
+            <div class="rounded-lg border border-slate-800 bg-slate-900/80 p-2.5">
+              <div class="text-[11px] text-slate-400">Restriction 条件</div>
+              <div id="val-rest" class="mt-0.5 font-mono text-xs font-bold text-violet-300">临界点 p=pₙ</div>
+            </div>
+          </div>
+          <p class="mt-2.5 text-xs leading-relaxed text-slate-400">
+            <strong class="text-slate-200">为什么只需证 p = pₙ 一点？</strong> 在 <span class="math"><i>p</i> = 2</span> 处由 Plancherel 定理平凡有 <span class="math"><i>s</i> = 0</span>，在 <span class="math"><i>p</i> = ∞</span> 处由 Sobolev 嵌入有 <span class="math"><i>s</i> &gt; (<i>n</i>−1)/2</span>。一旦攻克临界拐点 <span class="math"><i>p</i><sub><i>n</i></sub> = 2<i>n</i>/(<i>n</i>−1)</span> 处的环域局部光滑估计（<span class="math"><i>s</i> = ε</span>），通过 Riesz–Thorin 复插值即可自动封锁整条折线！
+          </p>
+        </div>
+
+        <div class="panel-card flex flex-col justify-between rounded-2xl p-4 sm:p-5 lg:col-span-5">
+          <div>
+            <h3 class="text-sm font-bold text-white">四大猜想的严格分析推导（点击切换步骤）</h3>
+            <div class="mt-3 grid grid-cols-2 gap-2">
+              <button type="button" data-imp="0" class="step-btn active rounded-xl border border-slate-700 bg-slate-900/80 p-2.5 text-left text-xs">
+                <div class="font-mono text-[10px] text-sky-400">STEP 1 ⇒ 2</div>
+                <div class="mt-0.5 font-bold text-white">局部光滑性 ⇒ BR</div>
+              </button>
+              <button type="button" data-imp="1" class="step-btn rounded-xl border border-slate-700 bg-slate-900/80 p-2.5 text-left text-xs">
+                <div class="font-mono text-[10px] text-indigo-400">STEP 2 ⇒ 3</div>
+                <div class="mt-0.5 font-bold text-white">BR ⇒ 傅里叶限制性</div>
+              </button>
+              <button type="button" data-imp="2" class="step-btn rounded-xl border border-slate-700 bg-slate-900/80 p-2.5 text-left text-xs">
+                <div class="font-mono text-[10px] text-violet-400">STEP 3 ⇒ 4</div>
+                <div class="mt-0.5 font-bold text-white">限制性 ⇒ 挂谷极大</div>
+              </button>
+              <button type="button" data-imp="3" class="step-btn rounded-xl border border-slate-700 bg-slate-900/80 p-2.5 text-left text-xs">
+                <div class="font-mono text-[10px] text-emerald-400">STEP 4 ⇒ DIM</div>
+                <div class="mt-0.5 font-bold text-white">挂谷极大 ⇒ 维数 n</div>
+              </button>
+            </div>
+            <div id="imp-detail" class="mt-4 space-y-3 text-xs leading-relaxed text-slate-300"></div>
+          </div>
+
+          <div class="mt-4 flex items-center justify-between border-t border-slate-800 pt-3">
+            <span class="text-[11px] text-slate-400">注：2026.10.26 预印本仍待独立同行评审</span>
+            <button type="button" data-goto-tab="mechanism" class="rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-semibold text-sky-300 hover:bg-slate-700 hover:text-white">
+              看核心证明机制 →
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: KNAPP WAVE PACKETS & QUATERNIONIC MONGE-AMPERE ==================== -->
+    <section id="panel-mechanism" class="tab-panel hidden space-y-5">
+      <div class="panel-card rounded-2xl p-5">
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 class="text-lg font-bold text-white sm:text-xl">
+              相空间核心：为什么波动方程“不光滑”，而曲率带来相消？
+            </h2>
+            <p class="mt-1 text-xs leading-relaxed text-slate-300 sm:text-sm">
+              在频率球面 <span class="math"><i>S</i><sup><i>n</i>−1</sup></span> 上取角半径为 <span class="math">δ</span> 的小帽 <span class="math">θ</span>，因球面曲率为正，小帽的法向厚度只有 <span class="math">~ δ²</span>。由海森堡不确定性原理，延拓算子 <span class="math"><i>E</i>(χ<sub>θ</sub>)(<i>x</i>) = ∫<sub>θ</sub> <i>e</i><sup>2π<i>i</i> <i>x</i>·ω</sup> <i>d</i>σ(ω)</span> 在物理空间集中在一条 <strong class="text-sky-300"><span class="math">δ<sup>−1</sup> × ⋯ × δ<sup>−1</sup> × δ<sup>−2</sup></span></strong> 的细长波包管（Knapp 极值例）上。
+            </p>
+          </div>
+          <div class="shrink-0 rounded-xl border border-slate-800 bg-slate-950/85 px-3.5 py-2.5 text-xs">
+            <div class="flex items-center justify-between gap-4">
+              <label for="slider-delta" class="font-semibold text-sky-300">频率帽半径 δ:</label>
+              <span id="label-delta" class="font-mono font-bold text-white">0.20</span>
+            </div>
+            <input id="slider-delta" type="range" min="8" max="42" value="20" class="mt-1.5 w-44" />
+            <div id="knapp-ratio" class="mt-1 font-mono text-[11px] text-amber-300">管宽 δ⁻¹=5.0 · 管长 δ⁻²=25.0</div>
+          </div>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-12">
+          <div class="lg:col-span-7">
+            <div class="relative h-64 w-full overflow-hidden rounded-xl border border-slate-800 bg-[#04070f]">
+              <canvas id="knappCanvas" class="h-full w-full"></canvas>
+            </div>
+            <div class="mt-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div class="flex items-center gap-2">
+                <button type="button" id="btn-knapp-single" class="rounded-lg border border-sky-500/60 bg-sky-500/20 px-3 py-1 font-semibold text-sky-200">
+                  单个 Knapp 波包
+                </button>
+                <button type="button" id="btn-knapp-multi" class="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1 font-semibold text-slate-300 hover:text-white">
+                  多方向波包重叠（挂谷管）
+                </button>
+              </div>
+              <span class="font-mono text-[11px] text-slate-400">
+                Knapp 尺度下界：p ≥ [(n+1)/(n−1)] q'
+              </span>
+            </div>
+          </div>
+
+          <div class="space-y-3 lg:col-span-5">
+            <div class="rounded-xl border border-rose-500/25 bg-rose-500/5 p-3.5 text-xs leading-relaxed">
+              <div class="font-bold text-rose-300">双曲型（波动）vs 椭圆/抛物型（热）的根本鸿沟</div>
+              <p class="mt-1.5 text-slate-300">
+                • <strong>热方程</strong> <span class="math"><i>e</i><sup><i>t</i>Δ</sup></span> 的傅里叶乘子是 <span class="math"><i>e</i><sup>−<i>t</i>|ξ|²</sup></span>，高频呈指数衰减，瞬间把奇异点抹成 <span class="math"><i>C</i><sup>∞</sup></span>。<br />
+                • <strong>波动方程</strong> <span class="math"><i>e</i><sup><i>it</i>√(−Δ)</sup></span> 的乘子是纯相位 <span class="math"><i>e</i><sup><i>it</i>|ξ|</sup></span>，模长恒为 1！高频能量永不衰减，只是沿光锥特征线（波包细管）搬运。因此人类过去 30 年（Wolff 角分解、Bourgain–Demeter 解耦、多项式分割）都在死磕<strong>“细管在时空中如何相交”</strong>的组合几何难题。
+              </p>
+            </div>
+            <div class="rounded-xl border border-violet-500/30 bg-violet-500/10 p-3.5 text-xs leading-relaxed">
+              <div class="font-bold text-violet-300">2026.10.26 AI 证明为什么被张瑞祥称作“天上掉下来”？</div>
+              <p class="mt-1.5 text-slate-300">
+                它彻底绕开了波包细管的组合重叠分析，转而把波函数嵌入带<strong>额外时间变量</strong>的<strong>四元数纤维空间 <span class="math">ℍ<sup><i>m</i></sup></span></strong>，在每条纤维上求解一个<strong>完全非线性椭圆型方程——四元数蒙日-安培方程（Quaternionic Monge-Ampère Equation）</strong>的 Dirichlet 边值问题，用其解的余子式矩阵造出正定无散度守恒流，一步锁死临界 <span class="math"><i>L</i><sup><i>p</i><sub><i>n</i></sub></sup></span> 估计！
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quaternionic Monge-Ampere & Interactive Hermitian Matrix -->
+      <div class="grid grid-cols-1 gap-5 lg:grid-cols-12">
+        <div class="panel-card rounded-2xl p-5 lg:col-span-7">
+          <h3 class="text-sm font-bold text-white">AI 证明核心架构：四元数蒙日-安培 ⇒ 守恒流 ⇒ 临界估计</h3>
+          <div class="mt-3 space-y-2.5 text-xs leading-relaxed">
+            <div class="rounded-xl border border-slate-800 bg-slate-900/75 p-3.5">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-sky-300">① 构造辅助纤维与额外时间变量</span>
+                <span class="font-mono text-[11px] text-slate-400">ℝⁿ × ℝₜ ↪ ℍᵐ / Γ</span>
+              </div>
+              <p class="mt-1 text-slate-300">
+                对频率局域在环域 <span class="math">|ξ| ~ <i>N</i></span> 的自由波 <span class="math"><i>u</i>(<i>x</i>,<i>t</i>)</span>，引入额外两个辅助时间坐标，将其嵌入四元数空间 <span class="math">ℍ<sup><i>m</i></sup></span> 的周期商空间纤维上，记空间四元数 Hermitian Hessian 为 <span class="math">𝖧</span>，含时间的全 Hessian 为 <span class="math"><i>H</i></span>。
+              </p>
+            </div>
+
+            <div class="rounded-xl border border-slate-800 bg-slate-900/75 p-3.5">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-violet-300">② 在纤维上求解四元数蒙日-安培 Dirichlet 问题（椭圆工具！）</span>
+                <span class="font-mono text-[11px] text-slate-400">Theorem A.1</span>
+              </div>
+              <div class="math-box math-display mt-1.5 rounded-lg px-3 py-1.5 text-violet-100">
+                det 𝖧(<i>B</i><sub>0</sub> + <i>v</i>) = μ,&nbsp;&nbsp;&nbsp; 𝖧(<i>B</i><sub>0</sub> + <i>v</i>) &gt; 0,&nbsp;&nbsp;&nbsp; <i>v</i>|<sub>∂Ω</sub> = 0
+              </div>
+              <p class="mt-1.5 text-slate-300">
+                给定由波振幅构造的光滑正密度 <span class="math">μ &gt; 0</span>，利用严格多次调和下解的存在性（arXiv:2611.03214 亦指出这可视为 Ma–Zhu 2017 四元数蒙日-安培理论的特例），得到唯一的光滑零边值可容许势函数 <span class="math"><i>v</i> ≤ 0</span>。
+              </p>
+            </div>
+
+            <div class="rounded-xl border border-slate-800 bg-slate-900/75 p-3.5">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-emerald-300">③ 余子式矩阵构造正定无散度“高斯守恒流”</span>
+                <span class="font-mono text-[11px] text-slate-400">div J = 0</span>
+              </div>
+              <p class="mt-1 text-slate-300">
+                利用四元数 Hermitian 矩阵行列式与余子式（cofactor）的精确恒等式，构造出满足 <span class="math">div <i>J</i> = 0</span> 的正定守恒流。由散度定理，区域内部的波能量积分（恰对应临界指数 <span class="math"><i>p</i><sub><i>n</i></sub> = 2<i>n</i>/(<i>n</i>−1)</span> 的 <span class="math"><i>L</i><sup><i>p</i><sub><i>n</i></sub></sup></span> 范数！）被边界面上的变分能量直接控制。
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive 2x2 Quaternionic Hermitian Matrix Lab -->
+        <div class="panel-card flex flex-col justify-between rounded-2xl p-5 lg:col-span-5">
+          <div>
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold text-violet-300">动手算一算：2×2 四元数 Hermitian 矩阵</h3>
+              <span class="font-mono text-[11px] text-slate-400">𝖧(u) &gt; 0</span>
+            </div>
+            <p class="mt-1.5 text-xs leading-relaxed text-slate-400">
+              为什么四元数不可替代？四元数非交换（<span class="math"><i>ij</i> = <i>k</i> = −<i>ji</i></span>），但乘积实部满足循环不变性 <span class="math">Re(<i>cd</i>) = Re(<i>dc</i>)</span>，且 <span class="math">2×2</span> 四元数 Hermitian 阵具有良定义的 Moore 行列式 <span class="math">det<sub>ℍ</sub>(<i>A</i>) = <i>ab</i> − |<i>q</i>|²</span> 与严格正定椭圆锥：
+            </p>
+
+            <div class="math-box mt-3 rounded-xl p-3 font-mono text-xs text-slate-200">
+              <div class="grid grid-cols-2 gap-2 text-center">
+                <div class="rounded bg-slate-900/90 py-1.5 text-sky-300">a = <span id="m-a-val">3.0</span></div>
+                <div class="rounded bg-slate-900/90 py-1.5 text-violet-300">q = <span id="m-q-val">0.6+0.7i+0.5j-0.6k</span></div>
+                <div class="rounded bg-slate-900/90 py-1.5 text-violet-300">q̄ = <span id="m-qbar-val">0.6-0.7i-0.5j+0.6k</span></div>
+                <div class="rounded bg-slate-900/90 py-1.5 text-sky-300">b = <span id="m-b-val">2.5</span></div>
+              </div>
+            </div>
+
+            <div class="mt-3 space-y-2 text-xs">
+              <label class="flex items-center gap-2">
+                <span class="w-16 font-mono text-sky-300">a ∈ [0.5,5]:</span>
+                <input id="inp-a" type="range" min="5" max="50" value="30" class="w-full" />
+              </label>
+              <label class="flex items-center gap-2">
+                <span class="w-16 font-mono text-sky-300">b ∈ [0.5,5]:</span>
+                <input id="inp-b" type="range" min="5" max="50" value="25" class="w-full" />
+              </label>
+              <label class="flex items-center gap-2">
+                <span class="w-16 font-mono text-violet-300">|q| 模长:</span>
+                <input id="inp-qnorm" type="range" min="0" max="35" value="12" class="w-full" />
+              </label>
+            </div>
+
+            <div class="mt-3 grid grid-cols-2 gap-2.5">
+              <div class="rounded-xl border border-slate-800 bg-slate-900/80 p-3">
+                <div class="text-[11px] text-slate-400">Moore 行列式 ab − |q|²</div>
+                <div id="m-det" class="mt-1 font-mono text-base font-extrabold text-emerald-300">6.06</div>
+              </div>
+              <div class="rounded-xl border border-slate-800 bg-slate-900/80 p-3">
+                <div class="text-[11px] text-slate-400">椭圆可容许性 𝖧 &gt; 0</div>
+                <div id="m-pos" class="mt-1 font-mono text-sm font-bold text-emerald-300">✓ 严格正定 (椭圆)</div>
+              </div>
+            </div>
+
+            <div class="mt-3 rounded-xl border border-slate-800 bg-slate-950/70 p-3 font-mono text-[11px] text-slate-300">
+              <div>非交换验证：(1+i)(1+j) = 1+i+j+k</div>
+              <div class="mt-0.5 text-amber-300">但 (1+j)(1+i) = 1+i+j−k ≠ (1+i)(1+j)</div>
+              <div class="mt-1 text-emerald-300">tr(cof(A)·B) &gt; 0 在正定锥上保持单调椭圆性</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: KAKEYA PERRON TREE & DIMENSION BOUNDS ==================== -->
+    <section id="panel-kakeya" class="tab-panel hidden space-y-5">
+      <div class="panel-card rounded-2xl p-5">
+        <div>
+          <h2 class="text-lg font-bold text-white sm:text-xl">
+            挂谷集合的精确构造：Perron 树如何把面积压到 0，而维数锁死在 <span class="math"><i>n</i></span>？
+          </h2>
+          <p class="mt-1 text-xs leading-relaxed text-slate-300 sm:text-sm">
+            1919 年 Besicovitch 发现：将高为 1、底为 <span class="math"><i>b</i></span> 的三角形二等分为两个子三角形，然后把其中一个沿底边平移重叠比例 <span class="math">α ∈ (0.5, 1)</span>，得到的新图形<strong class="text-emerald-300">依然包含原三角形内所有斜率的单位线段</strong>，但面积按因子 <span class="math text-amber-300">α² + 2(1−α)² &lt; 1</span> 严格缩小。反复迭代 <span class="math"><i>k</i></span> 次（Perron 树），总测度 <span class="math">ℒ²(<i>K</i>) → 0</span>！
+          </p>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 gap-5 lg:grid-cols-12">
+          <div class="space-y-3 lg:col-span-7">
+            <div class="relative h-72 w-full overflow-hidden rounded-xl border border-slate-800 bg-[#04070f]">
+              <canvas id="perronCanvas" class="h-full w-full"></canvas>
+            </div>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div class="rounded-xl border border-slate-800 bg-slate-900/80 p-3">
+                <div class="flex justify-between text-xs">
+                  <label for="slider-perron-k" class="font-semibold text-emerald-300">二分迭代次数 k (2ᵏ 细楔)</label>
+                  <span id="label-perron-k" class="font-mono text-emerald-200">k = 4 (16 楔)</span>
+                </div>
+                <input id="slider-perron-k" type="range" min="0" max="6" value="4" class="mt-1.5 w-full" />
+              </div>
+              <div class="rounded-xl border border-slate-800 bg-slate-900/80 p-3">
+                <div class="flex justify-between text-xs">
+                  <label for="slider-perron-alpha" class="font-semibold text-sky-300">平移重叠系数 α</label>
+                  <span id="label-perron-alpha" class="font-mono text-sky-200">α = 0.80</span>
+                </div>
+                <input id="slider-perron-alpha" type="range" min="50" max="95" value="80" class="mt-1.5 w-full" />
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2.5 text-center">
+              <div class="rounded-xl border border-slate-800 bg-slate-900/80 p-2.5">
+                <div class="text-[11px] text-slate-400">方向区间覆盖</div>
+                <div class="mt-0.5 font-mono text-sm font-bold text-sky-300">100% 不变</div>
+              </div>
+              <div class="rounded-xl border border-slate-800 bg-slate-900/80 p-2.5">
+                <div class="text-[11px] text-slate-400">Perron 树面积比</div>
+                <div id="perron-area-ratio" class="mt-0.5 font-mono text-sm font-bold text-amber-300">0.268</div>
+              </div>
+              <div class="rounded-xl border border-slate-800 bg-slate-900/80 p-2.5">
+                <div class="text-[11px] text-slate-400">豪斯多夫维数</div>
+                <div class="mt-0.5 font-mono text-sm font-bold text-emerald-300">dim = n</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col justify-between space-y-4 lg:col-span-5">
+            <div class="rounded-xl border border-slate-800 bg-slate-950/80 p-4">
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-white">挂谷集合豪斯多夫维数下界演进</h3>
+                <span class="font-mono text-[11px] text-slate-400">dim_H(K) ≤ n</span>
+              </div>
+              <div class="relative mt-3 h-52 w-full">
+                <canvas id="boundsCanvas" class="h-full w-full"></canvas>
+              </div>
+              <div class="mt-2.5 space-y-1 text-[11px] text-slate-400">
+                <div>• <strong class="text-slate-200">灌木法 (Bush, Bourgain)</strong>: (n+1)/2</div>
+                <div>• <strong class="text-sky-300">毛刷法 (Hairbrush, Wolff 1995)</strong>: (n+2)/2（例：n=4 时为 3）</div>
+                <div>• <strong class="text-violet-300">历史里程碑</strong>: n=2 Davies (1971) 证满维；n=3 王虹–Zahl (2025) 证满维 3；n=4 此前最佳仅略超 3.06</div>
+                <div>• <strong class="text-emerald-300">若局部光滑性成立</strong>: 由 pₙ = 2n/(n−1) 直接锁定全维度 dim_H(K) = n！</div>
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-3.5 text-xs leading-relaxed text-slate-300">
+              <strong class="text-emerald-300">测度为 0 与满维为何不矛盾？</strong><br />
+              勒贝格测度 <span class="math">ℒ<sup><i>n</i></sup>(<i>K</i>) = 0</span> 仅要求对任意 ε &gt; 0，可用半径 <span class="math"><i>r</i><sub><i>j</i></sub></span> 的球覆盖 <span class="math"><i>K</i></span> 使得 <span class="math">∑ <i>r</i><sub><i>j</i></sub><sup><i>n</i></sup> &lt; ε</span>；而 <span class="math">dim<sub>H</sub>(<i>K</i>) = <i>n</i></span> 意味着对任意 <span class="math"><i>s</i> &lt; <i>n</i></span>，<span class="math">∑ <i>r</i><sub><i>j</i></sub><sup><i>s</i></sup></span> 必然发散（即覆盖所需 δ-球数 ≳ δ<sup>−<i>n</i>+ε</sup>）。地球内部挖出的“1 米弹道网”可以没有体积，却绝不可能压进任何 2 维曲面或 (3−ε) 维分形里。
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: LEAN VERIFICATION & BEYOND STARTER VILLAGE ==================== -->
+    <section id="panel-frontiers" class="tab-panel hidden space-y-5">
+      <div class="panel-card rounded-2xl p-5">
+        <h2 class="text-lg font-bold text-white sm:text-xl">
+          为什么通过 Lean 形式化验证后，张瑞祥仍坚持“先当它是错的”？
+        </h2>
+        <div class="mt-3 grid grid-cols-1 gap-3 text-xs leading-relaxed md:grid-cols-3">
+          <div class="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+            <div class="font-bold text-amber-300">1. 形式化转译（Formalization）偏差风险</div>
+            <p class="mt-1.5 text-slate-300">
+              Lean 验证的是“形式化后的类型陈述”能否从公理推出，但无法自动担保该陈述忠实等价于人类数学界所说的 Sogge 局部光滑性猜想——例如是否多加了隐蔽假设、漏掉了临界范围、或把范数定义写弱了。
+            </p>
+          </div>
+          <div class="rounded-xl border border-violet-500/30 bg-violet-500/5 p-4">
+            <div class="font-bold text-violet-300">2. 内核健全性与边界范围</div>
+            <p class="mt-1.5 text-slate-300">
+              除了验证器内核本身需接受审计，2026 年 10 月预印本本身也明确限定于<strong>欧氏空间常系数半波算子</strong>及<strong>带 ε 损失</strong>的严格区间（不含零损失端点与一般变系数流形）。
+            </p>
+          </div>
+          <div class="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
+            <div class="font-bold text-emerald-300">3. 数学的本质是理解与迁移，而非真值表</div>
+            <p class="mt-1.5 text-slate-300">
+              即便证明完全无误，只知道“猜想 = True”没有意义。只有当人类数学家彻底拆解<strong>四元数蒙日-安培 + 守恒流</strong>究竟抓住了什么本质结构，它才能变成攻克下一代问题的通用武器。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-card rounded-2xl p-5">
+        <h2 class="text-lg font-bold text-white sm:text-xl">
+          “出了新手村”：四大猜想之外的硬核数学前沿
+        </h2>
+        <div class="mt-4 grid grid-cols-1 gap-4 text-xs leading-relaxed md:grid-cols-2">
+          <div class="rounded-xl border border-slate-800 bg-slate-900/75 p-4">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-sky-300">1. 弯曲挂谷问题 &amp; 变系数波动方程</span>
+              <span class="font-mono text-[11px] text-slate-400">Curved Kakeya</span>
+            </div>
+            <p class="mt-1.5 text-slate-300">
+              在非欧黎曼流形 <span class="math">(<i>M</i>, <i>g</i>)</span> 或变系数双曲算子上，特征线不再是欧氏直线而是测地线/曲线族。欧氏平移不变性彻底消失，如何将欧氏辅助 PDE 与守恒流推广到弯曲几何，是全新的战场。
+            </p>
+          </div>
+
+          <div class="rounded-xl border border-slate-800 bg-slate-900/75 p-4">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-emerald-300">2. 高维 Furstenberg 集合猜想</span>
+              <span class="font-mono text-[11px] text-slate-400">(s, t)-Furstenberg</span>
+            </div>
+            <p class="mt-1.5 text-slate-300">
+              设集合 <span class="math"><i>E</i> ⊂ ℝ<sup><i>n</i></sup></span> 与一个 <span class="math"><i>t</i></span>-维直线族中的每条直线交集都有 <span class="math">dim<sub>H</sub>(<i>E</i> ∩ ℓ) ≥ <i>s</i></span>，求 <span class="math">dim<sub>H</sub>(<i>E</i>)</span> 的精确下界。平面情形由 Ren–Wang (2023) 解决，高维 <span class="math"><i>n</i> ≥ 3</span> 远比挂谷猜想更深更广。
+            </p>
+          </div>
+
+          <div class="rounded-xl border border-slate-800 bg-slate-900/75 p-4">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-amber-300">3. 一般振荡积分与 Mizohata–Takeuchi 型问题</span>
+              <span class="font-mono text-[11px] text-slate-400">Hörmander Operators</span>
+            </div>
+            <p class="mt-1.5 text-slate-300">
+              傅里叶限制性只处理最对称的球面/抛物面相位。对一般弯曲相位函数与加权估计（如 2025 年被张瑞祥指导的 17 岁学生 Hannah Cairo 构造反例推翻的 Mizohata–Takeuchi 猜想），其真正边界远未探明。
+            </p>
+          </div>
+
+          <div class="rounded-xl border border-slate-800 bg-slate-900/75 p-4">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-violet-300">4. 指数和估计与黎曼猜想启发</span>
+              <span class="font-mono text-[11px] text-slate-400">Analytic Number Theory</span>
+            </div>
+            <p class="mt-1.5 text-slate-300">
+              调和分析与解析数论血脉相连：Bourgain–Demeter 解耦定理曾一举攻克数论百年难题 <strong>Vinogradov 中值定理</strong>。全新的振荡相消与守恒流思想，能否改进黎曼 ζ(s) 函数的零点密度估计与 Lindelöf 猜想，令人高度期待。
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      // ==================== TAB SWITCHING ====================
+      let activeTab = 'exponents';
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabPanels = document.querySelectorAll('.tab-panel');
+
+      function resizeCanvas(canvas) {
+        if (!canvas) return;
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function switchTab(name) {
+        activeTab = name;
+        tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+        tabPanels.forEach(p => p.classList.toggle('hidden', p.id !== `panel-${name}`));
+        requestAnimationFrame(() => {
+          if (name === 'exponents') {
+            resizeCanvas(expCanvas);
+            drawExponentDiagram();
+          } else if (name === 'mechanism') {
+            resizeCanvas(knappCanvas);
+            drawKnapp();
+          } else if (name === 'kakeya') {
+            resizeCanvas(perronCanvas);
+            resizeCanvas(boundsCanvas);
+            drawPerron();
+            drawBoundsChart();
+          }
+        });
+      }
+
+      tabBtns.forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+      document.querySelectorAll('[data-goto-tab]').forEach(b => {
+        b.addEventListener('click', () => {
+          switchTab(b.dataset.gotoTab);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      });
+
+      // ==================== TAB 1: EXACT EXPONENT DIAGRAM ====================
+      const expCanvas = document.getElementById('exponentCanvas');
+      const invpSlider = document.getElementById('slider-invp');
+      let dimN = 3;
+      let invP = 1 / 3;
+
+      function updateDimUI() {
+        const pn = (2 * dimN) / (dimN - 1);
+        const sFixedPn = (dimN - 1) * (0.5 - 1 / pn);
+        document.getElementById('readout-pn').textContent = `${pn.toFixed(3)} (${2 * dimN}/${dimN - 1})`;
+        document.getElementById('readout-sfixed-pn').textContent = sFixedPn.toFixed(3);
+        document.getElementById('readout-gain-pn').textContent = (1 / pn).toFixed(3);
+        updateCursorReadouts();
+        drawExponentDiagram();
+      }
+
+      function updateCursorReadouts() {
+        const p = 1 / invP;
+        const sFixed = (dimN - 1) * (0.5 - invP);
+        const sLS = Math.max(0, (dimN - 1) / 2 - dimN * invP);
+        const brDelta = Math.max(0, dimN * (0.5 - invP) - 0.5);
+        const pn = (2 * dimN) / (dimN - 1);
+
+        document.getElementById('p-cursor-label').textContent = `当前 p = ${p.toFixed(2)} (1/p = ${invP.toFixed(3)})`;
+        document.getElementById('val-sfixed').textContent = sFixed.toFixed(3);
+        document.getElementById('val-sls').textContent = `${sLS.toFixed(3)}+ε`;
+        document.getElementById('val-br').textContent = `${brDelta.toFixed(3)}+`;
+        if (Math.abs(p - pn) < 0.08) {
+          document.getElementById('val-rest').textContent = '临界点 p=pₙ';
+        } else if (p > pn) {
+          const qConj = ((dimN - 1) / (dimN + 1)) * p;
+          document.getElementById('val-rest').textContent = `成立 (q'≤${qConj.toFixed(2)})`;
+        } else {
+          document.getElementById('val-rest').textContent = 'p≤pₙ 无界';
+        }
+      }
+
+      document.querySelectorAll('.dim-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          dimN = Number(btn.dataset.dim);
+          document.querySelectorAll('.dim-btn').forEach(b => b.classList.toggle('active', b === btn));
+          const invPn = (dimN - 1) / (2 * dimN);
+          invP = invPn;
+          invpSlider.value = String(Math.round(invPn * 100));
+          updateDimUI();
+        });
+      });
+
+      invpSlider.addEventListener('input', (e) => {
+        invP = Number(e.target.value) / 100;
+        updateCursorReadouts();
+        drawExponentDiagram();
+      });
+
+      document.getElementById('btn-snap-pn').addEventListener('click', () => {
+        invP = (dimN - 1) / (2 * dimN);
+        invpSlider.value = String(Math.round(invP * 100));
+        updateCursorReadouts();
+        drawExponentDiagram();
+      });
+
+      function drawExponentDiagram() {
+        if (!expCanvas) return;
+        const rect = expCanvas.getBoundingClientRect();
+        if (rect.width === 0) return;
+        const ctx = expCanvas.getContext('2d');
+        const w = rect.width;
+        const h = rect.height;
+        ctx.clearRect(0, 0, w, h);
+
+        const padL = 46, padR = 24, padT = 22, padB = 34;
+        const pw = w - padL - padR;
+        const ph = h - padT - padB;
+        const maxS = Math.max(2.6, (dimN - 1) / 2 + 0.3);
+
+        const toX = (xVal) => padL + (xVal / 0.5) * pw;
+        const toY = (sVal) => padT + ph - (sVal / maxS) * ph;
+
+        // Grid
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.12)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 5; i++) {
+          const x = toX(i * 0.1);
+          ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + ph); ctx.stroke();
+        }
+        const sStep = maxS > 2 ? 0.5 : 0.25;
+        for (let s = 0; s <= maxS + 0.01; s += sStep) {
+          const y = toY(s);
+          ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + pw, y); ctx.stroke();
+        }
+
+        // Axes
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(padL, padT);
+        ctx.lineTo(padL, padT + ph);
+        ctx.lineTo(padL + pw, padT + ph);
+        ctx.stroke();
+
+        const invPn = (dimN - 1) / (2 * dimN);
+        const sInf = (dimN - 1) / 2;
+
+        // Shaded Gain Region
+        ctx.beginPath();
+        ctx.moveTo(toX(0), toY(sInf));
+        ctx.lineTo(toX(0.5), toY(0));
+        ctx.lineTo(toX(invPn), toY(0));
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.14)';
+        ctx.fill();
+
+        // Fixed-time Peral-Miyachi line
+        ctx.strokeStyle = '#fb7185';
+        ctx.setLineDash([6, 4]);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(toX(0), toY(sInf));
+        ctx.lineTo(toX(0.5), toY(0));
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Sogge Local Smoothing line
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 2.8;
+        ctx.beginPath();
+        ctx.moveTo(toX(0), toY(sInf));
+        ctx.lineTo(toX(invPn), toY(0));
+        ctx.lineTo(toX(0.5), toY(0));
+        ctx.stroke();
+
+        // Critical kink point
+        ctx.fillStyle = '#34d399';
+        ctx.beginPath();
+        ctx.arc(toX(invPn), toY(0), 5.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#a7f3d0';
+        ctx.font = 'bold 11px JetBrains Mono, monospace';
+        ctx.fillText(`1/pₙ=${invPn.toFixed(2)}`, toX(invPn) - 26, toY(0) - 10);
+
+        // Cursor vertical line
+        const curX = toX(invP);
+        const curSFixed = (dimN - 1) * (0.5 - invP);
+        const curSLS = Math.max(0, sInf - dimN * invP);
+
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
+        ctx.setLineDash([3, 3]);
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(curX, toY(curSFixed));
+        ctx.lineTo(curX, toY(curSLS));
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#fb7185';
+        ctx.beginPath(); ctx.arc(curX, toY(curSFixed), 4.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath(); ctx.arc(curX, toY(curSLS), 4.5, 0, Math.PI * 2); ctx.fill();
+
+        // Axis labels
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '11px Inter, sans-serif';
+        ctx.fillText('1/p (0 → p=∞, 0.5 → p=2)', padL + pw * 0.28, h - 8);
+        ctx.fillText('s (导数阶)', 6, 15);
+        ctx.fillText('0', padL - 12, padT + ph + 4);
+        ctx.fillText('0.5', toX(0.5) - 10, padT + ph + 14);
+        ctx.fillText(sInf.toFixed(1), 10, toY(sInf) + 4);
+
+        // Legend
+        ctx.fillStyle = '#fb7185';
+        ctx.fillText('--- 固定时刻最优界 (Peral-Miyachi)', padL + pw - 215, padT + 14);
+        ctx.fillStyle = '#34d399';
+        ctx.fillText('━━ 局部光滑性猜想 (净赚 1/p)', padL + pw - 215, padT + 30);
+      }
+
+      // Rigorous 4-step implications with native HTML math
+      const impDetails = [
+        `
+        <div class="font-bold text-sky-300">局部光滑性 ⇒ Bochner-Riesz 猜想</div>
+        <p>Bochner-Riesz 乘子 <span class="math"><i>m</i><sub>δ</sub>(ξ) = (1 − |ξ|²)<sub>+</sub><sup>δ</sup></span> 可通过一维傅里叶反演（从属公式）写成波动传播子的时间积分：</p>
+        <div class="math-box math-display rounded-lg px-3 py-1.5 text-sky-100">
+          <i>m</i><sub>δ</sub>(ξ) = <i>c</i><sub>δ</sub> ∫<sub>0</sub><sup>∞</sup> ψ<sub>δ</sub>(<i>t</i>) cos(<i>t</i>|ξ|) <i>dt</i>,&nbsp;&nbsp; |ψ<sub>δ</sub>(<i>t</i>)| ≲ (1 + <i>t</i>)<sup>−δ−1</sup>
+        </div>
+        <p>对时间做二进分解 <span class="math"><i>t</i> ~ 2<sup><i>j</i></sup></span>，在每块时间切片 <span class="math">[2<sup><i>j</i></sup>, 2<sup><i>j</i>+1</sup>]</span> 上做变量伸缩并套用局部光滑性估计，级数 <span class="math">∑<sub><i>j</i>≥0</sub> 2<sup><i>j</i>(<i>s</i><sub>LS</sub>(<i>p</i>) − δ)</sup></span> 收敛的精确充要条件恰是 <span class="math text-sky-200">δ &gt; max(<i>n</i>|1/2 − 1/<i>p</i>| − 1/2, 0)</span>！</p>
+        `,
+        `
+        <div class="font-bold text-indigo-300">Bochner-Riesz ⇒ 傅里叶限制性猜想 (Tao 1999)</div>
+        <p>将 Bochner-Riesz 乘子局域到单位球面 <span class="math"><i>S</i><sup><i>n</i>−1</sup></span> 附近厚度为 <span class="math"><i>R</i><sup>−1</sup></span> 的薄球壳上，其 <span class="math"><i>L</i><sup><i>p</i></sup></span> 有界性直接控制球面延拓算子 <span class="math"><i>Ef</i>(<i>x</i>) = ∫<sub><i>S</i><sup><i>n</i>−1</sup></sub> <i>f</i>(ω)<i>e</i><sup>2π<i>i</i> <i>x</i>·ω</sup> <i>d</i>σ(ω)</span> 的局域范数：</p>
+        <div class="math-box math-display rounded-lg px-3 py-1.5 text-indigo-100">
+          ‖<i>Ef</i>‖<sub><i>L</i><sup><i>p</i></sup>(<i>B</i>(0,<i>R</i>))</sub> ≲<sub>ε</sub> <i>R</i><sup>ε</sup> ‖<i>f</i>‖<sub><i>L</i><sup><i>q</i></sup>(<i>S</i><sup><i>n</i>−1</sup>)</sub>,&nbsp;&nbsp; <i>p</i> &gt; <span class="frac"><span>2<i>n</i></span><span><i>n</i>−1</span></span>,&nbsp; <i>q</i>' ≤ <span class="frac"><span><i>n</i>−1</span><span><i>n</i>+1</span></span><i>p</i>
+        </div>
+        <p>再借助 ε-移除引理（ε-removal lemma），即可从局域估计提升至全局限制性估计。</p>
+        `,
+        `
+        <div class="font-bold text-violet-300">傅里叶限制性 ⇒ 挂谷极大猜想 (Khintchine 随机化)</div>
+        <p>将球面 <span class="math"><i>S</i><sup><i>n</i>−1</sup></span> 剖分为 <span class="math">~ δ<sup>−(<i>n</i>−1)</sup></span> 个角半径为 <span class="math">δ</span> 的小帽 θ。每个小帽产生一个集中在细管 <span class="math"><i>T</i><sub>θ</sub></span>（宽 <span class="math">δ<sup>−1</sup></span>、长 <span class="math">δ<sup>−2</sup></span>）上的波包 <span class="math"><i>Ef</i><sub>θ</sub></span>。乘上独立随机符号 <span class="math">ε<sub>θ</sub> ∈ {±1}</span> 并取期望，由 <strong>Khintchine 不等式</strong>：</p>
+        <div class="math-box math-display rounded-lg px-3 py-1.5 text-violet-100">
+          𝔼 ‖∑<sub>θ</sub> ε<sub>θ</sub> <i>Ef</i><sub>θ</sub>‖<sub><i>L</i><sup><i>p</i></sup></sub><sup><i>p</i></sup> ≈ ∫ (∑<sub>θ</sub> |<i>Ef</i><sub>θ</sub>(<i>x</i>)|²)<sup><i>p</i>/2</sup> <i>dx</i> ≳ ‖∑<sub><i>T</i></sub> χ<sub><i>T</i></sub>‖<sub><i>L</i><sup><i>p</i>/2</sup></sub><sup><i>p</i>/2</sup>
+        </div>
+        <p>波动相消界立刻转化为细管重叠度（挂谷极大函数）的 <span class="math"><i>L</i><sup><i>n</i>/(<i>n</i>−1)</sup></span> 控制！</p>
+        `,
+        `
+        <div class="font-bold text-emerald-300">挂谷极大猜想 ⇒ dim<sub>H</sub>(K) = n</div>
+        <p>设 <span class="math"><i>K</i> ⊂ ℝ<sup><i>n</i></sup></span> 为挂谷集合。取间距 <span class="math">δ</span> 的方向网 <span class="math">{ω<sub><i>j</i></sub>}</span>（共 <span class="math">~ δ<sup>−(<i>n</i>−1)</sup></span> 个方向），每条方向对应一根包含于 <span class="math"><i>K</i><sub>δ</sub></span>（<span class="math"><i>K</i></span> 的 δ-邻域）的 δ-细管 <span class="math"><i>T</i><sub><i>j</i></sub></span>。由 Hölder 不等式与细管重叠的 <span class="math"><i>L</i><sup><i>n</i>/(<i>n</i>−1)</sup></span> 界：</p>
+        <div class="math-box math-display rounded-lg px-3 py-1.5 text-emerald-100">
+          1 ~ ∑<sub><i>j</i></sub> |<i>T</i><sub><i>j</i></sub>| = ∫<sub><i>K</i><sub>δ</sub></sub> ∑<sub><i>j</i></sub> χ<sub><i>T</i><sub><i>j</i></sub></sub> ≤ |<i>K</i><sub>δ</sub>|<sup>1/<i>n</i></sup> ‖∑<sub><i>j</i></sub> χ<sub><i>T</i><sub><i>j</i></sub></sub>‖<sub><i>L</i><sup><i>n</i>/(<i>n</i>−1)</sup></sub> ≲<sub>ε</sub> δ<sup>−ε</sup> |<i>K</i><sub>δ</sub>|<sup>1/<i>n</i></sup>
+        </div>
+        <p>从而 <span class="math">|<i>K</i><sub>δ</sub>| ≳<sub>ε</sub> δ<sup><i>n</i>ε</sup></span>，即覆盖 <span class="math"><i>K</i></span> 至少需要 <span class="math">≳ δ<sup>−<i>n</i>+<i>n</i>ε</sup></span> 个 δ-球，强制 <span class="math text-emerald-300">dim<sub>H</sub>(<i>K</i>) = <i>n</i></span>！</p>
+        `
+      ];
+
+      const impBox = document.getElementById('imp-detail');
+      function selectImp(i) {
+        document.querySelectorAll('.step-btn').forEach((b, idx) => b.classList.toggle('active', idx === i));
+        impBox.innerHTML = impDetails[i];
+      }
+      document.querySelectorAll('.step-btn').forEach(b => {
+        b.addEventListener('click', () => selectImp(Number(b.dataset.imp)));
+      });
+      selectImp(0);
+
+      // ==================== TAB 2: KNAPP CANVAS & QUATERNION MATRIX ====================
+      const knappCanvas = document.getElementById('knappCanvas');
+      const deltaSlider = document.getElementById('slider-delta');
+      let knappDelta = 0.20;
+      let knappMulti = false;
+
+      function updateKnappUI() {
+        document.getElementById('label-delta').textContent = knappDelta.toFixed(2);
+        const wTube = (1 / knappDelta).toFixed(1);
+        const lTube = (1 / (knappDelta * knappDelta)).toFixed(1);
+        document.getElementById('knapp-ratio').textContent = `管宽 δ⁻¹=${wTube} · 管长 δ⁻²=${lTube}`;
+        drawKnapp();
+      }
+
+      deltaSlider.addEventListener('input', (e) => {
+        knappDelta = Number(e.target.value) / 100;
+        updateKnappUI();
+      });
+
+      document.getElementById('btn-knapp-single').addEventListener('click', (e) => {
+        knappMulti = false;
+        e.currentTarget.className = 'rounded-lg border border-sky-500/60 bg-sky-500/20 px-3 py-1 font-semibold text-sky-200';
+        document.getElementById('btn-knapp-multi').className = 'rounded-lg border border-slate-700 bg-slate-900 px-3 py-1 font-semibold text-slate-300 hover:text-white';
+        drawKnapp();
+      });
+
+      document.getElementById('btn-knapp-multi').addEventListener('click', (e) => {
+        knappMulti = true;
+        e.currentTarget.className = 'rounded-lg border border-sky-500/60 bg-sky-500/20 px-3 py-1 font-semibold text-sky-200';
+        document.getElementById('btn-knapp-single').className = 'rounded-lg border border-slate-700 bg-slate-900 px-3 py-1 font-semibold text-slate-300 hover:text-white';
+        drawKnapp();
+      });
+
+      function drawKnapp() {
+        if (!knappCanvas) return;
+        const rect = knappCanvas.getBoundingClientRect();
+        if (rect.width === 0) return;
+        const ctx = knappCanvas.getContext('2d');
+        const w = rect.width;
+        const h = rect.height;
+        ctx.clearRect(0, 0, w, h);
+
+        const midX = w * 0.44;
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath(); ctx.moveTo(midX, 12); ctx.lineTo(midX, h - 12); ctx.stroke();
+        ctx.setLineDash([]);
+
+        const fcx = midX * 0.5;
+        const fcy = h * 0.54;
+        const fR = Math.min(midX * 0.36, h * 0.34);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.fillText('频率空间 ξ ∈ Sⁿ⁻¹', 12, 20);
+        ctx.fillText('物理空间 x（对偶波包管）', midX + 14, 20);
+
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(fcx, fcy, fR, 0, Math.PI * 2); ctx.stroke();
+
+        const caps = knappMulti ? [-1.1, -0.55, 0, 0.55, 1.1] : [0];
+        const pcx = midX + (w - midX) * 0.5;
+        const pcy = h * 0.54;
+
+        caps.forEach((ang, idxCap) => {
+          const hue = knappMulti ? (195 + idxCap * 28) : 198;
+          ctx.strokeStyle = `hsl(${hue}, 90%, 62%)`;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(fcx, fcy, fR, ang - knappDelta, ang + knappDelta);
+          ctx.stroke();
+
+          const boxLen = fR * knappDelta * 2;
+          const boxThick = Math.max(4, fR * knappDelta * knappDelta * 1.4);
+          ctx.save();
+          ctx.translate(fcx + Math.cos(ang) * fR, fcy + Math.sin(ang) * fR);
+          ctx.rotate(ang);
+          ctx.strokeStyle = `hsla(${hue}, 90%, 70%, 0.65)`;
+          ctx.lineWidth = 1;
+          ctx.strokeRect(-boxThick, -boxLen / 2, boxThick * 1.3, boxLen);
+          ctx.restore();
+
+          const tubeLen = Math.min((w - midX) * 0.82, 42 / (knappDelta * 1.1));
+          const tubeWid = Math.max(7, 5.2 / knappDelta);
+          ctx.save();
+          ctx.translate(pcx, pcy);
+          ctx.rotate(ang);
+          ctx.fillStyle = `hsla(${hue}, 88%, 58%, ${knappMulti ? 0.22 : 0.32})`;
+          ctx.strokeStyle = `hsla(${hue}, 90%, 68%, 0.9)`;
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.rect(-tubeLen / 2, -tubeWid / 2, tubeLen, tubeWid);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.strokeStyle = `hsla(${hue}, 95%, 80%, 0.35)`;
+          ctx.lineWidth = 1;
+          for (let x = -tubeLen / 2 + 6; x < tubeLen / 2; x += 8) {
+            ctx.beginPath(); ctx.moveTo(x, -tubeWid / 2); ctx.lineTo(x, tubeWid / 2); ctx.stroke();
+          }
+          ctx.restore();
+        });
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = '11px JetBrains Mono, monospace';
+        ctx.fillText('帽宽~δ, 曲率厚~δ²', 12, h - 12);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillText('长~δ⁻², 宽~δ⁻¹ (沿法向传播)', midX + 14, h - 12);
+      }
+
+      // Quaternionic Hermitian matrix calculator
+      const inpA = document.getElementById('inp-a');
+      const inpB = document.getElementById('inp-b');
+      const inpQ = document.getElementById('inp-qnorm');
+
+      function updateQuatMatrix() {
+        const a = Number(inpA.value) / 10;
+        const b = Number(inpB.value) / 10;
+        const qNorm = Number(inpQ.value) / 10;
+        const dir = [0.5, 0.6, 0.4, -0.4796];
+        const q = dir.map(c => c * qNorm);
+        const det = a * b - qNorm * qNorm;
+
+        document.getElementById('m-a-val').textContent = a.toFixed(1);
+        document.getElementById('m-b-val').textContent = b.toFixed(1);
+        document.getElementById('m-q-val').textContent = `${q[0].toFixed(1)}+${q[1].toFixed(1)}i+${q[2].toFixed(1)}j${q[3].toFixed(1)}k`;
+        document.getElementById('m-qbar-val').textContent = `${q[0].toFixed(1)}-${q[1].toFixed(1)}i-${q[2].toFixed(1)}j+${Math.abs(q[3]).toFixed(1)}k`;
+        document.getElementById('m-det').textContent = det.toFixed(2);
+        const posEl = document.getElementById('m-pos');
+        if (det > 0 && a > 0 && b > 0) {
+          posEl.textContent = '✓ 严格正定 (椭圆)';
+          posEl.className = 'mt-1 font-mono text-sm font-bold text-emerald-300';
+          document.getElementById('m-det').className = 'mt-1 font-mono text-base font-extrabold text-emerald-300';
+        } else {
+          posEl.textContent = '✗ 失去正定性';
+          posEl.className = 'mt-1 font-mono text-sm font-bold text-rose-400';
+          document.getElementById('m-det').className = 'mt-1 font-mono text-base font-extrabold text-rose-400';
+        }
+      }
+      [inpA, inpB, inpQ].forEach(el => el.addEventListener('input', updateQuatMatrix));
+      updateQuatMatrix();
+
+      // ==================== TAB 3: PERRON TREE & KAKEYA BOUNDS ====================
+      const perronCanvas = document.getElementById('perronCanvas');
+      const boundsCanvas = document.getElementById('boundsCanvas');
+      const perronKSlider = document.getElementById('slider-perron-k');
+      const perronASlider = document.getElementById('slider-perron-alpha');
+
+      let perronK = 4;
+      let perronAlpha = 0.80;
+
+      function updatePerron() {
+        const count = Math.pow(2, perronK);
+        document.getElementById('label-perron-k').textContent = `k = ${perronK} (${count} 楔)`;
+        document.getElementById('label-perron-alpha').textContent = `α = ${perronAlpha.toFixed(2)}`;
+        const stepFactor = Math.min(0.99, perronAlpha * perronAlpha + 2 * Math.pow(1 - perronAlpha, 2));
+        const ratio = Math.pow(stepFactor, perronK);
+        document.getElementById('perron-area-ratio').textContent = ratio.toFixed(3);
+        drawPerron();
+      }
+
+      perronKSlider.addEventListener('input', (e) => {
+        perronK = Number(e.target.value);
+        updatePerron();
+      });
+      perronASlider.addEventListener('input', (e) => {
+        perronAlpha = Number(e.target.value) / 100;
+        updatePerron();
+      });
+
+      function drawPerron() {
+        if (!perronCanvas) return;
+        const rect = perronCanvas.getBoundingClientRect();
+        if (rect.width === 0) return;
+        const ctx = perronCanvas.getContext('2d');
+        const w = rect.width;
+        const h = rect.height;
+        ctx.clearRect(0, 0, w, h);
+
+        const baseY = h - 28;
+        const topY = 26;
+        const baseW = Math.min(w * 0.72, 340);
+        const startX = (w - baseW) * 0.5;
+
+        let wedges = [{ xTop: startX + baseW * 0.5, xL: startX, xR: startX + baseW }];
+        for (let step = 0; step < perronK; step++) {
+          const next = [];
+          for (const g of wedges) {
+            const midBase = (g.xL + g.xR) * 0.5;
+            const halfW = (g.xR - g.xL) * 0.5;
+            const shift = halfW * perronAlpha;
+            next.push({ xTop: g.xTop, xL: g.xL, xR: midBase });
+            next.push({ xTop: g.xTop - shift, xL: midBase - shift, xR: g.xR - shift });
+          }
+          let minX = Infinity, maxX = -Infinity;
+          for (const g of next) {
+            minX = Math.min(minX, g.xL, g.xTop);
+            maxX = Math.max(maxX, g.xR, g.xTop);
+          }
+          const offset = (w - (minX + maxX)) * 0.5;
+          wedges = next.map(g => ({ xTop: g.xTop + offset, xL: g.xL + offset, xR: g.xR + offset }));
+        }
+
+        wedges.forEach((g, idxW) => {
+          ctx.beginPath();
+          ctx.moveTo(g.xTop, topY);
+          ctx.lineTo(g.xL, baseY);
+          ctx.lineTo(g.xR, baseY);
+          ctx.closePath();
+          ctx.fillStyle = `hsla(${158 + (idxW % 6) * 8}, 75%, 52%, ${Math.max(0.14, 0.42 - perronK * 0.045)})`;
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(52, 211, 153, 0.55)';
+          ctx.lineWidth = 0.9;
+          ctx.stroke();
+        });
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '11px JetBrains Mono, monospace';
+        ctx.fillText(`单步面积缩减因子: α² + 2(1−α)² = ${(perronAlpha*perronAlpha + 2*Math.pow(1-perronAlpha,2)).toFixed(3)}`, 12, 18);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText('平移子三角形不改变内部任何单位线段的方向集合', 12, h - 8);
+      }
+
+      function drawBoundsChart() {
+        if (!boundsCanvas) return;
+        const rect = boundsCanvas.getBoundingClientRect();
+        if (rect.width === 0) return;
+        const ctx = boundsCanvas.getContext('2d');
+        const w = rect.width;
+        const h = rect.height;
+        ctx.clearRect(0, 0, w, h);
+
+        const dims = [2, 3, 4, 5, 6];
+        const padL = 34, padR = 14, padT = 18, padB = 28;
+        const pw = w - padL - padR;
+        const ph = h - padT - padB;
+        const maxD = 6.2;
+
+        const toY = (v) => padT + ph - (v / maxD) * ph;
+        const groupW = pw / dims.length;
+
+        ctx.strokeStyle = 'rgba(148,163,184,0.12)';
+        for (let v = 1; v <= 6; v++) {
+          const y = toY(v);
+          ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + pw, y); ctx.stroke();
+          ctx.fillStyle = '#64748b';
+          ctx.font = '10px JetBrains Mono, monospace';
+          ctx.fillText(String(v), 12, y + 3);
+        }
+
+        dims.forEach((n, i) => {
+          const gx = padL + i * groupW + groupW * 0.14;
+          const bw = groupW * 0.22;
+          const bush = (n + 1) / 2;
+          const wolff = Math.min(n, (n + 2) / 2);
+          const full = n;
+
+          ctx.fillStyle = '#64748b';
+          ctx.fillRect(gx, toY(bush), bw, padT + ph - toY(bush));
+          ctx.fillStyle = '#38bdf8';
+          ctx.fillRect(gx + bw + 2, toY(wolff), bw, padT + ph - toY(wolff));
+          ctx.fillStyle = '#34d399';
+          ctx.fillRect(gx + (bw + 2) * 2, toY(full), bw, padT + ph - toY(full));
+
+          ctx.fillStyle = '#cbd5e1';
+          ctx.font = 'bold 11px JetBrains Mono, monospace';
+          ctx.fillText(`n=${n}`, gx + bw, h - 8);
+        });
+      }
+
+      // ==================== INIT ====================
+      window.addEventListener('resize', () => {
+        if (activeTab === 'exponents') { resizeCanvas(expCanvas); drawExponentDiagram(); }
+        if (activeTab === 'mechanism') { resizeCanvas(knappCanvas); drawKnapp(); }
+        if (activeTab === 'kakeya') {
+          resizeCanvas(perronCanvas);
+          resizeCanvas(boundsCanvas);
+          drawPerron();
+          drawBoundsChart();
+        }
+      });
+
+      resizeCanvas(expCanvas);
+      updateDimUI();
+      updateKnappUI();
+      updatePerron();
+    });
+  </script>
+</body>
+</html>

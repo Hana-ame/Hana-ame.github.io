@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>麻将牌谱</title>
+<style>
+:root{--bg:#0f1115;--panel:#181b22;--panel2:#1f232c;--line:#2c313d;
+  --tx:#e6e9ef;--tx2:#9aa3b2;--acc:#4da3ff;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);
+  font:14px/1.5 "Segoe UI",system-ui,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:18px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;margin-bottom:12px}
+h1{font-size:19px;margin:0;font-weight:600}
+.meta{color:var(--tx2);font-size:13px}
+.badge{padding:2px 10px;border-radius:11px;background:#20301f;
+  border:1px solid #3a5c37;color:#8ee08a;font-size:12px}
+.center{display:flex;gap:20px;flex-wrap:wrap;align-items:center;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:10px 14px;margin:12px 0}
+.kv{color:var(--tx2);font-size:13px}.kv b{color:var(--tx);font-weight:600}
+.eventbar{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:10px 14px;margin:12px 0;min-height:44px}
+.eventbar .lbl{color:var(--tx2);font-size:12px;margin-right:8px}
+nav{display:flex;gap:8px;align-items:center;margin:12px 0}
+button{background:var(--panel2);color:var(--tx);border:1px solid var(--line);
+  border-radius:7px;padding:7px 14px;cursor:pointer;font-size:13px}
+button:hover{border-color:var(--acc);color:var(--acc)}
+button:disabled{opacity:.4;cursor:not-allowed}
+#stepno{color:var(--tx2);font-size:13px;min-width:96px;text-align:center}
+.slider{flex:1;min-width:150px}
+input[type=range]{width:100%;accent-color:var(--acc)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+.panel h2{margin:0 0 8px;font-size:14px;color:var(--tx2);font-weight:600;
+  display:flex;justify-content:space-between;align-items:center}
+.seat{font-weight:700;color:var(--acc);font-size:15px}
+.dealer{font-size:11px;background:#3a2f14;color:#f0c86b;border:1px solid #5c4a1e;
+  padding:1px 7px;border-radius:9px;margin-left:6px}
+.riichi-tag{font-size:11px;background:#2a1c3a;color:#d79bff;border:1px solid #4b3466;
+  padding:1px 7px;border-radius:9px;margin-left:6px}
+.pts{color:var(--tx);font-variant-numeric:tabular-nums}
+.hand,.river{display:flex;flex-wrap:wrap;gap:3px;margin:6px 0}
+.river{min-height:28px;max-height:110px;overflow:auto}
+.tile{display:inline-flex;align-items:center;justify-content:center;min-width:26px;
+  height:30px;padding:0 5px;border-radius:4px;background:#fff;
+  border:1px solid #cfd4de;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.river .tile{min-width:24px;height:26px;font-size:12px}
+.man{color:#1a1d24}.pin{color:#1b5fbf}.sou{color:#177d55}.ji{color:#b8420f}
+.tile.none{background:#22262f;border-color:var(--line);color:var(--tx2)}
+.draw{outline:2px solid var(--acc);outline-offset:-2px}
+.latest{outline:2px solid #ff8a5c;outline-offset:-2px}
+.sublabel{font-size:11px;color:var(--tx2);margin-top:8px;text-transform:uppercase;
+  letter-spacing:.04em}
+.melds{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.meld{display:inline-flex;gap:2px;padding:2px;border:1px dashed #6b5a2a;
+  border-radius:4px;background:#1b1a14}
+.logwrap{max-height:300px;overflow:auto;border:1px solid var(--line);
+  border-radius:10px;background:var(--panel);margin-top:12px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{text-align:left;padding:5px 10px;border-bottom:1px solid var(--line);color:var(--tx2)}
+th{position:sticky;top:0;background:var(--panel);font-weight:600}
+tr.cur{background:#1b2740}tr.cur td{color:var(--tx)}
+tr{cursor:pointer}
+footer{color:var(--tx2);font-size:12px;margin-top:16px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>牌谱游览</h1><span class="meta" id="meta"></span>
+    <span class="badge" id="result"></span></header>
+  <div class="center" id="center"></div>
+  <div class="eventbar"><span class="lbl">本步动作</span><span id="event">—</span></div>
+  <nav>
+    <button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button>
+    <span id="stepno"></span>
+    <span class="slider"><input type="range" id="range" min="0" max="0" value="0"></span>
+    <button id="auto">▶ 自动播放</button>
+  </nav>
+  <div class="grid" id="seats"></div>
+  <div class="logwrap"><table><thead><tr><th>步</th><th>动作</th></tr></thead>
+    <tbody id="log"></tbody></table></div>
+  <footer>make_game_log.py + render_game_html.py · <span id="fmodel"></span></footer>
+</div>
+<script>
+const D={"meta":{"ckpt":"teacher47_eff_wuke_d2.pt","seed":8801},"result":{"type":"ron","winner":3,"from":2,"dora_count":0,"aka":2,"ura":0,"yaku":["立直","役牌:场风"],"han":4},"dora0":["5p"],"wall0":84,"players0":[{"idx":0,"wind":27,"hand":["1m","1m","2m","2m","3m","4s","5s","6p","6p","8p","8s","9m","P"],"river":[],"melds":[],"points":25000,"riichi":false,"dealer":true},{"idx":1,"wind":28,"hand":["1p","1s","2p","2p","2s","4p","6m","7m","7m","8p","9p","F","S"],"river":[],"melds":[],"points":25000,"riichi":false,"dealer":false},{"idx":2,"wind":29,"hand":["1p","2p","2s","3p","4s","5m","5s","6m","7s","9m","E","E","W"],"river":[],"melds":[],"points":25000,"riichi":false,"dealer":false},{"idx":3,"wind":30,"hand":["1p","3p","4m","5m","7p","7p","8s","9m","9p","9s","E","P","W"],"river":[],"melds":[],"points":25000,"riichi":false,"dealer":false}],"events":[{"seat":1,"kind":"DISCARD","tile":"P"},{"seat":0,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":2,"kind":"DISCARD","tile":"1m"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":3,"kind":"DISCARD","tile":"9m"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":0,"kind":"DISCARD","tile":"E"},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":1,"kind":"DISCARD","tile":"8p"},{"seat":0,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":2,"kind":"DISCARD","tile":"S"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":3,"kind":"DISCARD","tile":"W"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":0,"kind":"DISCARD","tile":"W"},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":1,"kind":"DISCARD","tile":"7p"},{"seat":0,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":2,"kind":"DISCARD","tile":"2p"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":3,"kind":"DISCARD","tile":"8m"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":0,"kind":"DISCARD","tile":"P"},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":1,"kind":"DISCARD","tile":"8s"},{"seat":0,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":2,"kind":"DISCARD","tile":"1p"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":3,"kind":"DISCARD","tile":"N"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":0,"kind":"DISCARD","tile":"8m"},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":1,"kind":"RIICHI","tile":"7m"},{"seat":0,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":2,"kind":"DISCARD","tile":"2p"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":3,"kind":"DISCARD","tile":"9m"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":0,"kind":"DISCARD","tile":"9m"},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":1,"kind":"DISCARD","tile":"3s"},{"seat":0,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":2,"kind":"DISCARD","tile":"9p"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":3,"kind":"DISCARD","tile":"2s"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":0,"kind":"DISCARD","tile":"6s"},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":1,"kind":"DISCARD","tile":"7s"},{"seat":0,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":2,"kind":"DISCARD","tile":"S"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":3,"kind":"DISCARD","tile":"C"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":0,"kind":"DISCARD","tile":"5s"},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":1,"kind":"DISCARD","tile":"3s"},{"seat":0,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":2,"kind":"DISCARD","tile":"2s"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":3,"kind":"DISCARD","tile":"C"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":0,"kind":"DISCARD","tile":"1p"},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":1,"kind":"DISCARD","tile":"2p"},{"seat":0,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":2,"kind":"DISCARD","tile":"6p"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":3,"kind":"DISCARD","tile":"1s"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":0,"kind":"DISCARD","tile":"3p"},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":1,"kind":"DISCARD","tile":"5s"},{"seat":0,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":2,"kind":"DISCARD","tile":"1s"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":3,"kind":"DISCARD","tile":"2m"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":0,"kind":"DISCARD","tile":"F"},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":1,"kind":"DISCARD","tile":"4p"},{"seat":0,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":2,"kind":"DISCARD","tile":"3s"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":3,"kind":"DISCARD","tile":"C"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":0,"kind":"DISCARD","tile":"N"},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":1,"kind":"DISCARD","tile":"9p"},{"seat":0,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":2,"kind":"RIICHI","tile":"6s"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":3,"kind":"DISCARD","tile":"1p"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":0,"kind":"DISCARD","tile":"5p"},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":1,"kind":"DISCARD","tile":"5m"},{"seat":0,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":2,"kind":"DISCARD","tile":"P"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":3,"kind":"DISCARD","tile":"8p"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":0,"kind":"DISCARD","tile":"1m"},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":1,"kind":"DISCARD","tile":"1s"},{"seat":0,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":2,"kind":"DISCARD","tile":"6s"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":3,"kind":"DISCARD","tile":"2s"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":0,"kind":"DISCARD","tile":"3p"},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":1,"kind":"DISCARD","tile":"4s"},{"seat":0,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":2,"kind":"DISCARD","tile":"8m"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":3,"kind":"RIICHI","tile":"9s"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":0,"kind":"DISCARD","tile":"C"},{"seat":1,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":1,"kind":"DISCARD","tile":"7s"},{"seat":0,"kind":"PASS","tile":null},{"seat":2,"kind":"PASS","tile":null},{"seat":3,"kind":"PASS","tile":null},{"seat":2,"kind":"DISCARD","tile":"3s"},{"seat":0,"kind":"PASS","tile":null},{"seat":1,"kind":"PASS","tile":null},{"seat":3,"kind":"RON","tile":"3s"}]};
+const SL={27:"东",28:"南",29:"西",30:"北"};
+const ORD=[27,28,29,30];
+const CALLS=["CHI","PON","ANKAN","MINKAN","ADD_KAN"];
+let cur=0,timer=null,view=null;
+
+function tileH(n,cls){if(!n)return'<span class="tile none">?</span>';
+  let c="ji";if(n.endsWith("m"))c="man";else if(n.endsWith("p"))c="pin";else if(n.endsWith("s"))c="sou";
+  return`<span class="tile ${c} ${cls||""}">${n}</span>`;}
+
+function freshState(){return JSON.parse(JSON.stringify(D.players0));}
+
+function windLabel(w){return{27:"东",28:"南",29:"西",30:"北"}[w]||w;}
+
+// 增量重放：从 players0 出发，重放 events[0..i] 得到该时刻的四家状态。
+// events[k].seat 是玩家索引 0-3，players0[i].idx === i、.wind 是 27-30 风位码。
+function stateAt(i){
+  const st = D.players0.map(p=>JSON.parse(JSON.stringify(p)));
+  for(let k=0;k<=i;k++){
+    const e=D.events[k]; if(!e) continue;
+    const p=st[e.seat]; if(!p) continue;
+    if(e.kind==="DISCARD" && e.tile){
+      const j=p.hand.indexOf(e.tile); if(j>=0) p.hand.splice(j,1);
+      p.river.push(e.tile);
+    } else if(e.kind==="RIICHI"){
+      p.riichi=true;
+      if(e.tile){const j=p.hand.indexOf(e.tile); if(j>=0) p.hand.splice(j,1); p.river.push(e.tile);}
+    } else if(CALLS.includes(e.kind) && e.tile){
+      p.melds.push(e.tile);   // 副露：简化为单张表示，够展示用
+    }
+  }
+  return st;
+}
+
+function describe(e){const p=D.players0[e.seat];
+  const s=windLabel(p?p.wind:e.seat);
+  switch(e.kind){
+    case"DISCARD":return`${s}家 切 ${e.tile}`;
+    case"PASS":return`${s}家 pass`;
+    case"RIICHI":return`<b>${s}家 立直！</b>`;
+    case"RON":return`<b>${s}家 荣和 ${e.tile}</b>`;
+    case"TSUMO":return`<b>${s}家 自摸</b>`;
+    case"CHI":return`${s}家 吃`;case"PON":return`${s}家 碰`;
+    case"ANKAN":return`${s}家 暗杠`;case"MINKAN":return`${s}家 明杠`;
+    case"ADD_KAN":return`${s}家 加杠`;
+    case"RYUUKYOKU":return`流局`;
+    default:return`${s}家 ${e.kind}`;}}
+
+function render(){
+  const st=stateAt(cur);
+  const ev=D.events[cur];
+  document.getElementById("stepno").textContent=`第 ${cur+1} / ${D.events.length} 步`;
+  document.getElementById("range").value=cur;
+  document.getElementById("event").innerHTML=ev?describe(ev):"—";
+  document.getElementById("center").innerHTML=
+    `<span class="kv">牌墙 <b>${D.wall0}</b></span>`+
+    `<span class="kv">宝牌 <span>${(D.dora0||[]).map(t=>tileH(t)).join("")||"—"}</span></span>`;
+  document.getElementById("seats").innerHTML=st.map(p=>{
+    const i=p.idx;                       // = 事件 seat
+    const evNow=D.events[cur];
+    const isDraw=evNow&&evNow.seat===i&&!CALLS.includes(evNow.kind)&&evNow.kind!=="DISCARD";
+    const hand=p.hand.map((t,k)=>tileH(t,(isDraw&&k===p.hand.length-1)?"draw":"")).join("");
+    const lastDiscard=(evNow&&evNow.seat===i&&evNow.kind==="DISCARD")?evNow.tile:null;
+    const river=p.river.map(t=>tileH(t,t===lastDiscard?"latest":"")).join("");
+    const melds=(p.melds||[]).map(t=>`<span class="meld">${tileH(t)}</span>`).join("");
+    return`<div class="panel"><h2><span><span class="seat">${windLabel(p.wind)}家</span>
+      ${p.dealer?'<span class="dealer">庄</span>':""}
+      ${p.riichi?'<span class="riichi-tag">立直</span>':""}</span>
+      <span class="pts">${p.points.toLocaleString()}</span></h2>
+      <div class="sublabel">手牌（近似）</div>
+      <div class="hand">${hand||"—"}</div>
+      ${melds?`<div class="sublabel">副露</div><div class="melds">${melds}</div>`:""}
+      <div class="sublabel">牌河 ${p.river.length}</div>
+      <div class="river">${river||"—"}</div></div>`;
+  }).join("");
+  document.querySelectorAll("#log tr").forEach(tr=>
+    tr.classList.toggle("cur",+tr.dataset.i===cur));
+  document.getElementById("prev").disabled=cur===0;
+  document.getElementById("next").disabled=cur===D.events.length-1;
+}
+
+function init(){
+  const m=D.meta;
+  document.getElementById("meta").textContent=`模型 ${m.ckpt} · seed ${m.seed}`;
+  document.getElementById("fmodel").textContent=m.ckpt;
+  const r=D.result||{},el=document.getElementById("result");
+  if(r.type){const wp=D.players0[r.winner];
+    const w=wp?windLabel(wp.wind):r.winner;
+    el.textContent=`${r.type==="ron"?"荣和":r.type==="tsumo"?"自摸":"流局"} · ${w}家`+
+      (r.han?` · ${r.han}番`:"")+((r.yaku||[]).length?` · ${r.yaku.join("、")}`:"");}
+  else el.textContent="流局";
+  document.getElementById("log").innerHTML=D.events.map((e,i)=>
+    `<tr data-i="${i}"><td>${i+1}</td><td>${describe(e)}</td></tr>`).join("");
+  document.querySelectorAll("#log tr").forEach(tr=>tr.onclick=()=>{stop();go(+tr.dataset.i);});
+  const rg=document.getElementById("range");rg.max=D.events.length-1;
+  go(0);
+}
+function go(i){cur=Math.max(0,Math.min(D.events.length-1,i));render();}
+document.getElementById("prev").onclick=()=>{stop();go(cur-1);};
+document.getElementById("next").onclick=()=>{stop();go(cur+1);};
+document.getElementById("range").oninput=e=>{stop();go(+e.target.value);};
+document.getElementById("auto").onclick=()=>{
+  if(timer){stop();return;}
+  document.getElementById("auto").textContent="⏸ 暂停";
+  timer=setInterval(()=>{if(cur>=D.events.length-1)stop();else go(cur+1);},700);};
+function stop(){if(timer){clearInterval(timer);timer=null;}
+  document.getElementById("auto").textContent="▶ 自动播放";}
+init();
+</script>
+</body>
+</html>

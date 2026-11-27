@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>riichi-rl 模型架构可视化 · 3D WebGL &amp; 2D 矢量图</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #070b14;
+      color: #e2e8f0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .glass {
+      background: rgba(12, 18, 34, 0.84);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.4);
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.45);
+      border-radius: 9999px;
+    }
+    .svg-node {
+      cursor: pointer;
+      transition: filter 0.18s ease, transform 0.18s ease;
+    }
+    .svg-node:hover {
+      filter: brightness(1.18) drop-shadow(0 0 10px rgba(56, 189, 248, 0.45));
+    }
+    .svg-node.selected rect.node-bg {
+      stroke: #ffffff;
+      stroke-width: 2.5;
+    }
+    .svg-node.dim-highlight rect.node-bg {
+      stroke: #fde047;
+      stroke-width: 2.6;
+      filter: drop-shadow(0 0 12px rgba(250, 204, 21, 0.75));
+    }
+    .dim-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 6px;
+      border-radius: 5px;
+      border: 1px solid rgba(52, 211, 153, 0.35);
+      background: rgba(16, 185, 129, 0.12);
+      color: #6ee7b7;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-weight: 600;
+    }
+    .dim-chip:hover {
+      background: rgba(56, 189, 248, 0.25);
+      border-color: rgba(56, 189, 248, 0.75);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+    .dim-chip.active {
+      background: rgba(250, 204, 21, 0.28);
+      border-color: #fde047;
+      color: #fef08a;
+      box-shadow: 0 0 10px rgba(250, 204, 21, 0.45);
+    }
+    .step-card {
+      transition: all 0.16s ease;
+      cursor: pointer;
+    }
+    .step-card.active {
+      background: rgba(14, 165, 233, 0.16);
+      border-color: rgba(56, 189, 248, 0.65);
+    }
+    @keyframes dashFlow {
+      to {
+        stroke-dashoffset: -24;
+      }
+    }
+    .flow-edge {
+      stroke-dasharray: 6 6;
+      animation: dashFlow 1.1s linear infinite;
+    }
+    .flow-paused .flow-edge {
+      animation-play-state: paused;
+    }
+  </style>
+</head>
+<body class="flex flex-col h-screen w-screen select-none">
+
+  <!-- Top Navigation Bar -->
+  <header class="glass z-30 flex flex-wrap items-center justify-between gap-2 px-3 py-2 border-b border-slate-800/80 shrink-0">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
+        <svg class="w-4.5 h-4.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <div class="min-w-0">
+        <h1 class="text-sm sm:text-base font-bold tracking-tight text-white truncate">riichi-rl 模型架构可视化</h1>
+        <p class="text-[11px] text-slate-400 truncate hidden sm:block">源码级还原 · 拖拽旋转 · 滚轮缩放 · 点击任意模块查看张量与参数</p>
+      </div>
+    </div>
+
+    <!-- Model Switcher -->
+    <div class="flex items-center gap-1 bg-slate-900/90 p-1 rounded-lg border border-slate-700/60">
+      <button id="btnModelDual" class="px-2.5 py-1 text-xs font-medium rounded-md transition-all bg-cyan-500/20 text-cyan-300 border border-cyan-400/40">
+        DualStream Transformer
+      </button>
+      <button id="btnModelConv" class="px-2.5 py-1 text-xs font-medium rounded-md transition-all text-slate-400 hover:text-slate-200 border border-transparent">
+        MahjongNet (1D ResNet)
+      </button>
+    </div>
+
+    <!-- Render Mode Switcher (3D WebGL vs 2D SVG) -->
+    <div class="flex items-center gap-1 bg-slate-900/90 p-1 rounded-lg border border-slate-700/60">
+      <button id="btnMode3D" class="px-2.5 py-1 text-xs font-medium rounded-md transition-all bg-indigo-500/25 text-indigo-200 border border-indigo-400/40">
+        3D WebGL
+      </button>
+      <button id="btnMode2D" class="px-2.5 py-1 text-xs font-medium rounded-md transition-all text-slate-400 hover:text-slate-200 border border-transparent">
+        2D 矢量 SVG
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <div class="relative flex-1 flex overflow-hidden">
+
+    <!-- Main Viewport (3D Canvas + 2D SVG Container) -->
+    <main class="relative flex-1 h-full overflow-hidden">
+      <!-- Three.js 3D Container -->
+      <div id="viewport3d" class="w-full h-full cursor-grab active:cursor-grabbing"></div>
+
+      <!-- 2D Vector SVG Container -->
+      <div id="viewport2d" class="hidden w-full h-full overflow-auto custom-scroll bg-[#080d1a] flex items-center justify-center p-4">
+        <div id="svgMount" class="w-full h-full flex items-center justify-center min-w-[780px] min-h-[540px]"></div>
+      </div>
+
+      <!-- Top-Left Variant & Quick Controls -->
+      <div class="absolute top-3 left-3 z-20 flex flex-col gap-2 max-w-[calc(100%-1.5rem)] sm:max-w-xs">
+        <div class="glass rounded-xl p-2.5 shadow-xl">
+          <div class="flex items-center justify-between gap-2 mb-1.5">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">配置规格</span>
+            <span id="badgeParams" class="font-mono text-[11px] px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">1.17M 参数</span>
+          </div>
+          <div id="variantButtons" class="flex flex-wrap gap-1"></div>
+        </div>
+
+        <!-- Legend -->
+        <div class="glass rounded-xl px-2.5 py-2 shadow-xl hidden sm:flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-300">
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-sky-400"></span>观测/牌面流</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-400"></span>1D 卷积/残差</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-violet-400"></span>历史事件流</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-amber-400"></span>注意力融合</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-rose-400"></span>策略/价值头</span>
+        </div>
+      </div>
+
+      <!-- Bottom-Left Camera & Flow Controls -->
+      <div class="absolute bottom-3 left-3 z-20 glass rounded-xl p-1.5 flex flex-wrap items-center gap-1.5 shadow-xl">
+        <button id="btnToggleFlow" class="px-2.5 py-1.5 text-xs rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/35 hover:bg-emerald-500/30 transition">
+          ● 数据流: 开
+        </button>
+        <button id="btnToggleExplode" class="px-2.5 py-1.5 text-xs rounded-lg bg-slate-800/80 text-slate-300 border border-slate-700 hover:bg-slate-700/80 transition">
+          展开层级
+        </button>
+        <button id="btnToggleRotate" class="px-2.5 py-1.5 text-xs rounded-lg bg-slate-800/80 text-slate-300 border border-slate-700 hover:bg-slate-700/80 transition">
+          自动旋转: 关
+        </button>
+        <button id="btnResetCam" class="px-2.5 py-1.5 text-xs rounded-lg bg-slate-800/80 text-slate-300 border border-slate-700 hover:bg-slate-700/80 transition">
+          重置视角
+        </button>
+        <button id="btnDownloadSvg" class="hidden px-2.5 py-1.5 text-xs rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition">
+          导出 .SVG 矢量图
+        </button>
+        <button id="btnToggleInspectorMobile" class="lg:hidden px-2.5 py-1.5 text-xs rounded-lg bg-indigo-500/25 text-indigo-200 border border-indigo-400/40">
+          详情面板
+        </button>
+      </div>
+
+      <!-- Hover Tooltip (3D) -->
+      <div id="hoverTip" class="pointer-events-none fixed z-40 hidden glass px-2.5 py-1.5 rounded-lg text-xs text-white shadow-2xl border-cyan-400/40"></div>
+    </main>
+
+    <!-- Right Inspector Sidebar -->
+    <aside id="inspectorPanel" class="glass z-20 w-80 xl:w-96 border-l border-slate-800/80 flex flex-col shrink-0 transition-transform duration-200 fixed lg:static right-0 top-[53px] bottom-0 translate-x-full lg:translate-x-0">
+      <div class="px-4 py-3 border-b border-slate-800/80 flex items-center justify-between">
+        <div>
+          <h2 id="inspModelTitle" class="text-sm font-bold text-white">DualStreamMahjongNet</h2>
+          <p id="inspModelFile" class="font-mono text-[11px] text-cyan-400">mahjong/dual_net.py</p>
+        </div>
+        <button id="btnCloseInspectorMobile" class="lg:hidden text-slate-400 hover:text-white p-1">✕</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto custom-scroll p-4 space-y-4">
+        <!-- Model Summary KPIs -->
+        <div class="grid grid-cols-2 gap-2">
+          <div class="bg-slate-900/75 rounded-lg p-2.5 border border-slate-800">
+            <div class="text-[10px] text-slate-400 uppercase">总参数量</div>
+            <div id="kpiParams" class="font-mono text-sm font-bold text-cyan-300 mt-0.5">1,166,608</div>
+          </div>
+          <div class="bg-slate-900/75 rounded-lg p-2.5 border border-slate-800">
+            <div class="text-[10px] text-slate-400 uppercase">动作空间</div>
+            <div id="kpiActions" class="font-mono text-sm font-bold text-rose-300 mt-0.5">47 槽位</div>
+          </div>
+          <div class="bg-slate-900/75 rounded-lg p-2.5 border border-slate-800 col-span-2">
+            <div class="text-[10px] text-slate-400 uppercase">输入观测张量</div>
+            <div id="kpiInput" class="font-mono text-xs text-slate-200 mt-0.5">obs: (B, 29×34 + 32) · events: (B, 48, 4)</div>
+          </div>
+        </div>
+
+        <!-- Selected Module Detail Card -->
+        <div id="moduleDetailCard" class="bg-slate-900/80 rounded-xl p-3.5 border border-slate-700/70 space-y-2.5">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <span id="modTag" class="inline-block text-[10px] font-semibold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 mb-1">点击左侧模块</span>
+              <h3 id="modName" class="text-sm font-bold text-white">选择一个网络模块</h3>
+            </div>
+            <span id="modParams" class="font-mono text-xs text-amber-300 shrink-0"></span>
+          </div>
+
+          <div class="bg-slate-950/85 rounded-lg p-2.5 border border-slate-800/90 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">张量 Shape 推导（点击维度高亮溯源）</span>
+              <button id="btnClearDim" class="hidden text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 hover:bg-amber-500/30 transition">清除高亮</button>
+            </div>
+            <div id="modShape" class="space-y-1.5"></div>
+            <div id="dimExplainBox" class="hidden rounded-lg bg-amber-500/10 border border-amber-400/40 p-2.5 space-y-1">
+              <div class="flex items-center justify-between gap-2">
+                <span id="dimExplainTitle" class="text-xs font-bold text-amber-200"></span>
+                <span id="dimExplainSource" class="font-mono text-[10px] text-amber-300/90"></span>
+              </div>
+              <div id="dimExplainFormula" class="font-mono text-[11px] text-slate-100 leading-relaxed"></div>
+              <div id="dimExplainNodes" class="flex flex-wrap items-center gap-1 pt-1"></div>
+            </div>
+          </div>
+
+          <p id="modDesc" class="text-xs leading-relaxed text-slate-300">
+            点击 3D 场景或 2D 矢量图中的任意网络层，查看该层在源码中的精确结构、维度变化、参数量占比与麻将领域设计意图。
+          </p>
+
+          <div id="modSubList" class="space-y-1.5 pt-1"></div>
+        </div>
+
+        <!-- Module Directory List -->
+        <div>
+          <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">模块清单（点击定位）</div>
+          <div id="moduleList" class="space-y-1"></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. GROUNDED MODEL SPECIFICATIONS (Extracted directly from riichi-rl repo)
+    // =========================================================================
+    const MODEL_DATA = {
+      dual: {
+        id: 'dual',
+        name: 'DualStreamMahjongNet',
+        subtitle: '双流 Transformer 策略价值网络',
+        file: 'mahjong/dual_net.py',
+        variants: [
+          {
+            id: 'light',
+            label: '轻量版 (d=128, L=3, H=4)',
+            totalParams: 1166608,
+            paramsShort: '1.17M 参数',
+            d_model: 128,
+            n_layers: 3,
+            n_heads: 4,
+            n_actions: 47,
+            in_planes: 29,
+            scalar_dim: 32,
+            event_len: 48,
+            counts: {
+              obs_in: 0,
+              suit_enc: 201856,
+              honor_enc: 20352,
+              sit_enc: 20736,
+              q35_merge: 4480,
+              ev_emb: 9216,
+              ev_enc: 265216,
+              fusion: 597376,
+              discard_head: 129,
+              special_head: 18189,
+              value_head: 28929,
+              aux_danger: 129
+            }
+          },
+          {
+            id: 'scaled',
+            label: '扩展版 (d=256, L=6, H=8)',
+            totalParams: 6890000,
+            paramsShort: '6.89M 参数',
+            d_model: 256,
+            n_layers: 6,
+            n_heads: 8,
+            n_actions: 47,
+            in_planes: 29,
+            scalar_dim: 32,
+            event_len: 48,
+            counts: {
+              obs_in: 0,
+              suit_enc: 796928,
+              honor_enc: 73472,
+              sit_enc: 74240,
+              q35_merge: 8960,
+              ev_emb: 18432,
+              ev_enc: 1054720,
+              fusion: 4748288,
+              discard_head: 257,
+              special_head: 69133,
+              value_head: 45313,
+              aux_danger: 257
+            }
+          }
+        ],
+        buildNodes(v) {
+          const D = v.d_model, L = v.n_layers, H = v.n_heads;
+          const c = v.counts;
+          return [
+            {
+              id: 'obs_in', name: '牌面观测张量 (obs2)', tag: '输入流 1', color: 0x38bdf8, hex: '#38bdf8',
+              shape: 'planes: [B, 29, 34] + scalars: [B, 32] (总 1018 维)',
+              params: c.obs_in,
+              pos: [-9.5, 2.2, -1.6], size: [2.2, 2.0, 3.0], kind: 'planes',
+              desc: '仅包含公开或自有信息（按相对视角旋转：0=自家, 1=下家, 2=对家, 3=上家），严禁泄露对手手牌或牌山顺序。',
+              details: [
+                '平面 0：自己手牌计数 (0..4)',
+                '平面 1–12：四家暗牌张数、牌河计数、副露计数',
+                '平面 13–21：副露组数、已见牌、宝牌/里宝指示牌、上张弃牌、立直、未知牌',
+                '平面 22–28：3家对手立直标志 + 3家现物安全牌 + 赤宝牌候选(5m/5p/5s)',
+                '标量 32 维：点数/25000、庄家、巡目、场风/自风、振听、余山、阶段、响应弃牌者'
+              ]
+            },
+            {
+              id: 'suit_enc', name: '数牌共享 1D 残差编码器', tag: '流 1a · 万/筒/索', color: 0x34d399, hex: '#34d399',
+              shape: `[B, 29, 27] → [3B, 29, 9] → [B, 27, ${D}]`,
+              params: c.suit_enc,
+              pos: [-5.6, 4.4, -2.5], size: [2.4, 1.5, 2.4], kind: 'suits',
+              desc: '将万/筒/索三门数牌折叠进 Batch 维度，共享 1×1 Conv + 2 个 _SuitResBlock1D (GroupNorm + GELU + Conv1d k=3)，绝不跨花色污染，最后加可学习 suit_emb (3, 1, D)。',
+              details: [
+                `suit_in: Conv1d(29 → ${D}, k=1)`,
+                `suit_blocks: 2 × _SuitResBlock1D(dim=${D}, k=3, pad=1)`,
+                `suit_emb: Parameter(3, 1, ${D}) 区分万/筒/索`
+              ]
+            },
+            {
+              id: 'honor_enc', name: '字牌独立 MLP 编码器', tag: '流 1b · 7种字牌', color: 0x2dd4bf, hex: '#2dd4bf',
+              shape: `[B, 7, 29] → [B, 7, ${D}]`,
+              params: c.honor_enc,
+              pos: [-5.6, 1.8, -2.5], size: [2.2, 1.1, 1.8], kind: 'honors',
+              desc: '东南西北白发中 7 种字牌没有顺子邻接关系，跳过 1D 卷积，直接经两层 Linear + GELU 独立映射。',
+              details: [
+                `Linear(29 → ${D}) → GELU → Linear(${D} → ${D})`,
+                '对应牌号 27..33（东/南/西/北/白/发/中）'
+              ]
+            },
+            {
+              id: 'sit_enc', name: '全局场况词元投影', tag: '流 1c · 第35号词元', color: 0xf59e0b, hex: '#f59e0b',
+              shape: `[B, 32] → [B, 1, ${D}]`,
+              params: c.sit_enc,
+              pos: [-5.6, -0.7, -2.5], size: [2.0, 0.9, 1.2], kind: 'prism',
+              desc: '将 32 维全局场况标量（点数、风位、巡目、阶段、立直状态等）投影为第 35 号全局枢纽 Token。',
+              details: [
+                `sit_proj: Linear(32 → ${D}) → GELU → Linear(${D} → ${D})`,
+                '最终作为全局决策枢纽驱动特殊动作头与 Value 价值塔'
+              ]
+            },
+            {
+              id: 'q35_merge', name: 'Query 35-Token 序列拼接', tag: 'Query Stream', color: 0x0ea5e9, hex: '#0ea5e9',
+              shape: `[B, 27+7+1, ${D}] + pos_emb_35 → [B, 35, ${D}]`,
+              params: c.q35_merge,
+              pos: [-1.8, 2.2, -2.0], size: [1.5, 2.8, 2.2], kind: 'tokens',
+              desc: '前 34 行严格对齐 34 种麻将牌，第 35 行为全局场况词元，加上可学习 35 位置嵌入 pos_emb_35。',
+              details: [
+                `pos_emb_35: Parameter(1, 35, ${D})`,
+                '保留完整的 34 牌空间分辨率，供后续 Cross-Attn 逐牌检索历史'
+              ]
+            },
+            {
+              id: 'ev_emb', name: '历史事件流 4 路离散嵌入', tag: '输入流 2 · Events', color: 0xa78bfa, hex: '#a78bfa',
+              shape: `int64 [B, 48, 4] → [B, 48, ${D}]`,
+              params: c.ev_emb,
+              pos: [-9.2, -2.8, 2.2], size: [2.6, 1.4, 2.2], kind: 'sequence',
+              desc: '把最近 48 步牌河、手切/摸切、立直与副露压缩为离散事件序列（第 0 位固定 BOS 防止开局全 padding 产生 NaN）。',
+              details: [
+                `emb_seat (vocab=5): 0=PAD, 1..4=相对四家`,
+                `emb_tile (vocab=35): 0..33 牌种, 34=BOS/空`,
+                `emb_act (vocab=7): BOS/手切/摸切/立直/吃/碰/杠`,
+                `emb_turn (vocab=25): 0=PAD, 1..24 巡目桶`,
+                '四路 Embedding 逐元素相加'
+              ]
+            },
+            {
+              id: 'ev_enc', name: '2 层因果 Transformer 编码器', tag: 'Key/Value Stream', color: 0x8b5cf6, hex: '#8b5cf6',
+              shape: `[B, 48, ${D}] → K/V: [B, 48, ${D}]`,
+              params: c.ev_enc,
+              pos: [-4.4, -2.8, 2.2], size: [2.8, 1.8, 2.2], kind: 'transformer',
+              desc: '2 层 Pre-LN Causal Self-Attention（上三角因果掩码 + seat==0 padding mask）+ LayerNorm，捕捉对手弃牌顺序与手切/摸切节奏。',
+              details: [
+                `TransformerEncoder × 2 (d_model=${D}, nhead=${H}, FFN=${D * 2}, GELU, norm_first=True)`,
+                '强制第 0 位 BOS 永不被 mask，保证数值稳定'
+              ]
+            },
+            {
+              id: 'fusion', name: `融合主干 (${L}× _FusionBlock)`, tag: 'Cross + Self Attn', color: 0xfbbf24, hex: '#fbbf24',
+              shape: `Q:[B,35,${D}] × KV:[B,48,${D}] → [B, 35, ${D}]`,
+              params: c.fusion,
+              pos: [2.6, 0.5, 0.0], size: [3.6, 3.2, 2.8], kind: 'fusion',
+              desc: `核心交互主干！每层先做 Cross-Attention 让每张牌主动检索全部 48 步牌河/副露/立直事件，再做 35-Token Self-Attention 形成手牌组合，最后经 FFN (${D}→${D*2}→${D}) 与 out_norm。`,
+              details: [
+                `层数: ${L} 层，注意力头数: ${H} 头`,
+                '1. Cross-Attn: Q=牌面35, K/V=历史事件48 (Pre-LN)',
+                '2. Self-Attn: 34牌 + 1全局词元 内部全局交互',
+                `3. FFN: Linear(${D}→${D*2}) → GELU → Linear(${D*2}→${D})`
+              ]
+            },
+            {
+              id: 'discard_head', name: '逐牌切牌头 (discard_head)', tag: '策略输出 0..33', color: 0xfb7185, hex: '#fb7185',
+              shape: `h35[:, :34, ${D}] → [B, 34]`,
+              params: c.discard_head,
+              pos: [8.6, 4.0, -1.2], size: [2.2, 1.3, 2.6], kind: 'bars',
+              desc: '前 34 行逐牌共享一个线性层 Linear(D, 1)，直接输出 34 种牌的切牌 logits，完全保留单张牌的空间位置对应关系。',
+              details: [
+                `Linear(${D} → 1)，权重在 34 种牌间完全共享`,
+                '与 special_head 拼接组成完整 47 槽位策略 logits'
+              ]
+            },
+            {
+              id: 'special_head', name: '特殊动作头 (special_head)', tag: '策略输出 34..46', color: 0xf43f5e, hex: '#f43f5e',
+              shape: `h35[:, 34, ${D}] → [B, 13]`,
+              params: c.special_head,
+              pos: [8.6, 1.4, -0.6], size: [2.1, 1.2, 1.6], kind: 'box',
+              desc: '由第 35 号全局场况词元驱动，输出立直、吃×3、碰、杠、自摸/荣和、流局、过牌等 13 个特殊动作槽位。',
+              details: [
+                `Linear(${D} → ${D}) → GELU → Linear(${D} → 13)`,
+                '与 34 切牌槽拼接为 [B, 47] 统一策略分布'
+              ]
+            },
+            {
+              id: 'value_head', name: '独立价值塔 (value_head)', tag: 'Critic V(s)', color: 0xf97316, hex: '#f97316',
+              shape: `cat(h35[:, 34], scalars) [${D + 32}] → [B, 1]`,
+              params: c.value_head,
+              pos: [8.6, -1.2, 0.8], size: [2.1, 1.2, 1.6], kind: 'pyramid',
+              desc: 'Critic 价值估计塔，拼接第 35 词元与原始 32 维场况标量，与策略头解耦，便于 BC → PPO Warmup 阶段平稳接管。',
+              details: [
+                `Linear(${D + 32} → 128) → SiLU → Linear(128 → 64) → SiLU → Linear(64 → 1)`,
+                '输出当前局面的标量价值估计 V(s)'
+              ]
+            },
+            {
+              id: 'aux_danger', name: '旁路危险张头 (aux_danger_head)', tag: '仅训练期旁路', color: 0xec4899, hex: '#ec4899',
+              shape: `h35[:, :34, ${D}] → [B, 34] (推理零开销)`,
+              params: c.aux_danger,
+              pos: [8.6, -3.8, 2.0], size: [2.0, 1.0, 2.0], kind: 'wire',
+              desc: '仅在 forward_aux() 训练时启用，预测 34 种牌的放铳危险度 logits，为共享主干注入防守梯度；推理阶段完全跳过，零额外耗时。',
+              details: [
+                `Linear(${D} → 1) 作用于前 34 牌词元`,
+                '监督信号：对手听牌/放铳危险张标签'
+              ]
+            }
+          ];
+        },
+        edges: [
+          ['obs_in', 'suit_enc', '#38bdf8'],
+          ['obs_in', 'honor_enc', '#2dd4bf'],
+          ['obs_in', 'sit_enc', '#f59e0b'],
+          ['suit_enc', 'q35_merge', '#34d399'],
+          ['honor_enc', 'q35_merge', '#2dd4bf'],
+          ['sit_enc', 'q35_merge', '#f59e0b'],
+          ['ev_emb', 'ev_enc', '#a78bfa'],
+          ['q35_merge', 'fusion', '#38bdf8'],
+          ['ev_enc', 'fusion', '#a78bfa'],
+          ['fusion', 'discard_head', '#fb7185'],
+          ['fusion', 'special_head', '#f43f5e'],
+          ['fusion', 'value_head', '#f97316'],
+          ['fusion', 'aux_danger', '#ec4899']
+        ]
+      },
+
+      conv: {
+        id: 'conv',
+        name: 'MahjongNet',
+        subtitle: 'Mortal 式 1D ResNet + 通道注意力策略网络',
+        file: 'mahjong/net.py',
+        variants: [
+          {
+            id: 'pertile',
+            label: '逐牌头 (c=160, 6块 · 推荐)',
+            totalParams: 1687903,
+            paramsShort: '1.69M 参数',
+            channels: 160,
+            n_blocks: 6,
+            n_actions: 47,
+            in_planes: 29,
+            scalar_dim: 32,
+            per_tile_head: true,
+            counts: {
+              obs_planes: 0,
+              obs_scalars: 0,
+              embed: 4800,
+              resblocks: 1003440,
+              head_conv: 76960,
+              pooling: 0,
+              head_fc: 557824,
+              policy_head: 44622,
+              value_head: 257
+            }
+          },
+          {
+            id: 'fc54',
+            label: '经典全连接头 (c=160, 6块)',
+            totalParams: 1657159,
+            paramsShort: '1.66M 参数',
+            channels: 160,
+            n_blocks: 6,
+            n_actions: 54,
+            in_planes: 29,
+            scalar_dim: 32,
+            per_tile_head: false,
+            counts: {
+              obs_planes: 0,
+              obs_scalars: 0,
+              embed: 4800,
+              resblocks: 1003440,
+              head_conv: 76960,
+              pooling: 0,
+              head_fc: 557824,
+              policy_head: 13878,
+              value_head: 257
+            }
+          },
+          {
+            id: 'legacy_best',
+            label: 'Legacy Best (c=64, 4块 · 21.8%和牌)',
+            totalParams: 453232,
+            paramsShort: '0.45M 参数',
+            channels: 64,
+            n_blocks: 4,
+            n_actions: 47,
+            in_planes: 22,
+            scalar_dim: 46,
+            per_tile_head: false,
+            counts: {
+              obs_planes: 0,
+              obs_scalars: 0,
+              embed: 1472,
+              resblocks: 107840,
+              head_conv: 12352,
+              pooling: 0,
+              head_fc: 319232,
+              policy_head: 12079,
+              value_head: 257
+            }
+          }
+        ],
+        buildNodes(v) {
+          const C = v.channels, B_cnt = v.n_blocks, P = v.in_planes, S = v.scalar_dim;
+          const c = v.counts;
+          return [
+            {
+              id: 'obs_planes', name: `二维牌面平面 (${P}×34)`, tag: '空间输入', color: 0x38bdf8, hex: '#38bdf8',
+              shape: `[B, ${P}, 34] (通道优先，34 种牌)`,
+              params: 0,
+              pos: [-9.2, 1.4, -0.8], size: [2.2, 2.4, 3.0], kind: 'planes',
+              desc: `把一维观测重构为 (${P}, 34) 二维张量，使 1D 卷积能够直接捕捉相邻牌种之间的顺子/搭子/听牌结构关系。`,
+              details: [
+                P === 29 ? '当前 obs2：22 基础平面 + 3 立直 + 3 现物安全牌 + 1 赤宝' : 'obs2_v1 (legacy)：22 基础平面',
+                '四家牌河/副露统一按相对座位旋转（0自家/1下家/2对家/3上家）'
+              ]
+            },
+            {
+              id: 'obs_scalars', name: `全局标量特征 (${S} 维)`, tag: '标量旁路', color: 0xf59e0b, hex: '#f59e0b',
+              shape: `[B, ${S}]`,
+              params: 0,
+              pos: [-5.2, -3.0, 2.0], size: [2.4, 1.0, 1.4], kind: 'prism',
+              desc: '绕过卷积主干，在池化拼接阶段直接注入 head_fc，提供点数、巡目、场风自风、振听、余山与阶段标志。',
+              details: [
+                S === 46 ? '26 基础标量 + 8 touch_dim + 12 extra_scalar (legacy best)' : '32 维 obs2 标准标量（含 3 对手立直 + 3 响应弃牌者座位）'
+              ]
+            },
+            {
+              id: 'embed', name: '1×1 通道嵌入 (embed)', tag: '特征升维', color: 0x2dd4bf, hex: '#2dd4bf',
+              shape: `[B, ${P}, 34] → [B, ${C}, 34]`,
+              params: c.embed,
+              pos: [-5.6, 1.4, -0.8], size: [1.5, 2.4, 2.8], kind: 'box',
+              desc: `用 kernel_size=1 的 1D 卷积将 ${P} 个观测平面线性混合升维至 ${C} 个特征通道。`,
+              details: [`nn.Conv1d(${P}, ${C}, kernel_size=1)`]
+            },
+            {
+              id: 'resblocks', name: `${B_cnt}× Mortal 式 1D 残差块`, tag: '核心主干 + 通道注意力', color: 0x34d399, hex: '#34d399',
+              shape: `[B, ${C}, 34] → [B, ${C}, 34]`,
+              params: c.resblocks,
+              pos: [-1.2, 1.4, -0.8], size: [4.2, 2.7, 3.0], kind: 'resstack',
+              desc: `堆叠 ${B_cnt} 个 Pre-Act ResBlock：GroupNorm(4) → ReLU → Conv1d(k=3) ×2，末端接双路 ChannelAttention (mean + amax 共享 MLP → Sigmoid) 加权后残差相加。`,
+              details: [
+                `每块包含: 2×GroupNorm(4, ${C}) + 2×Conv1d(${C}→${C}, k=3, pad=1)`,
+                `ChannelAttention: avg+max 双路 → Linear(${C}→${Math.max(4, Math.floor(C/4))}) → ReLU → Linear → Sigmoid`,
+                `残差连接: x + attn(h)`
+              ]
+            },
+            {
+              id: 'head_conv', name: '末端特征卷积 (head_conv)', tag: '空间提炼', color: 0x10b981, hex: '#10b981',
+              shape: `[B, ${C}, 34] → h: [B, ${C}, 34]`,
+              params: c.head_conv,
+              pos: [3.0, 1.4, -0.8], size: [1.5, 2.4, 2.6], kind: 'box',
+              desc: '在池化前做最后一次 1D 卷积 + ReLU；在逐牌切牌头模式下，该输出 h 直接保留供后续逐牌打分融合。',
+              details: [`ReLU(Conv1d(${C}, ${C}, kernel_size=3, padding=1))`]
+            },
+            {
+              id: 'pooling', name: '分段平均 + 全局最大池化', tag: 'SegPool(4) + MaxPool', color: 0xfbbf24, hex: '#fbbf24',
+              shape: `seg:[B, ${C*4}] + glob:[B, ${C}] + scalars:[B, ${S}] → [B, ${C*5 + S}]`,
+              params: 0,
+              pos: [5.4, -0.8, 0.8], size: [1.7, 1.8, 2.0], kind: 'tokens',
+              desc: 'AdaptiveAvgPool1d(4) 保留万/筒/索/字 4 个区段的结构信息，与全局最大池化 amax(-1) 及标量特征拼接成定长向量 z。',
+              details: [
+                `seg = AdaptiveAvgPool1d(4)(h).flatten(1) → ${C * 4} 维`,
+                `glob = h.amax(-1) → ${C} 维`,
+                `z = cat([seg, glob, scalars]) → ${C * 5 + S} 维`
+              ]
+            },
+            {
+              id: 'head_fc', name: '全局上下文 MLP (head_fc)', tag: '特征压缩', color: 0xa78bfa, hex: '#a78bfa',
+              shape: `[B, ${C*5 + S}] → z_fc: [B, 256]`,
+              params: c.head_fc,
+              pos: [7.8, -0.8, 0.8], size: [1.8, 1.8, 1.8], kind: 'transformer',
+              desc: '两层全连接网络将多尺度池化特征与场况标量融合压缩为 256 维全局局势表征 z_fc。',
+              details: [
+                `Linear(${C * 5 + S} → 512) → ReLU`,
+                'Linear(512 → 256) → ReLU'
+              ]
+            },
+            {
+              id: 'policy_head', name: v.per_tile_head ? '逐牌切牌头 + 特殊动作头' : `全连接策略头 (${v.n_actions} 槽)`, tag: 'Policy Logits', color: 0xfb7185, hex: '#fb7185',
+              shape: v.per_tile_head ? `h[B,${C},34]+ctx → [B,34] ⊕ [B,${v.n_actions - 34}]` : `z_fc[B, 256] → [B, ${v.n_actions}]`,
+              params: c.policy_head,
+              pos: [10.4, 1.8, -0.6], size: [2.2, 1.6, 2.5], kind: 'bars',
+              desc: v.per_tile_head
+                ? '推荐新架构：将 z_fc 经 tile_ctx 广播注入逐牌特征图 h，再用 1×1 Conv 输出 34 切牌 logits，避免池化丢失单张牌位置信息；其余 13 个特殊动作由 special_policy 输出。'
+                : `经典架构（兼容所有历史 ckpt，含 21.8% 和牌率最佳模型 teacher47_eff_wuke_d2）：直接由 256 维 z_fc 经单层 Linear 输出 ${v.n_actions} 槽动作 logits。`,
+              details: v.per_tile_head
+                ? [`tile_ctx: Linear(256 → ${C})`, `tile_policy: Conv1d(${C} → 1, k=1) → 34 切牌`, `special_policy: Linear(256 → ${v.n_actions - 34})`]
+                : [`policy: Linear(256 → ${v.n_actions})`, '配合 legal_action_mask 做 masked softmax']
+            },
+            {
+              id: 'value_head', name: '价值头 (value)', tag: 'Critic V(s)', color: 0xf97316, hex: '#f97316',
+              shape: 'z_fc [B, 256] → [B, 1]',
+              params: c.value_head,
+              pos: [10.4, -1.8, 1.4], size: [1.9, 1.2, 1.5], kind: 'pyramid',
+              desc: '单层线性投影输出当前局面的标量价值估计 V(s)，用于 A2C / PPO 优势计算。',
+              details: ['nn.Linear(256, 1) → squeeze(-1)']
+            }
+          ];
+        },
+        getEdges(v) {
+          const base = [
+            ['obs_planes', 'embed', '#38bdf8'],
+            ['embed', 'resblocks', '#2dd4bf'],
+            ['resblocks', 'head_conv', '#34d399'],
+            ['head_conv', 'pooling', '#fbbf24'],
+            ['obs_scalars', 'pooling', '#f59e0b'],
+            ['pooling', 'head_fc', '#a78bfa'],
+            ['head_fc', 'policy_head', '#fb7185'],
+            ['head_fc', 'value_head', '#f97316']
+          ];
+          if (v.per_tile_head) {
+            base.push(['head_conv', 'policy_head', '#34d399']);
+          }
+          return base;
+        }
+      }
+    };
+
+    // =========================================================================
+    // 2. APPLICATION STATE
+    // =========================================================================
+    const state = {
+      modelKey: 'dual',
+      variantId: 'light',
+      renderMode: '3d', // '3d' | '2d'
+      selectedNodeId: 'fusion',
+      activeDimToken: null,
+      activeStepIdx: 0,
+      flowEnabled: true,
+      exploded: false,
+      autoRotate: false
+    };
+
+    function getCurrentModel() {
+      return MODEL_DATA[state.modelKey];
+    }
+    function getCurrentVariant() {
+      const m = getCurrentModel();
+      return m.variants.find(v => v.id === state.variantId) || m.variants[0];
+    }
+    function getCurrentNodes() {
+      return getCurrentModel().buildNodes(getCurrentVariant());
+    }
+    function getCurrentEdges() {
+      const m = getCurrentModel();
+      return typeof m.getEdges === 'function' ? m.getEdges(getCurrentVariant()) : m.edges;
+    }
+
+    // =========================================================================
+    // 3. THREE.JS 3D SCENE ENGINE
+    // =========================================================================
+    const container3d = document.getElementById('viewport3d');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x070b14, 0.014);
+
+    const camera = new THREE.PerspectiveCamera(44, container3d.clientWidth / Math.max(1, container3d.clientHeight), 0.1, 200);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(container3d.clientWidth, container3d.clientHeight);
+    renderer.setClearColor(0x070b14, 1);
+    container3d.appendChild(renderer.domElement);
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xcbd5e1, 0.72);
+    scene.add(ambientLight);
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.95);
+    dirLight1.position.set(14, 22, 18);
+    scene.add(dirLight1);
+    const dirLight2 = new THREE.DirectionalLight(0x38bdf8, 0.45);
+    dirLight2.position.set(-16, -8, -14);
+    scene.add(dirLight2);
+    const ptLight = new THREE.PointLight(0xa78bfa, 0.6, 40);
+    ptLight.position.set(0, 6, 8);
+    scene.add(ptLight);
+
+    // Subtle Studio Grid Floor
+    const gridHelper = new THREE.GridHelper(44, 44, 0x1e293b, 0x0f172a);
+    gridHelper.position.y = -5.6;
+    scene.add(gridHelper);
+
+    // Custom Smooth Orbit Controls
+    const camOrbit = {
+      theta: 0.36,
+      phi: 1.18,
+      radius: 26.5,
+      target: new THREE.Vector3(0.4, 0.2, 0),
+      dragging: false,
+      panning: false,
+      lastX: 0,
+      lastY: 0,
+      moved: false
+    };
+
+    function updateCamera() {
+      camOrbit.phi = Math.max(0.25, Math.min(Math.PI - 0.25, camOrbit.phi));
+      camOrbit.radius = Math.max(11, Math.min(48, camOrbit.radius));
+      camera.position.x = camOrbit.target.x + camOrbit.radius * Math.sin(camOrbit.phi) * Math.sin(camOrbit.theta);
+      camera.position.y = camOrbit.target.y + camOrbit.radius * Math.cos(camOrbit.phi);
+      camera.position.z = camOrbit.target.z + camOrbit.radius * Math.sin(camOrbit.phi) * Math.cos(camOrbit.theta);
+      camera.lookAt(camOrbit.target);
+    }
+    updateCamera();
+
+    // Pointer Events for Orbit + Raycast Click
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const hoverTip = document.getElementById('hoverTip');
+    let clickableMeshes = [];
+    let nodeGroups = {};
+    let flowParticles = [];
+    const architectureRoot = new THREE.Group();
+    scene.add(architectureRoot);
+
+    container3d.addEventListener('pointerdown', (e) => {
+      camOrbit.dragging = true;
+      camOrbit.panning = (e.button === 2 || e.shiftKey);
+      camOrbit.lastX = e.clientX;
+      camOrbit.lastY = e.clientY;
+      camOrbit.moved = false;
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (camOrbit.dragging) {
+        const dx = e.clientX - camOrbit.lastX;
+        const dy = e.clientY - camOrbit.lastY;
+        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) camOrbit.moved = true;
+        camOrbit.lastX = e.clientX;
+        camOrbit.lastY = e.clientY;
+        if (camOrbit.panning) {
+          camOrbit.target.x -= dx * 0.025;
+          camOrbit.target.y += dy * 0.025;
+        } else {
+          camOrbit.theta -= dx * 0.0075;
+          camOrbit.phi -= dy * 0.0075;
+        }
+        updateCamera();
+      } else if (state.renderMode === '3d') {
+        const rect = renderer.domElement.getBoundingClientRect();
+        if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+          mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+          mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+          raycaster.setFromCamera(mouse, camera);
+          const hits = raycaster.intersectObjects(clickableMeshes, false);
+          if (hits.length > 0) {
+            const nodeData = hits[0].object.userData.nodeData;
+            container3d.style.cursor = 'pointer';
+            hoverTip.textContent = `${nodeData.name} · ${nodeData.shape}`;
+            hoverTip.style.left = (e.clientX + 14) + 'px';
+            hoverTip.style.top = (e.clientY + 14) + 'px';
+            hoverTip.classList.remove('hidden');
+          } else {
+            container3d.style.cursor = 'grab';
+            hoverTip.classList.add('hidden');
+          }
+        } else {
+          hoverTip.classList.add('hidden');
+        }
+      }
+    });
+    window.addEventListener('pointerup', (e) => {
+      if (camOrbit.dragging && !camOrbit.moved && state.renderMode === '3d') {
+        const rect = renderer.domElement.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        const hits = raycaster.intersectObjects(clickableMeshes, false);
+        if (hits.length > 0) {
+          selectNode(hits[0].object.userData.nodeData.id);
+        }
+      }
+      camOrbit.dragging = false;
+    });
+    container3d.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      camOrbit.radius += e.deltaY * 0.02;
+      updateCamera();
+    }, { passive: false });
+    container3d.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // Helper: Crisp 3D Floating Label Sprite
+    function createLabelSprite(title, sub, accentHex) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = 'rgba(10, 15, 30, 0.86)';
+      ctx.strokeStyle = accentHex;
+      ctx.lineWidth = 4;
+      roundRect(ctx, 10, 14, 492, 100, 18);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = 'bold 34px Inter, PingFang SC, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(title, 256, 56);
+
+      ctx.fillStyle = accentHex;
+      ctx.font = '600 24px JetBrains Mono, monospace';
+      ctx.fillText(sub, 256, 96);
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.minFilter = THREE.LinearFilter;
+      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false });
+      const sprite = new THREE.Sprite(mat);
+      sprite.scale.set(4.6, 1.15, 1);
+      sprite.renderOrder = 999;
+      return sprite;
+    }
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    // Build Rich Domain-Specific 3D Geometries per Neural Layer Type
+    function buildNodeMesh3D(node) {
+      const group = new THREE.Group();
+      const [sx, sy, sz] = node.size;
+      const baseMat = new THREE.MeshPhysicalMaterial({
+        color: node.color,
+        emissive: node.color,
+        emissiveIntensity: 0.16,
+        roughness: 0.25,
+        metalness: 0.15,
+        transparent: true,
+        opacity: 0.78
+      });
+
+      const registerHit = (mesh) => {
+        mesh.userData.nodeData = node;
+        clickableMeshes.push(mesh);
+      };
+
+      if (node.kind === 'planes') {
+        // Stacked translucent feature planes (29 channels x 34 tiles)
+        const layers = 7;
+        for (let i = 0; i < layers; i++) {
+          const geo = new THREE.BoxGeometry(sx * 0.14, sy, sz);
+          const m = new THREE.Mesh(geo, baseMat.clone());
+          m.material.opacity = 0.45 + (i / layers) * 0.35;
+          m.position.x = -sx / 2 + (i + 0.5) * (sx / layers);
+          group.add(m);
+          registerHit(m);
+        }
+      } else if (node.kind === 'suits') {
+        // 3 parallel folded suit slabs (Wan / Pin / Sou)
+        const suitColors = [0x34d399, 0x10b981, 0x059669];
+        for (let s = 0; s < 3; s++) {
+          const geo = new THREE.BoxGeometry(sx, sy * 0.26, sz);
+          const mat = baseMat.clone();
+          mat.color.setHex(suitColors[s]);
+          const m = new THREE.Mesh(geo, mat);
+          m.position.y = (s - 1) * (sy * 0.36);
+          group.add(m);
+          registerHit(m);
+        }
+      } else if (node.kind === 'honors') {
+        // 7 crystalline vertical columns for 7 honor tiles
+        for (let h = 0; h < 7; h++) {
+          const geo = new THREE.BoxGeometry(sx * 0.65, sy, sz * 0.11);
+          const m = new THREE.Mesh(geo, baseMat.clone());
+          m.position.z = -sz / 2 + (h + 0.5) * (sz / 7);
+          group.add(m);
+          registerHit(m);
+        }
+      } else if (node.kind === 'sequence') {
+        // Chronological 48-step event cards
+        const steps = 10;
+        for (let i = 0; i < steps; i++) {
+          const geo = new THREE.BoxGeometry(sx * 0.08, sy * (0.65 + 0.35 * Math.sin(i * 0.7)), sz);
+          const m = new THREE.Mesh(geo, baseMat.clone());
+          m.position.x = -sx / 2 + (i + 0.5) * (sx / steps);
+          group.add(m);
+          registerHit(m);
+        }
+      } else if (node.kind === 'resstack') {
+        // Stacked ResBlocks with glowing ChannelAttention rings
+        const blocks = 6;
+        for (let i = 0; i < blocks; i++) {
+          const geo = new THREE.BoxGeometry(sx * 0.13, sy, sz);
+          const m = new THREE.Mesh(geo, baseMat.clone());
+          m.position.x = -sx / 2 + (i + 0.5) * (sx / blocks);
+          group.add(m);
+          registerHit(m);
+          if (i % 2 === 1) {
+            const ringGeo = new THREE.TorusGeometry(sy * 0.62, 0.05, 8, 28);
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.75 });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.y = Math.PI / 2;
+            ring.position.x = m.position.x;
+            group.add(ring);
+          }
+        }
+      } else if (node.kind === 'fusion') {
+        // Multi-layer Cross-Attn + Self-Attn + FFN blocks with golden attention bridges
+        const stacks = 3;
+        for (let i = 0; i < stacks; i++) {
+          const geo = new THREE.BoxGeometry(sx * 0.26, sy, sz);
+          const m = new THREE.Mesh(geo, baseMat.clone());
+          m.position.x = (i - 1) * (sx * 0.35);
+          group.add(m);
+          registerHit(m);
+          const edges = new THREE.EdgesGeometry(geo);
+          const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.65 }));
+          line.position.copy(m.position);
+          group.add(line);
+        }
+      } else if (node.kind === 'bars') {
+        // 34-tile discard probability bar array
+        const count = 9;
+        for (let i = 0; i < count; i++) {
+          const h = sy * (0.45 + 0.55 * Math.abs(Math.sin(i * 1.1 + 0.5)));
+          const geo = new THREE.BoxGeometry(sx * 0.72, h, sz * 0.085);
+          const m = new THREE.Mesh(geo, baseMat.clone());
+          m.position.z = -sz / 2 + (i + 0.5) * (sz / count);
+          m.position.y = (h - sy) * 0.5;
+          group.add(m);
+          registerHit(m);
+        }
+      } else if (node.kind === 'pyramid') {
+        const geo = new THREE.ConeGeometry(Math.max(sx, sz) * 0.52, sy * 1.15, 4);
+        const m = new THREE.Mesh(geo, baseMat);
+        m.rotation.y = Math.PI / 4;
+        group.add(m);
+        registerHit(m);
+      } else if (node.kind === 'prism') {
+        const geo = new THREE.OctahedronGeometry(Math.max(sx, sy) * 0.55, 0);
+        const m = new THREE.Mesh(geo, baseMat);
+        group.add(m);
+        registerHit(m);
+      } else if (node.kind === 'wire') {
+        const geo = new THREE.BoxGeometry(sx, sy, sz);
+        const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: node.color, transparent: true, opacity: 0.22 }));
+        const wire = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: node.color }));
+        group.add(m);
+        group.add(wire);
+        registerHit(m);
+      } else {
+        const geo = new THREE.BoxGeometry(sx, sy, sz);
+        const m = new THREE.Mesh(geo, baseMat);
+        const wire = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.28 }));
+        group.add(m);
+        group.add(wire);
+        registerHit(m);
+      }
+
+      // Selection Highlight Bounding Box
+      const selGeo = new THREE.BoxGeometry(sx + 0.35, sy + 0.35, sz + 0.35);
+      const selEdges = new THREE.EdgesGeometry(selGeo);
+      const selBox = new THREE.LineSegments(selEdges, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95 }));
+      selBox.visible = (node.id === state.selectedNodeId);
+      group.add(selBox);
+      group.userData.selBox = selBox;
+
+      const dimGeo = new THREE.BoxGeometry(sx + 0.65, sy + 0.65, sz + 0.65);
+      const dimEdges = new THREE.EdgesGeometry(dimGeo);
+      const dimBox = new THREE.LineSegments(dimEdges, new THREE.LineBasicMaterial({ color: 0xfde047, transparent: true, opacity: 0.95 }));
+      dimBox.visible = false;
+      group.add(dimBox);
+      group.userData.dimBox = dimBox;
+      group.userData.basePos = new THREE.Vector3(...node.pos);
+
+      // Floating Label
+      const paramStr = node.params > 0 ? `${(node.params / 1000).toFixed(1)}K params` : node.tag;
+      const sprite = createLabelSprite(node.name, paramStr, node.hex);
+      sprite.position.set(0, sy * 0.5 + 1.05, 0);
+      group.add(sprite);
+
+      const mult = state.exploded ? 1.32 : 1.0;
+      group.position.set(node.pos[0] * mult, node.pos[1] * mult, node.pos[2] * mult);
+      return group;
+    }
+
+    function rebuild3DScene() {
+      while (architectureRoot.children.length > 0) {
+        architectureRoot.remove(architectureRoot.children[0]);
+      }
+      clickableMeshes = [];
+      nodeGroups = {};
+      flowParticles = [];
+
+      const nodes = getCurrentNodes();
+      const edges = getCurrentEdges();
+      const mult = state.exploded ? 1.32 : 1.0;
+
+      nodes.forEach(n => {
+        const grp = buildNodeMesh3D(n);
+        nodeGroups[n.id] = grp;
+        architectureRoot.add(grp);
+      });
+
+      // Curved 3D Connections + Animated Flow Particles
+      const nodeMap = Object.fromEntries(nodes.map(n => [n.id, n]));
+      edges.forEach(([fromId, toId, hexColor]) => {
+        const a = nodeMap[fromId];
+        const b = nodeMap[toId];
+        if (!a || !b) return;
+        const p1 = new THREE.Vector3(a.pos[0] * mult, a.pos[1] * mult, a.pos[2] * mult);
+        const p2 = new THREE.Vector3(b.pos[0] * mult, b.pos[1] * mult, b.pos[2] * mult);
+        const mid = p1.clone().add(p2).multiplyScalar(0.5);
+        mid.y += (a.id === 'head_conv' && b.id === 'policy_head') ? 2.4 : 0.45;
+        const curve = new THREE.QuadraticBezierCurve3(p1, mid, p2);
+        const pts = curve.getPoints(28);
+        const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+        const lineMat = new THREE.LineBasicMaterial({ color: hexColor, transparent: true, opacity: 0.55 });
+        architectureRoot.add(new THREE.Line(lineGeo, lineMat));
+
+        // 2 glowing pulses per edge
+        for (let k = 0; k < 2; k++) {
+          const pGeo = new THREE.SphereGeometry(0.14, 10, 10);
+          const pMat = new THREE.MeshBasicMaterial({ color: hexColor });
+          const pulse = new THREE.Mesh(pGeo, pMat);
+          architectureRoot.add(pulse);
+          flowParticles.push({ mesh: pulse, curve, t: k * 0.5 + Math.random() * 0.15, speed: 0.0055 + Math.random() * 0.002 });
+        }
+      });
+    }
+
+    // Animation Loop
+    let rafId = null;
+    function animate() {
+      rafId = requestAnimationFrame(animate);
+      if (state.renderMode === '3d') {
+        if (state.autoRotate && !camOrbit.dragging) {
+          camOrbit.theta += 0.004;
+          updateCamera();
+        }
+        flowParticles.forEach(p => {
+          p.mesh.visible = state.flowEnabled;
+          if (state.flowEnabled) {
+            p.t = (p.t + p.speed) % 1;
+            p.mesh.position.copy(p.curve.getPoint(p.t));
+          }
+        });
+        renderer.render(scene, camera);
+      }
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      const w = container3d.clientWidth;
+      const h = Math.max(1, container3d.clientHeight);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    });
+
+    // =========================================================================
+    // 4. 2D VECTOR SVG BLUEPRINT ENGINE
+    // =========================================================================
+    function render2DSvg() {
+      const mount = document.getElementById('svgMount');
+      const nodes = getCurrentNodes();
+      const edges = getCurrentEdges();
+      const v = getCurrentVariant();
+      const m = getCurrentModel();
+
+      // Map 3D positions onto crisp 2D blueprint coordinates (1160 x 680)
+      const W = 1160, H = 680;
+      const mapX = (x) => 115 + ((x + 10.5) / 22.0) * (W - 230);
+      const mapY = (y) => 350 - y * 68;
+      const nodeCoords = {};
+      nodes.forEach(n => {
+        nodeCoords[n.id] = { x: mapX(n.pos[0]), y: mapY(n.pos[1]), w: 176, h: 66 };
+      });
+
+      let edgesSvg = '';
+      edges.forEach(([fromId, toId, color]) => {
+        const a = nodeCoords[fromId], b = nodeCoords[toId];
+        if (!a || !b) return;
+        const x1 = a.x + a.w / 2, y1 = a.y;
+        const x2 = b.x - b.w / 2, y2 = b.y;
+        const cx = (x1 + x2) / 2;
+        const dyBias = (fromId === 'head_conv' && toId === 'policy_head') ? -110 : 0;
+        const d = `M ${x1} ${y1} C ${cx} ${y1 + dyBias}, ${cx} ${y2 + dyBias}, ${x2} ${y2}`;
+        edgesSvg += `<path d="${d}" fill="none" stroke="${color}" stroke-width="2.2" stroke-opacity="0.35"/>`;
+        edgesSvg += `<path class="flow-edge" d="${d}" fill="none" stroke="${color}" stroke-width="2.2" stroke-opacity="0.92" marker-end="url(#arrow)"/>`;
+      });
+
+      let nodesSvg = '';
+      nodes.forEach(n => {
+        const c = nodeCoords[n.id];
+        const isSel = n.id === state.selectedNodeId;
+        const isDimHl = getHighlightedNodeIds().includes(n.id);
+        const paramLabel = n.params > 0 ? `${(n.params / 1000).toFixed(1)}K params` : n.tag;
+        nodesSvg += `
+          <g class="svg-node ${isSel ? 'selected' : ''} ${isDimHl ? 'dim-highlight' : ''}" data-node-id="${n.id}" transform="translate(${c.x - c.w / 2}, ${c.y - c.h / 2})">
+            <rect class="node-bg" width="${c.w}" height="${c.h}" rx="12" fill="#0f172a" stroke="${n.hex}" stroke-width="${isSel ? 2.5 : 1.6}" fill-opacity="0.95"/>
+            <rect width="6" height="${c.h}" rx="3" fill="${n.hex}"/>
+            <text x="16" y="23" fill="#f8fafc" font-size="12" font-weight="700" font-family="Inter, PingFang SC, sans-serif">${escapeXml(n.name)}</text>
+            <text x="16" y="40" fill="${n.hex}" font-size="10" font-family="JetBrains Mono, monospace">${escapeXml(paramLabel)}</text>
+            <text x="16" y="55" fill="#94a3b8" font-size="9.5" font-family="JetBrains Mono, monospace">${escapeXml(truncate(n.shape, 25))}</text>
+          </g>
+        `;
+      });
+
+      const svgStr = `
+        <svg id="archSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" class="w-full h-full max-w-[1160px] max-h-[680px] ${state.flowEnabled ? '' : 'flow-paused'}">
+          <defs>
+            <pattern id="grid2d" width="32" height="32" patternUnits="userSpaceOnUse">
+              <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#1e293b" stroke-width="0.7" stroke-opacity="0.5"/>
+            </pattern>
+            <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#94a3b8"/>
+            </marker>
+          </defs>
+          <rect width="${W}" height="${H}" fill="#080d1a" rx="16"/>
+          <rect width="${W}" height="${H}" fill="url(#grid2d)" rx="16"/>
+          <text x="28" y="38" fill="#f8fafc" font-size="18" font-weight="700" font-family="Inter, PingFang SC, sans-serif">${escapeXml(m.name)} — ${escapeXml(v.label)}</text>
+          <text x="28" y="58" fill="#38bdf8" font-size="12" font-family="JetBrains Mono, monospace">${escapeXml(m.file)} · 总参数量 ${v.totalParams.toLocaleString()} (${v.paramsShort}) · 无损矢量架构蓝图</text>
+          ${edgesSvg}
+          ${nodesSvg}
+        </svg>
+      `;
+      mount.innerHTML = svgStr;
+
+      mount.querySelectorAll('.svg-node').forEach(el => {
+        el.addEventListener('click', () => {
+          selectNode(el.getAttribute('data-node-id'));
+        });
+      });
+    }
+
+    function escapeXml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function truncate(str, max) {
+      return str.length > max ? str.slice(0, max - 1) + '…' : str;
+    }
+
+    // =========================================================================
+    // 4.5. INTERACTIVE SHAPE DERIVATION & DIMENSION TRACE ENGINE
+    // =========================================================================
+    function getShapeSteps(node, v, modelKey) {
+      if (modelKey === 'dual') {
+        const D = v.d_model, L = v.n_layers, H = v.n_heads, P = v.in_planes, S = v.scalar_dim, T = v.event_len, A = v.n_actions;
+        const map = {
+          obs_in: [
+            { stage: '原始扁平观测', dims: ['B', `${P * 34 + S}`], op: `obs2.ObsEncoder.encode() 展平拼接: ${P}×34 + ${S} = ${P * 34 + S}` },
+            { stage: '拆分牌面张量', dims: ['B', `${P}`, '34'], op: `obs[:, :${P}*34].view(B, ${P}, 34) → 29个公开特征平面 × 34种牌` },
+            { stage: '拆分场况标量', dims: ['B', `${S}`], op: `obs[:, ${P}*34:] → 32维全局场况（点数/风位/巡目/立直/阶段）` }
+          ],
+          suit_enc: [
+            { stage: '切片取三门数牌', dims: ['B', `${P}`, '27'], op: 'planes[:, :, :27] 截取万(0..8) / 筒(9..17) / 索(18..26)' },
+            { stage: '花色折叠进 Batch', dims: ['3B', `${P}`, '9'], op: 'view(B, C, 3, 9).permute(2,0,1,3).reshape(3*B, C, 9) 绝不跨花色卷积' },
+            { stage: '1D 残差编码', dims: ['3B', `${D}`, '9'], op: `suit_in Conv1d(${P}→${D}, k=1) + 2×_SuitResBlock1D(k=3, pad=1)` },
+            { stage: '还原 + 花色嵌入', dims: ['B', '27', `${D}`], op: `view(3,B,${D},9).permute(1,0,3,2) + suit_emb(3,1,${D}) → reshape(B,27,${D})` }
+          ],
+          honor_enc: [
+            { stage: '切片取 7 种字牌', dims: ['B', '7', `${P}`], op: 'planes[:, :, 27:34].transpose(1, 2) 截取东南西北白发中' },
+            { stage: '两层独立 MLP', dims: ['B', '7', `${D}`], op: `Linear(${P}→${D}) → GELU → Linear(${D}→${D})，不做相邻卷积` }
+          ],
+          sit_enc: [
+            { stage: '全局标量输入', dims: ['B', `${S}`], op: 'scalars（点数、庄家、巡目、风位、振听、余山、阶段、对手立直）' },
+            { stage: '投影为第35词元', dims: ['B', '1', `${D}`], op: `sit_proj: Linear(${S}→${D})→GELU→Linear(${D}→${D}).unsqueeze(1)` }
+          ],
+          q35_merge: [
+            { stage: '三路 Token 拼接', dims: ['B', '35', `${D}`], op: 'cat([h_suits(27), h_honors(7), h_sit(1)], dim=1) → 27+7+1 = 35' },
+            { stage: '加位置嵌入', dims: ['B', '35', `${D}`], op: `+ pos_emb_35 (1, 35, ${D})，锁定 0..33 牌位与 34 全局位` }
+          ],
+          ev_emb: [
+            { stage: '离散事件序列', dims: ['B', `${T}`, '4'], op: `event_stream.py: 1个BOS + 最近${T - 1}步公开事件 × 4属性` },
+            { stage: '4路 Embedding 相加', dims: ['B', `${T}`, `${D}`], op: `emb_seat(5) + emb_tile(35) + emb_act(7) + emb_turn(25) → [B, ${T}, ${D}]` }
+          ],
+          ev_enc: [
+            { stage: '因果 Self-Attn', dims: ['B', `${T}`, `${D}`], op: `2层 Pre-LN TransformerEncoder (${H}头, FFN=${D * 2}) + 上三角因果掩码` },
+            { stage: '输出 Key/Value 流', dims: ['B', `${T}`, `${D}`], op: 'event_norm(kv) + pad_mask(seat==0, 第0位BOS永不mask)' }
+          ],
+          fusion: [
+            { stage: 'Cross-Attention', dims: ['B', '35', `${D}`], op: `Q:[B,35,${D}] 检索 K/V:[B,${T},${D}] (${H}头, 残差相加)` },
+            { stage: '35-Token Self-Attn', dims: ['B', '35', `${D}`], op: `34张牌 + 1全局词元内部全连接注意力交互 (${H}头)` },
+            { stage: `FFN × ${L} 层 + Norm`, dims: ['B', '35', `${D}`], op: `Linear(${D}→${D * 2})→GELU→Linear(${D * 2}→${D}) 重复 ${L} 层后经 out_norm` }
+          ],
+          discard_head: [
+            { stage: '切片前 34 牌词元', dims: ['B', '34', `${D}`], op: 'h35[:, :34, :] 严格对应 0..33 号麻将牌' },
+            { stage: '共享线性打分', dims: ['B', '34'], op: `discard_head: Linear(${D}→1).squeeze(-1)，34牌共享权重` }
+          ],
+          special_head: [
+            { stage: '切片第 35 全局词元', dims: ['B', `${D}`], op: 'h35[:, 34, :] 聚合全桌与事件流后的全局枢纽向量' },
+            { stage: '特殊动作 MLP', dims: ['B', `${A - 34}`], op: `Linear(${D}→${D})→GELU→Linear(${D}→${A - 34})，与34切牌拼成 ${A} 槽` }
+          ],
+          value_head: [
+            { stage: '全局特征 + 原始标量', dims: ['B', `${D + S}`], op: `cat([h35[:, 34, :](${D}), scalars(${S})], dim=-1) = ${D + S}` },
+            { stage: '3层 Critic 价值塔', dims: ['B', '1'], op: `Linear(${D + S}→128)→SiLU→Linear(128→64)→SiLU→Linear(64→1)` }
+          ],
+          aux_danger: [
+            { stage: '切片前 34 牌词元', dims: ['B', '34', `${D}`], op: 'h35[:, :34, :]（仅 forward_aux 训练时计算，推理跳过）' },
+            { stage: '危险张概率头', dims: ['B', '34'], op: `aux_danger_head: Linear(${D}→1).squeeze(-1) 预测34牌放铳危险度` }
+          ]
+        };
+        return map[node.id] || [];
+      } else {
+        const C = v.channels, B_cnt = v.n_blocks, P = v.in_planes, S = v.scalar_dim, A = v.n_actions;
+        const poolDim = C * 5 + S;
+        const map = {
+          obs_planes: [
+            { stage: '原始扁平观测切片', dims: ['B', `${P * 34}`], op: `obs[:, :${P}*34] 截取前 ${P * 34} 维空间特征` },
+            { stage: '重构二维平面', dims: ['B', `${P}`, '34'], op: `.view(B, ${P}, 34) 按通道优先排列 34 种麻将牌` }
+          ],
+          obs_scalars: [
+            { stage: '标量特征切片', dims: ['B', `${S}`], op: S === 46 ? 'obs2_v1 标量(26) + touch(8) + extra_scalar(12) = 46' : `obs[:, ${P}*34:] 提取 ${S} 维全局场况标量` }
+          ],
+          embed: [
+            { stage: '1×1 通道升维', dims: ['B', `${C}`, '34'], op: `nn.Conv1d(${P}→${C}, kernel_size=1) 逐牌混合 ${P} 个输入平面` }
+          ],
+          resblocks: [
+            { stage: `Pre-Act Conv1d ×2`, dims: ['B', `${C}`, '34'], op: `GroupNorm(4,${C})→ReLU→Conv1d(k=3,pad=1) 保持长度 34 不变` },
+            { stage: '双路通道注意力', dims: ['B', `${C}`, '1'], op: `mean(-1)+amax(-1) → Linear(${C}→${Math.max(4, Math.floor(C/4))})→ReLU→Linear(→${C})→Sigmoid` },
+            { stage: `${B_cnt}× 残差堆叠输出`, dims: ['B', `${C}`, '34'], op: `x + attn(h) 重复 ${B_cnt} 个 ResBlock` }
+          ],
+          head_conv: [
+            { stage: '末端空间提炼', dims: ['B', `${C}`, '34'], op: `F.relu(Conv1d(${C}→${C}, k=3, pad=1)) → 输出特征图 h` }
+          ],
+          pooling: [
+            { stage: '分段平均池化 (4段)', dims: ['B', `${C * 4}`], op: `AdaptiveAvgPool1d(4)(h).flatten(1) → ${C}×4 = ${C * 4}` },
+            { stage: '全局最大池化', dims: ['B', `${C}`], op: `h.amax(dim=-1) 提取每通道最显著牌特征 → ${C}` },
+            { stage: '拼接标量得 z', dims: ['B', `${poolDim}`], op: `cat([seg(${C * 4}), glob(${C}), scalars(${S})]) = ${poolDim}` }
+          ],
+          head_fc: [
+            { stage: '第一层压缩', dims: ['B', '512'], op: `Linear(${poolDim} → 512) → ReLU` },
+            { stage: '全局表征 z_fc', dims: ['B', '256'], op: 'Linear(512 → 256) → ReLU' }
+          ],
+          policy_head: v.per_tile_head ? [
+            { stage: '全局上下文广播', dims: ['B', `${C}`, '34'], op: `h[B,${C},34] + tile_ctx(z_fc)[B,${C},1] 注入全局局势` },
+            { stage: '逐牌 1×1 卷积切牌', dims: ['B', '34'], op: `tile_policy: Conv1d(${C}→1, k=1).squeeze(1) → 34 切牌 logits` },
+            { stage: '拼接特殊动作头', dims: ['B', `${A}`], op: `cat([discard(34), special_policy(256→${A - 34})]) = ${A}` }
+          ] : [
+            { stage: '全连接映射', dims: ['B', `${A}`], op: `policy: Linear(256 → ${A}) 输出 ${A} 槽动作 logits` }
+          ],
+          value_head: [
+            { stage: '单层价值估计', dims: ['B', '1'], op: 'value: Linear(256 → 1).squeeze(-1) 输出 V(s)' }
+          ]
+        };
+        return map[node.id] || [];
+      }
+    }
+
+    function getDimInfo(token, v, modelKey) {
+      const D = v.d_model || v.channels;
+      const P = v.in_planes;
+      const S = v.scalar_dim;
+      const T = v.event_len || 48;
+      const A = v.n_actions;
+      const isDual = modelKey === 'dual';
+
+      if (token === 'B') {
+        return {
+          title: 'Batch Size (B)',
+          source: '推理=1 / 训练=mini-batch',
+          formula: '批大小维度：在线对局单步推理时 B=1；BC/PPO 训练时为并行样本数（如 64~512）。',
+          relatedNodes: isDual ? ['obs_in', 'ev_emb', 'fusion'] : ['obs_planes', 'obs_scalars', 'head_fc']
+        };
+      }
+      if (token === '3B') {
+        return {
+          title: '折叠花色维 (3B = 3 × B)',
+          source: 'mahjong/dual_net.py:208',
+          formula: '3 门数牌（万/筒/索）× Batch(B) = 3B。将花色折叠进 Batch 维后做 1D 卷积，强制三门共享参数且绝不在 9m↔1p 处跨花色污染。',
+          relatedNodes: ['obs_in', 'suit_enc', 'q35_merge']
+        };
+      }
+      if (token === '34') {
+        return {
+          title: '麻将牌种总数 (34)',
+          source: 'mahjong/tiles.py · NUM_TILES',
+          formula: '9 万 (1m–9m) + 9 筒 (1p–9p) + 9 索 (1s–9s) + 7 字牌 (东南西北白发中) = 34 种牌。',
+          relatedNodes: isDual ? ['obs_in', 'q35_merge', 'discard_head', 'aux_danger'] : ['obs_planes', 'embed', 'resblocks', 'head_conv', 'policy_head']
+        };
+      }
+      if (token === '27') {
+        return {
+          title: '数牌总数 (27)',
+          source: 'mahjong/dual_net.py:207',
+          formula: '3 花色（万/筒/索）× 9 点数（1..9）= 27。具有顺子相邻拓扑结构，适合 1D 卷积。',
+          relatedNodes: ['obs_in', 'suit_enc', 'q35_merge']
+        };
+      }
+      if (token === '9') {
+        return {
+          title: '单花色长度 (9)',
+          source: 'mahjong/dual_net.py:208',
+          formula: '每门数牌从 1 到 9 共 9 张（如 1m..9m），Conv1d(k=3, pad=1) 恰好覆盖相邻两张搭子/顺子关系。',
+          relatedNodes: ['suit_enc']
+        };
+      }
+      if (token === '7') {
+        return {
+          title: '字牌总数 (7)',
+          source: 'mahjong/dual_net.py:214',
+          formula: '4 风牌（东/南/西/北）+ 3 三元牌（白/发/中）= 7。无顺子邻接关系，因此独立走 MLP。',
+          relatedNodes: ['obs_in', 'honor_enc', 'q35_merge']
+        };
+      }
+      if (token === String(P)) {
+        return {
+          title: `观测特征平面数 (${P})`,
+          source: P === 29 ? 'mahjong/obs2.py · N_PLANES' : 'mahjong/obs2_v1.py · N_PLANES',
+          formula: P === 29
+            ? '22 基础平面（手牌1 + 四家暗牌4 + 四家牌河4 + 四家副露4 + 副露组数1 + 已见1 + 宝/里宝2 + 上张弃牌1 + 自家牌河1 + 自家立直1 + 宝牌集合1 + 未知牌1）+ 3 对手立直 + 3 现物安全牌 + 1 赤宝牌 = 29。'
+            : 'Legacy obs2_v1：22 个基础公开平面（不含后期新增的对手立直、现物安全牌与赤宝平面）。',
+          relatedNodes: isDual ? ['obs_in', 'suit_enc', 'honor_enc'] : ['obs_planes', 'embed']
+        };
+      }
+      if (token === String(P * 34)) {
+        return {
+          title: `展平牌面维度 (${P * 34})`,
+          source: 'mahjong/net.py:113',
+          formula: `${P} 个特征平面 × 34 种牌 = ${P * 34} 维，在网络入口处 reshape 回 [B, ${P}, 34]。`,
+          relatedNodes: isDual ? ['obs_in'] : ['obs_planes']
+        };
+      }
+      if (token === String(P * 34 + S)) {
+        return {
+          title: `输入观测总维度 (${P * 34 + S})`,
+          source: 'mahjong/obs2.py · OBS_TENSOR_DIM',
+          formula: `${P} 平面 × 34 牌 (${P * 34}) + ${S} 维全局标量 = ${P * 34 + S} 维。`,
+          relatedNodes: isDual ? ['obs_in', 'suit_enc', 'honor_enc', 'sit_enc'] : ['obs_planes', 'obs_scalars']
+        };
+      }
+      if (token === String(S)) {
+        return {
+          title: `全局场况标量维 (${S})`,
+          source: S === 46 ? 'obs2_v1 + touch + sit' : 'mahjong/obs2.py · SCALAR_DIM',
+          formula: S === 46
+            ? '26 基础标量 + 8 touch_dim + 12 extra_scalar(局势扩展) = 46 维（Legacy Best ckpt 配置）。'
+            : '4 四家点数 + 1 庄家 + 1 巡目 + 4 场风 + 4 自风 + 1 振听 + 1 立直 + 1 余山 + 4 手牌数 + 2 阶段 + 1 副露数 + 2 上张弃牌标志 + 3 对手立直 + 3 响应弃牌者座位 = 32 维。',
+          relatedNodes: isDual ? ['obs_in', 'sit_enc', 'value_head'] : ['obs_scalars', 'pooling']
+        };
+      }
+      if (token === '35') {
+        return {
+          title: 'Query 词元总数 (35)',
+          source: 'mahjong/dual_net.py:220',
+          formula: '27 数牌 Token + 7 字牌 Token + 1 全局场况枢纽 Token = 35。前 34 位严格对齐 34 种牌，第 35 位负责全局决策。',
+          relatedNodes: ['suit_enc', 'honor_enc', 'sit_enc', 'q35_merge', 'fusion']
+        };
+      }
+      if (token === String(T)) {
+        return {
+          title: `历史事件序列长度 (${T})`,
+          source: 'mahjong/event_stream.py · DEFAULT_EVENT_LEN',
+          formula: `第 0 位固定 BOS 起始标记（防止开局全 padding 产生 NaN）+ 最近 ${T - 1} 步公开牌河/副露/立直事件 = ${T} 步。`,
+          relatedNodes: ['ev_emb', 'ev_enc', 'fusion']
+        };
+      }
+      if (token === '4') {
+        return {
+          title: '单步事件四元组 (4)',
+          source: 'mahjong/event_stream.py:6-9',
+          formula: '每步历史事件由 4 个离散整数表示：[0: 相对座位(0..4), 1: 牌号(0..34), 2: 动作类型(BOS/手切/摸切/立直/吃/碰/杠), 3: 巡目桶(0..24)]。',
+          relatedNodes: ['ev_emb', 'ev_enc']
+        };
+      }
+      if (isDual && token === String(D)) {
+        return {
+          title: `Transformer 隐藏维度 d_model (${D})`,
+          source: 'mahjong/dual_net.py:108',
+          formula: `网络主干宽度 d_model=${D}，配合 n_heads=${v.n_heads}（每头维度 ${D / v.n_heads}），FFN 中间维度 2×d_model=${D * 2}。`,
+          relatedNodes: ['suit_enc', 'honor_enc', 'sit_enc', 'q35_merge', 'ev_emb', 'ev_enc', 'fusion']
+        };
+      }
+      if (!isDual && token === String(D)) {
+        return {
+          title: `卷积主干通道数 channels (${D})`,
+          source: 'mahjong/net.py:73',
+          formula: `embed 将 ${P} 平面升维至 ${D} 通道，经 ${v.n_blocks} 个 ResBlock 与 ChannelAttention（隐藏层 ${Math.max(4, Math.floor(D / 4))}）保持 ${D} 通道不变。`,
+          relatedNodes: ['embed', 'resblocks', 'head_conv', 'pooling']
+        };
+      }
+      if (!isDual && token === String(D * 4)) {
+        return {
+          title: `4 段平均池化展平 (${D * 4})`,
+          source: 'mahjong/net.py:94,120',
+          formula: `AdaptiveAvgPool1d(4) 将 34 牌压为 4 段（近似对应万/筒/索/字 4 区段）× ${D} 通道 = ${D * 4} 维。`,
+          relatedNodes: ['head_conv', 'pooling']
+        };
+      }
+      if (!isDual && token === String(D * 5 + S)) {
+        return {
+          title: `池化拼接向量 z (${D * 5 + S})`,
+          source: 'mahjong/net.py:96,122',
+          formula: `segpool (${D}×4 = ${D * 4}) + maxpool (${D}) + scalars (${S}) = ${D * 5 + S} 维，直接送入 head_fc。`,
+          relatedNodes: ['head_conv', 'obs_scalars', 'pooling', 'head_fc']
+        };
+      }
+      if (isDual && token === String(D + S)) {
+        return {
+          title: `价值塔融合输入 (${D + S})`,
+          source: 'mahjong/dual_net.py:190,279',
+          formula: `第 35 号全局词元 h35[:, 34] (${D}) + 原始场况标量 scalars (${S}) = ${D + S} 维，让 Critic 直接看到精确点数与巡目。`,
+          relatedNodes: ['fusion', 'obs_in', 'value_head']
+        };
+      }
+      if (token === '512') {
+        return {
+          title: 'head_fc 隐藏层 (512)',
+          source: 'mahjong/net.py:96',
+          formula: `全连接瓶颈第一层：将 ${D * 5 + S} 维多尺度池化特征压缩至 512 维 + ReLU。`,
+          relatedNodes: ['pooling', 'head_fc']
+        };
+      }
+      if (token === '256') {
+        return {
+          title: '全局局势表征 z_fc (256)',
+          source: 'mahjong/net.py:98',
+          formula: 'head_fc 输出的 256 维紧凑局势向量，同时驱动 policy（或 tile_ctx + special_policy）与 value 头。',
+          relatedNodes: ['head_fc', 'policy_head', 'value_head']
+        };
+      }
+      if (token === String(A - 34)) {
+        return {
+          title: `特殊动作槽数 (${A - 34})`,
+          source: isDual ? 'mahjong/dual_net.py:186' : 'mahjong/net.py:105',
+          formula: `总动作槽 ${A} − 34 切牌槽 = ${A - 34} 个特殊动作槽（立直、吃×3、碰、暗/明/加杠、自摸、荣和、流局、过牌等）。`,
+          relatedNodes: isDual ? ['special_head', 'fusion'] : ['policy_head']
+        };
+      }
+      if (token === String(A)) {
+        return {
+          title: `完整动作空间槽数 (${A})`,
+          source: A === 54 ? 'mahjong/net.py · 54槽哈希' : 'train_hanchan.py · N_ACTIONS=47',
+          formula: A === 54
+            ? '34 切牌槽 (0..33) + 20 哈希特殊动作槽 (34..53) = 54 槽（旧版定长哈希映射）。'
+            : '34 切牌槽 (0..33) + 13 显式特殊动作槽 (34..46) = 47 槽，推理时叠加 legal_action_mask 做 masked softmax。',
+          relatedNodes: isDual ? ['discard_head', 'special_head'] : ['policy_head']
+        };
+      }
+      if (token === '1') {
+        return {
+          title: '标量维度 (1)',
+          source: '单张/单值维度',
+          formula: '作为 Token 维时表示第 35 号单个全局场况词元；作为输出维时表示局面价值估计 V(s) 或单通道权重。',
+          relatedNodes: isDual ? ['sit_enc', 'value_head'] : ['value_head', 'resblocks']
+        };
+      }
+      return {
+        title: `维度 ${token}`,
+        source: getCurrentModel().file,
+        formula: `该层张量在这一轴上的长度为 ${token}。`,
+        relatedNodes: [state.selectedNodeId]
+      };
+    }
+
+    function getHighlightedNodeIds() {
+      if (!state.activeDimToken) return [];
+      const info = getDimInfo(state.activeDimToken, getCurrentVariant(), state.modelKey);
+      return info.relatedNodes || [];
+    }
+
+    function applyDimHighlightTo3D() {
+      const hlIds = new Set(getHighlightedNodeIds());
+      Object.entries(nodeGroups).forEach(([id, grp]) => {
+        if (grp.userData.dimBox) {
+          grp.userData.dimBox.visible = hlIds.has(id);
+        }
+      });
+    }
+
+    function selectDimToken(token) {
+      state.activeDimToken = (state.activeDimToken === token) ? null : token;
+      applyDimHighlightTo3D();
+      renderInspector();
+      if (state.renderMode === '2d') render2DSvg();
+    }
+
+    // =========================================================================
+    // 5. UI BINDINGS & INSPECTOR SYNC
+    // =========================================================================
+    function renderInspector() {
+      const m = getCurrentModel();
+      const v = getCurrentVariant();
+      const nodes = getCurrentNodes();
+
+      document.getElementById('inspModelTitle').textContent = m.name;
+      document.getElementById('inspModelFile').textContent = m.file;
+      document.getElementById('badgeParams').textContent = v.paramsShort;
+      document.getElementById('kpiParams').textContent = v.totalParams.toLocaleString();
+      document.getElementById('kpiActions').textContent = `${v.n_actions} 槽位`;
+      document.getElementById('kpiInput').textContent = state.modelKey === 'dual'
+        ? `obs: (B, ${v.in_planes}×34 + ${v.scalar_dim}) · events: (B, ${v.event_len}, 4)`
+        : `obs: (B, ${v.in_planes}×34 + ${v.scalar_dim})`;
+
+      // Variant Buttons
+      const vb = document.getElementById('variantButtons');
+      vb.innerHTML = '';
+      m.variants.forEach(item => {
+        const btn = document.createElement('button');
+        const active = item.id === v.id;
+        btn.className = `px-2 py-1 text-[11px] rounded-md border transition ${active ? 'bg-cyan-500/20 text-cyan-200 border-cyan-400/50 font-medium' : 'bg-slate-900/70 text-slate-400 border-slate-700/60 hover:text-slate-200'}`;
+        btn.textContent = item.label;
+        btn.addEventListener('click', () => {
+          state.variantId = item.id;
+          syncAll();
+        });
+        vb.appendChild(btn);
+      });
+
+      // Module List
+      const list = document.getElementById('moduleList');
+      list.innerHTML = '';
+      nodes.forEach(n => {
+        const isSel = n.id === state.selectedNodeId;
+        const row = document.createElement('button');
+        row.className = `w-full text-left px-2.5 py-2 rounded-lg border flex items-center justify-between gap-2 transition ${isSel ? 'bg-slate-800/95 border-cyan-400/60 text-white' : 'bg-slate-900/55 border-slate-800/80 text-slate-300 hover:bg-slate-800/60'}`;
+        row.innerHTML = `
+          <span class="flex items-center gap-2 min-w-0">
+            <span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:${n.hex}"></span>
+            <span class="text-xs font-medium truncate">${n.name}</span>
+          </span>
+          <span class="font-mono text-[10px] text-slate-400 shrink-0">${n.params > 0 ? (n.params / 1000).toFixed(1) + 'K' : '输入'}</span>
+        `;
+        row.addEventListener('click', () => selectNode(n.id));
+        list.appendChild(row);
+      });
+
+      // Selected Module Detail
+      const sel = nodes.find(n => n.id === state.selectedNodeId) || nodes[0];
+      if (sel) {
+        state.selectedNodeId = sel.id;
+        document.getElementById('modTag').textContent = sel.tag;
+        document.getElementById('modTag').style.color = sel.hex;
+        document.getElementById('modTag').style.backgroundColor = sel.hex + '22';
+        document.getElementById('modName').textContent = sel.name;
+        const pct = v.totalParams > 0 ? ((sel.params / v.totalParams) * 100).toFixed(1) : '0.0';
+        document.getElementById('modParams').textContent = sel.params > 0 ? `${sel.params.toLocaleString()} (${pct}%)` : '0 参数';
+        const shapeBox = document.getElementById('modShape');
+        const steps = getShapeSteps(sel, v, state.modelKey);
+        if (state.activeStepIdx >= steps.length) state.activeStepIdx = 0;
+        shapeBox.innerHTML = '';
+        steps.forEach((st, idx) => {
+          const isStepActive = idx === state.activeStepIdx;
+          const card = document.createElement('div');
+          card.className = `step-card rounded-md px-2 py-1.5 border ${isStepActive ? 'active border-sky-400/60 bg-sky-500/10' : 'border-slate-800/80 bg-slate-900/50 hover:border-slate-700'}`;
+
+          const topRow = document.createElement('div');
+          topRow.className = 'flex items-center justify-between gap-1.5 flex-wrap';
+
+          const stageLbl = document.createElement('span');
+          stageLbl.className = 'text-[10px] font-medium text-slate-400';
+          stageLbl.textContent = `${idx + 1}. ${st.stage}`;
+
+          const chipsWrap = document.createElement('div');
+          chipsWrap.className = 'flex items-center gap-0.5 font-mono text-[11px] flex-wrap';
+          const openBr = document.createElement('span');
+          openBr.className = 'text-slate-500';
+          openBr.textContent = '[';
+          chipsWrap.appendChild(openBr);
+
+          st.dims.forEach((tok, ti) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `dim-chip ${state.activeDimToken === tok ? 'active' : ''}`;
+            btn.textContent = tok;
+            btn.title = `点击查看维度 ${tok} 的来源并高亮关联模块`;
+            btn.addEventListener('click', (ev) => {
+              ev.stopPropagation();
+              state.activeStepIdx = idx;
+              selectDimToken(tok);
+            });
+            chipsWrap.appendChild(btn);
+            if (ti < st.dims.length - 1) {
+              const comma = document.createElement('span');
+              comma.className = 'text-slate-500 mr-0.5';
+              comma.textContent = ',';
+              chipsWrap.appendChild(comma);
+            }
+          });
+          const closeBr = document.createElement('span');
+          closeBr.className = 'text-slate-500';
+          closeBr.textContent = ']';
+          chipsWrap.appendChild(closeBr);
+
+          topRow.appendChild(stageLbl);
+          topRow.appendChild(chipsWrap);
+          card.appendChild(topRow);
+
+          const opDiv = document.createElement('div');
+          opDiv.className = `font-mono text-[10px] mt-1 leading-relaxed ${isStepActive ? 'text-sky-200' : 'text-slate-400'}`;
+          opDiv.textContent = '↳ ' + st.op;
+          card.appendChild(opDiv);
+
+          card.addEventListener('click', () => {
+            state.activeStepIdx = idx;
+            renderInspector();
+          });
+          shapeBox.appendChild(card);
+        });
+
+        // Dimension Explanation & Cross-Module Highlight Box
+        const expBox = document.getElementById('dimExplainBox');
+        const btnClear = document.getElementById('btnClearDim');
+        if (state.activeDimToken) {
+          const info = getDimInfo(state.activeDimToken, v, state.modelKey);
+          expBox.classList.remove('hidden');
+          btnClear.classList.remove('hidden');
+          document.getElementById('dimExplainTitle').textContent = info.title;
+          document.getElementById('dimExplainSource').textContent = info.source;
+          document.getElementById('dimExplainFormula').textContent = info.formula;
+
+          const relWrap = document.getElementById('dimExplainNodes');
+          relWrap.innerHTML = '<span class="text-[10px] text-amber-300/80 mr-1">关联高亮模块:</span>';
+          const nodeMap = Object.fromEntries(nodes.map(n => [n.id, n]));
+          (info.relatedNodes || []).forEach(nid => {
+            const target = nodeMap[nid];
+            if (!target) return;
+            const pill = document.createElement('button');
+            pill.type = 'button';
+            pill.className = 'text-[10px] px-1.5 py-0.5 rounded bg-slate-900/90 text-amber-200 border border-amber-400/40 hover:bg-amber-500/20 transition';
+            pill.textContent = target.name;
+            pill.addEventListener('click', () => selectNode(nid));
+            relWrap.appendChild(pill);
+          });
+        } else {
+          expBox.classList.add('hidden');
+          btnClear.classList.add('hidden');
+        }
+        document.getElementById('modDesc').textContent = sel.desc;
+
+        const sub = document.getElementById('modSubList');
+        sub.innerHTML = '';
+        (sel.details || []).forEach(line => {
+          const d = document.createElement('div');
+          d.className = 'text-[11px] font-mono text-slate-300 bg-slate-950/60 px-2.5 py-1.5 rounded border border-slate-800/70';
+          d.textContent = '• ' + line;
+          sub.appendChild(d);
+        });
+      }
+    }
+
+    function selectNode(nodeId) {
+      state.selectedNodeId = nodeId;
+      state.activeStepIdx = 0;
+      Object.entries(nodeGroups).forEach(([id, grp]) => {
+        if (grp.userData.selBox) grp.userData.selBox.visible = (id === nodeId);
+      });
+      applyDimHighlightTo3D();
+      renderInspector();
+      if (state.renderMode === '2d') render2DSvg();
+    }
+
+    function syncAll() {
+      // Model tabs
+      const isDual = state.modelKey === 'dual';
+      document.getElementById('btnModelDual').className = `px-2.5 py-1 text-xs font-medium rounded-md transition-all ${isDual ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40' : 'text-slate-400 hover:text-slate-200 border border-transparent'}`;
+      document.getElementById('btnModelConv').className = `px-2.5 py-1 text-xs font-medium rounded-md transition-all ${!isDual ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40' : 'text-slate-400 hover:text-slate-200 border border-transparent'}`;
+
+      // Render mode tabs
+      const is3D = state.renderMode === '3d';
+      document.getElementById('btnMode3D').className = `px-2.5 py-1 text-xs font-medium rounded-md transition-all ${is3D ? 'bg-indigo-500/25 text-indigo-200 border border-indigo-400/40' : 'text-slate-400 hover:text-slate-200 border border-transparent'}`;
+      document.getElementById('btnMode2D').className = `px-2.5 py-1 text-xs font-medium rounded-md transition-all ${!is3D ? 'bg-indigo-500/25 text-indigo-200 border border-indigo-400/40' : 'text-slate-400 hover:text-slate-200 border border-transparent'}`;
+
+      document.getElementById('viewport3d').classList.toggle('hidden', !is3D);
+      document.getElementById('viewport2d').classList.toggle('hidden', is3D);
+      document.getElementById('btnToggleExplode').classList.toggle('hidden', !is3D);
+      document.getElementById('btnToggleRotate').classList.toggle('hidden', !is3D);
+      document.getElementById('btnResetCam').classList.toggle('hidden', !is3D);
+      document.getElementById('btnDownloadSvg').classList.toggle('hidden', is3D);
+
+      rebuild3DScene();
+      applyDimHighlightTo3D();
+      render2DSvg();
+      renderInspector();
+    }
+
+    // Event Listeners
+    document.getElementById('btnModelDual').addEventListener('click', () => {
+      state.modelKey = 'dual';
+      state.variantId = 'light';
+      state.selectedNodeId = 'fusion';
+      state.activeDimToken = null;
+      state.activeStepIdx = 0;
+      syncAll();
+    });
+    document.getElementById('btnModelConv').addEventListener('click', () => {
+      state.modelKey = 'conv';
+      state.variantId = 'pertile';
+      state.selectedNodeId = 'resblocks';
+      state.activeDimToken = null;
+      state.activeStepIdx = 0;
+      syncAll();
+    });
+    document.getElementById('btnClearDim').addEventListener('click', () => {
+      state.activeDimToken = null;
+      applyDimHighlightTo3D();
+      renderInspector();
+      if (state.renderMode === '2d') render2DSvg();
+    });
+    document.getElementById('btnMode3D').addEventListener('click', () => {
+      state.renderMode = '3d';
+      syncAll();
+      window.dispatchEvent(new Event('resize'));
+    });
+    document.getElementById('btnMode2D').addEventListener('click', () => {
+      state.renderMode = '2d';
+      hoverTip.classList.add('hidden');
+      syncAll();
+    });
+    document.getElementById('btnToggleFlow').addEventListener('click', (e) => {
+      state.flowEnabled = !state.flowEnabled;
+      e.target.textContent = state.flowEnabled ? '● 数据流: 开' : '○ 数据流: 关';
+      e.target.className = state.flowEnabled
+        ? 'px-2.5 py-1.5 text-xs rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/35 hover:bg-emerald-500/30 transition'
+        : 'px-2.5 py-1.5 text-xs rounded-lg bg-slate-800/80 text-slate-400 border border-slate-700 hover:bg-slate-700/80 transition';
+      const svgEl = document.getElementById('archSvg');
+      if (svgEl) svgEl.classList.toggle('flow-paused', !state.flowEnabled);
+    });
+    document.getElementById('btnToggleExplode').addEventListener('click', (e) => {
+      state.exploded = !state.exploded;
+      e.target.textContent = state.exploded ? '收拢层级' : '展开层级';
+      e.target.className = state.exploded
+        ? 'px-2.5 py-1.5 text-xs rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 transition'
+        : 'px-2.5 py-1.5 text-xs rounded-lg bg-slate-800/80 text-slate-300 border border-slate-700 hover:bg-slate-700/80 transition';
+      rebuild3DScene();
+    });
+    document.getElementById('btnToggleRotate').addEventListener('click', (e) => {
+      state.autoRotate = !state.autoRotate;
+      e.target.textContent = state.autoRotate ? '自动旋转: 开' : '自动旋转: 关';
+      e.target.className = state.autoRotate
+        ? 'px-2.5 py-1.5 text-xs rounded-lg bg-indigo-500/25 text-indigo-200 border border-indigo-400/40 transition'
+        : 'px-2.5 py-1.5 text-xs rounded-lg bg-slate-800/80 text-slate-300 border border-slate-700 hover:bg-slate-700/80 transition';
+    });
+    document.getElementById('btnResetCam').addEventListener('click', () => {
+      camOrbit.theta = 0.36;
+      camOrbit.phi = 1.18;
+      camOrbit.radius = 26.5;
+      camOrbit.target.set(0.4, 0.2, 0);
+      updateCamera();
+    });
+    document.getElementById('btnDownloadSvg').addEventListener('click', () => {
+      const svgEl = document.getElementById('archSvg');
+      if (!svgEl) return;
+      const blob = new Blob([svgEl.outerHTML], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `riichi_rl_${state.modelKey}_${state.variantId}.svg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    // Mobile Inspector Drawer
+    const inspPanel = document.getElementById('inspectorPanel');
+    document.getElementById('btnToggleInspectorMobile').addEventListener('click', () => {
+      inspPanel.classList.toggle('translate-x-full');
+    });
+    document.getElementById('btnCloseInspectorMobile').addEventListener('click', () => {
+      inspPanel.classList.add('translate-x-full');
+    });
+
+    // Initial Render (pre-highlight '35' to showcase interactive dimension trace)
+    state.activeDimToken = '35';
+    syncAll();
+  </script>
+</body>
+</html>

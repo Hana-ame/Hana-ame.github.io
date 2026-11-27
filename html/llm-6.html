@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新一代 LLM 6 大架构可视化全景整理</title>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <style>
+    :root {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    }
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .math-formula {
+      font-family: 'Cambria Math', 'Times New Roman', ui-serif, Georgia, serif;
+      letter-spacing: 0.015em;
+    }
+    .svg-node {
+      cursor: pointer;
+      transition: filter 0.15s ease, opacity 0.15s ease;
+    }
+    .svg-node:hover {
+      filter: drop-shadow(0 3px 8px rgba(37, 99, 235, 0.25));
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+    .anchor-card {
+      scroll-margin-top: 24px;
+      transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+    .anchor-card.is-flash {
+      border-color: #4f46e5 !important;
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.22);
+    }
+    .katex-display {
+      margin: 0.25rem 0 !important;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 0.25rem 0;
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-indigo-100 selection:text-indigo-900">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <!-- Header -->
+    <header class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <div class="flex flex-wrap items-center gap-2 text-xs font-medium mb-2">
+            <span class="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">6 张完整矢量 SVG 架构图</span>
+            <span class="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-semibold">全页 LaTeX 公式 + 专属配图 · 点击图块直接锚点跳转</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+            新一代 LLM 神经网络主干 &amp; 外围系统架构全景整理
+          </h1>
+          <p class="mt-1.5 text-sm text-slate-600 max-w-3xl">
+            完整还原全部 6 张架构图的每一个模块、子图与数据流向，并配套<strong>看图要点、数学解析、以及“为什么好 &amp; 适合写论文”</strong>说明。
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <button id="btn-show-all" type="button" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm transition">
+            回到顶部 ↑
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter / Jump Tabs -->
+      <nav id="fig-nav" class="mt-5 pt-4 border-t border-slate-100 flex flex-wrap gap-2" aria-label="架构图切换">
+        <button type="button" data-fig="all" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 text-white">顶部总览</button>
+        <button type="button" data-fig="fig1" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200">图 1 · 神经网络主干</button>
+        <button type="button" data-fig="fig2" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200">图 2 · 循环与快权重</button>
+        <button type="button" data-fig="fig3" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200">图 3 · RLVR 飞轮</button>
+        <button type="button" data-fig="fig4" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200">图 4 · MemOS 记忆</button>
+        <button type="button" data-fig="fig5" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200">图 5 · 路由与验证</button>
+        <button type="button" data-fig="fig6" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200">图 6 · PD 分离 + KV 池</button>
+      </nav>
+    </header>
+
+    <main class="mt-6 space-y-6">
+      <!-- ==================== PART 1 HEADER ==================== -->
+      <div class="part-header flex items-center gap-3 px-1" data-part="backbone">
+        <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-bold">第一部分</span>
+        <h2 class="text-lg font-bold text-slate-900">神经网络主干架构可视化（图 1 — 图 2）</h2>
+      </div>
+
+      <!-- ==================== FIG 1 ==================== -->
+      <section id="fig1" class="fig-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-bold text-indigo-600">图 1 · 神经网络主干</span>
+            <h3 class="text-lg font-bold text-slate-900 mt-0.5">新一代 LLM 神经网络主干全景图</h3>
+          </div>
+          <span class="text-xs px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 self-start sm:self-center">点击任意方块查看数学解析</span>
+        </div>
+
+        <div class="px-5 py-3 bg-indigo-50/50 border-b border-indigo-100 text-xs sm:text-sm text-slate-700">
+          <strong>看图要点：</strong>把“死记硬背（查表记忆）”、“长程压缩（线性注意力）”、“精准检索（稀疏全局注意力）”和“动态推理（MoE + 循环深度）”彻底解耦。
+        </div>
+
+        <div class="p-4 sm:p-6 bg-slate-50/60 overflow-x-auto">
+          <svg viewBox="0 0 820 490" class="w-full min-w-[640px] h-auto block mx-auto" role="img" aria-label="图 1：新一代 LLM 神经网络主干全景图">
+            <defs>
+              <marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+              <marker id="a1-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="#ea580c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+              <marker id="a1-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+            </defs>
+
+            <!-- Input -->
+            <g class="svg-node" data-tip="f1-in" tabindex="0">
+              <rect x="190" y="14" width="440" height="48" rx="12" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+              <text x="410" y="34" text-anchor="middle" font-size="13" font-weight="700" fill="#0d47a1">原生统一多模态输入</text>
+              <text x="410" y="51" text-anchor="middle" font-size="11" fill="#1565c0">文本 Token / 图像 Patch / 音频帧（去独立编码器）</text>
+            </g>
+
+            <!-- Branch lines from IN -->
+            <path d="M 310 62 L 310 80 L 180 80 L 180 96" fill="none" stroke="#475569" stroke-width="1.6" marker-end="url(#a1)"/>
+            <path d="M 510 62 L 510 80 L 580 80 L 580 96" fill="none" stroke="#475569" stroke-width="1.6" marker-end="url(#a1)"/>
+
+            <!-- Left Subgraph: MEM -->
+            <rect x="20" y="96" width="320" height="202" rx="14" fill="#fff7ed" stroke="#fdba74" stroke-width="1.4" stroke-dasharray="5 3"/>
+            <text x="34" y="116" font-size="11.5" font-weight="700" fill="#c2410c">记忆与计算解耦模块（几乎零算力开销）</text>
+
+            <g class="svg-node" data-tip="f1-engram" tabindex="0">
+              <rect x="44" y="126" width="272" height="36" rx="9" fill="#ffedd5" stroke="#ea580c" stroke-width="1.3"/>
+              <text x="180" y="148" text-anchor="middle" font-size="12" font-weight="600" fill="#9a3412">局部 N-gram 哈希索引</text>
+            </g>
+            <line x1="180" y1="162" x2="180" y2="182" stroke="#ea580c" stroke-width="1.6" marker-end="url(#a1-orange)"/>
+
+            <g class="svg-node" data-tip="f1-engram" tabindex="0">
+              <rect x="44" y="186" width="272" height="46" rx="10" fill="#ffffff" stroke="#ea580c" stroke-width="1.6"/>
+              <text x="180" y="206" text-anchor="middle" font-size="12.5" font-weight="700" fill="#9a3412">超大稀疏查表层 Engram</text>
+              <text x="180" y="223" text-anchor="middle" font-size="11" fill="#c2410c">N-gram Memory（如 328B+ 参数）</text>
+            </g>
+
+            <line x1="180" y1="254" x2="180" y2="236" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#a1-orange)"/>
+            <g class="svg-node" data-tip="f1-dram" tabindex="0">
+              <rect x="54" y="256" width="252" height="32" rx="8" fill="#ffedd5" stroke="#fb923c" stroke-width="1.2"/>
+              <text x="180" y="276" text-anchor="middle" font-size="11.5" font-weight="600" fill="#9a3412">低成本 CPU DRAM 异步预取</text>
+            </g>
+
+            <!-- Right Subgraph: CORE -->
+            <rect x="372" y="96" width="428" height="304" rx="14" fill="#f0fdf4" stroke="#86efac" stroke-width="1.4"/>
+            <text x="386" y="116" font-size="11.5" font-weight="700" fill="#166534">主干推理引擎（mHC 流形约束多通道残差流）</text>
+
+            <g class="svg-node" data-tip="f1-enc" tabindex="0">
+              <rect x="440" y="124" width="280" height="32" rx="9" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.3"/>
+              <text x="580" y="144" text-anchor="middle" font-size="12" font-weight="600" fill="#0d47a1">统一底层嵌入映射</text>
+            </g>
+            <line x1="580" y1="156" x2="580" y2="170" stroke="#16a34a" stroke-width="1.6" marker-end="url(#a1-green)"/>
+
+            <g class="svg-node" data-tip="f1-linear" tabindex="0">
+              <rect x="404" y="174" width="352" height="42" rx="10" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+              <text x="580" y="192" text-anchor="middle" font-size="12" font-weight="700" fill="#14532d">~70%-75% 层：线性/增量注意力</text>
+              <text x="580" y="208" text-anchor="middle" font-size="10.5" fill="#15803d">KDA / Mamba（O(1) 恒定显存）</text>
+            </g>
+            <line x1="580" y1="216" x2="580" y2="230" stroke="#16a34a" stroke-width="1.6" marker-end="url(#a1-green)"/>
+
+            <g class="svg-node" data-tip="f1-sparse" tabindex="0">
+              <rect x="404" y="234" width="352" height="42" rx="10" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+              <text x="580" y="252" text-anchor="middle" font-size="12" font-weight="700" fill="#14532d">~25%-30% 层：稀疏全局注意力</text>
+              <text x="580" y="268" text-anchor="middle" font-size="10.5" fill="#15803d">Gated DSA / MLA（精准长距检索）</text>
+            </g>
+            <line x1="580" y1="276" x2="580" y2="288" stroke="#16a34a" stroke-width="1.6" marker-end="url(#a1-green)"/>
+
+            <!-- Gate Fusion + Injection from Engram -->
+            <g class="svg-node" data-tip="f1-gate" tabindex="0">
+              <rect x="495" y="292" width="170" height="28" rx="14" fill="#dcfce7" stroke="#15803d" stroke-width="1.3"/>
+              <text x="580" y="310" text-anchor="middle" font-size="11.5" font-weight="700" fill="#14532d">门控融合（Gated Fusion）</text>
+            </g>
+            <path d="M 316 209 L 354 209 L 354 306 L 491 306" fill="none" stroke="#ea580c" stroke-width="1.6" marker-end="url(#a1-orange)"/>
+            <rect x="330" y="286" width="108" height="18" rx="6" fill="#fff7ed"/>
+            <text x="384" y="299" text-anchor="middle" font-size="10" font-weight="600" fill="#c2410c">注入静态事实记忆</text>
+
+            <line x1="580" y1="320" x2="580" y2="332" stroke="#16a34a" stroke-width="1.6" marker-end="url(#a1-green)"/>
+
+            <!-- Dynamic-k MoE -->
+            <g class="svg-node" data-tip="f1-moe" tabindex="0">
+              <rect x="404" y="336" width="224" height="48" rx="10" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+              <text x="516" y="356" text-anchor="middle" font-size="12" font-weight="700" fill="#14532d">动态稀疏 MoE 层</text>
+              <text x="516" y="373" text-anchor="middle" font-size="10.5" fill="#15803d">Dynamic-k + 共享专家（简单词跳过）</text>
+            </g>
+            <line x1="628" y1="360" x2="646" y2="360" stroke="#16a34a" stroke-width="1.6" marker-end="url(#a1-green)"/>
+
+            <!-- Loop Decision -->
+            <g class="svg-node" data-tip="f1-loop" tabindex="0">
+              <rect x="650" y="336" width="136" height="48" rx="24" fill="#dcfce7" stroke="#15803d" stroke-width="1.6"/>
+              <text x="718" y="356" text-anchor="middle" font-size="11.5" font-weight="700" fill="#14532d">难度门控</text>
+              <text x="718" y="372" text-anchor="middle" font-size="10" fill="#166534">隐空间循环判断</text>
+            </g>
+
+            <!-- Loop back arrow -->
+            <path d="M 786 360 L 796 360 L 796 195 L 760 195" fill="none" stroke="#15803d" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#a1-green)"/>
+            <text x="774" y="280" text-anchor="middle" font-size="10" font-weight="700" fill="#166534" transform="rotate(-90 774 280)">难题：循环 k 次</text>
+
+            <!-- Output Head -->
+            <path d="M 718 384 L 718 418 L 626 418" fill="none" stroke="#6a1b9a" stroke-width="1.7" marker-end="url(#a1)"/>
+            <text x="676" y="411" text-anchor="middle" font-size="10" fill="#6b21a8">思考完成</text>
+
+            <g class="svg-node" data-tip="f1-mtp" tabindex="0">
+              <rect x="296" y="414" width="326" height="46" rx="12" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+              <text x="459" y="433" text-anchor="middle" font-size="12.5" font-weight="700" fill="#4a148c">原生 MTP 多 Token 预测头 / 块扩散并行解码</text>
+              <text x="459" y="450" text-anchor="middle" font-size="11" fill="#6a1b9a">单步并行预测多个 Token + 拒绝采样无损校验</text>
+            </g>
+            <line x1="296" y1="437" x2="254" y2="437" stroke="#6a1b9a" stroke-width="1.7" marker-end="url(#a1)"/>
+            <g class="svg-node" data-tip="f1-mtp" tabindex="0">
+              <rect x="44" y="418" width="206" height="38" rx="19" fill="#4a148c"/>
+              <text x="147" y="441" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">单步并行输出多个 Token</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 bg-white">
+          <div class="rounded-xl bg-indigo-50/50 border border-indigo-100 p-4">
+            <div class="text-xs font-bold text-indigo-800 mb-1">数学原理解析</div>
+            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              用核映射 + 矩阵结合律 <span class="math-formula font-semibold">(φ(Q)φ(K)ᵀ)V = φ(Q)(φ(K)ᵀV)</span> 把 75% 层显存锁死在 O(1)；25% 全局层配合 MLA 矩阵吸收守住秩上限；FFN 展开为软键值表，静态部分抽成 O(1) 哈希字典，动态部分靠长尾稀疏截断做 MoE；MTP 靠拒绝采样实现 100% 零误差提速。
+            </p>
+          </div>
+          <div class="rounded-xl bg-amber-50/80 border border-amber-200/80 p-4">
+            <div class="text-xs font-bold text-amber-900 mb-1">为什么好 &amp; 为什么适合写论文</div>
+            <p class="text-xs sm:text-sm text-amber-950/90 leading-relaxed">
+              彻底打破 Vanilla“所有词用同一套稠密算力”的浪费。写论文时主线极清（Decoupling Paradigm），在 1B~3B 规模做任意子模块的消融实验与 Iso-FLOPs 对比，都能画出审稿人最爱的 Pareto 前沿曲线。
+            </p>
+          </div>
+        </div>
+      
+        <!-- Full-page LaTeX & Visual Formula Detail Cards for Fig 1 -->
+        <div class="border-t border-slate-200 bg-slate-50/50 p-5 sm:p-6">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <h4 class="text-sm sm:text-base font-bold text-slate-900">图 1 · 各模块深度拆解（LaTeX 公式 + 专属原理配图 + 论文切入点）</h4>
+            <a href="#fig1" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 shrink-0">↑ 回到图 1</a>
+          </div>
+          <div id="details-fig1" class="grid grid-cols-1 lg:grid-cols-2 gap-5"></div>
+        </div>
+      </section>
+
+      <!-- ==================== FIG 2 ==================== -->
+      <section id="fig2" class="fig-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-bold text-indigo-600">图 2 · 前沿神经子机制</span>
+            <h3 class="text-lg font-bold text-slate-900 mt-0.5">两大前沿神经子机制内部原理对比</h3>
+          </div>
+          <span class="text-xs px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 self-start sm:self-center">Looped 循环深度 vs Titans 在线快权重</span>
+        </div>
+
+        <div class="px-5 py-3 bg-indigo-50/50 border-b border-indigo-100 text-xs sm:text-sm text-slate-700">
+          <strong>看图要点：</strong>展示“隐空间动态深度”和“测试时快权重（Titans）”是如何打破传统 Transformer 固定计算和静态权重限制的。
+        </div>
+
+        <div class="p-4 sm:p-6 bg-slate-50/60 overflow-x-auto">
+          <svg viewBox="0 0 820 330" class="w-full min-w-[640px] h-auto block mx-auto" role="img" aria-label="图 2：隐空间循环深度与测试时快权重对比图">
+            <defs>
+              <marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+            </defs>
+
+            <!-- Subgraph A: Looped -->
+            <rect x="16" y="14" width="788" height="142" rx="14" fill="#f0fdf4" stroke="#86efac" stroke-width="1.4"/>
+            <text x="32" y="36" font-size="12" font-weight="700" fill="#166534">机制 A：隐空间循环深度（Looped Transformer）—— 打破固定层数</text>
+
+            <g class="svg-node" data-tip="f2-loop" tabindex="0">
+              <rect x="34" y="48" width="176" height="38" rx="9" fill="#ffffff" stroke="#22c55e" stroke-width="1.3"/>
+              <text x="122" y="71" text-anchor="middle" font-size="12" font-weight="600" fill="#14532d">简单 Token（如：的/了）</text>
+            </g>
+            <line x1="210" y1="67" x2="314" y2="67" stroke="#16a34a" stroke-width="1.6" marker-end="url(#a2)"/>
+            <text x="262" y="60" text-anchor="middle" font-size="10.5" fill="#15803d">直通 1 圈</text>
+            <g class="svg-node" data-tip="f2-loop" tabindex="0">
+              <rect x="318" y="48" width="184" height="38" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="1.4"/>
+              <text x="410" y="71" text-anchor="middle" font-size="12" font-weight="700" fill="#14532d">共享权重核心层</text>
+            </g>
+            <line x1="502" y1="67" x2="606" y2="67" stroke="#16a34a" stroke-width="1.6" marker-end="url(#a2)"/>
+            <g class="svg-node" data-tip="f2-loop" tabindex="0">
+              <rect x="610" y="48" width="174" height="38" rx="19" fill="#16a34a"/>
+              <text x="697" y="71" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">快速输出</text>
+            </g>
+
+            <g class="svg-node" data-tip="f2-loop" tabindex="0">
+              <rect x="34" y="102" width="176" height="38" rx="9" fill="#ffffff" stroke="#15803d" stroke-width="1.5"/>
+              <text x="122" y="125" text-anchor="middle" font-size="12" font-weight="700" fill="#14532d">高难推理 Token</text>
+            </g>
+            <line x1="210" y1="121" x2="314" y2="121" stroke="#15803d" stroke-width="1.8" marker-end="url(#a2)"/>
+            <text x="262" y="114" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">循环 8~16 圈</text>
+            <g class="svg-node" data-tip="f2-loop" tabindex="0">
+              <rect x="318" y="102" width="184" height="38" rx="9" fill="#bbf7d0" stroke="#15803d" stroke-width="1.6"/>
+              <text x="410" y="125" text-anchor="middle" font-size="12" font-weight="700" fill="#14532d">共享权重核心层（自环迭代）</text>
+            </g>
+            <path d="M 480 102 C 510 86, 535 121, 506 128" fill="none" stroke="#15803d" stroke-width="1.5" stroke-dasharray="3 2" marker-end="url(#a2)"/>
+            <line x1="502" y1="121" x2="606" y2="121" stroke="#15803d" stroke-width="1.8" marker-end="url(#a2)"/>
+            <g class="svg-node" data-tip="f2-loop" tabindex="0">
+              <rect x="610" y="102" width="174" height="38" rx="19" fill="#14532d"/>
+              <text x="697" y="125" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">高密度逻辑输出</text>
+            </g>
+
+            <!-- Subgraph B: Titans -->
+            <rect x="16" y="172" width="788" height="144" rx="14" fill="#fffbeb" stroke="#fcd34d" stroke-width="1.4"/>
+            <text x="32" y="194" font-size="12" font-weight="700" fill="#b45309">机制 B：测试时在线快权重（Titans / Nested Learning）—— 打破静态权重冻结</text>
+
+            <g class="svg-node" data-tip="f2-titans" tabindex="0">
+              <rect x="34" y="206" width="196" height="40" rx="9" fill="#ffffff" stroke="#f59e0b" stroke-width="1.4"/>
+              <text x="132" y="230" text-anchor="middle" font-size="11.5" font-weight="600" fill="#92400e">读入长代码库 / 历史对话</text>
+            </g>
+            <line x1="230" y1="226" x2="262" y2="226" stroke="#d97706" stroke-width="1.6" marker-end="url(#a2)"/>
+
+            <g class="svg-node" data-tip="f2-titans" tabindex="0">
+              <rect x="266" y="206" width="210" height="40" rx="9" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+              <text x="371" y="224" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">快权重记忆网络 Fast Weights</text>
+              <text x="371" y="239" text-anchor="middle" font-size="10" fill="#b45309">推理期边读边局部梯度更新</text>
+            </g>
+
+            <g class="svg-node" data-tip="f2-titans" tabindex="0">
+              <rect x="266" y="262" width="210" height="38" rx="9" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.4"/>
+              <text x="371" y="285" text-anchor="middle" font-size="11.5" font-weight="600" fill="#0d47a1">慢权重主干（预训练固化通识）</text>
+            </g>
+
+            <path d="M 476 226 L 514 252" fill="none" stroke="#d97706" stroke-width="1.6" marker-end="url(#a2)"/>
+            <path d="M 476 281 L 514 258" fill="none" stroke="#1565c0" stroke-width="1.6" marker-end="url(#a2)"/>
+
+            <g class="svg-node" data-tip="f2-titans" tabindex="0">
+              <rect x="518" y="236" width="114" height="38" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/>
+              <text x="575" y="259" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">双权重协同推理</text>
+            </g>
+            <line x1="632" y1="255" x2="652" y2="255" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#a2)"/>
+
+            <g class="svg-node" data-tip="f2-titans" tabindex="0">
+              <rect x="656" y="232" width="132" height="46" rx="12" fill="#1e40af"/>
+              <text x="722" y="252" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">跨会话 / 超长程</text>
+              <text x="722" y="268" text-anchor="middle" font-size="11" fill="#dbeafe">在线记住新环境</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 bg-white">
+          <div class="rounded-xl bg-indigo-50/50 border border-indigo-100 p-4">
+            <div class="text-xs font-bold text-indigo-800 mb-1">数学原理解析</div>
+            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              Looped 遵循 <span class="math-formula font-semibold">h⁽ᵗ⁺¹⁾ = h⁽ᵗ⁾ + f(h⁽ᵗ⁾; θ)</span>，由 Banach 不动点定理以 γᵏ 收敛且具备图灵完备性；Titans 遵循 Delta Rule 梯度更新 <span class="math-formula font-semibold">Wₜ = Wₜ₋₁(I − ηkₜkₜᵀ) + ηvₜkₜᵀ</span>，数学上与带纠错擦除项的线性注意力完全对偶。
+            </p>
+          </div>
+          <div class="rounded-xl bg-amber-50/80 border border-amber-200/80 p-4">
+            <div class="text-xs font-bold text-amber-900 mb-1">为什么好 &amp; 为什么适合写论文</div>
+            <p class="text-xs sm:text-sm text-amber-950/90 leading-relaxed">
+              小算力高校实验室的黄金赛道！在几百 M 参数上就能验证“以循环步数换深度”的长度外推奇迹，或写出“注意力 ≡ 梯度下降”的统一理论视角，审稿人极易给高分。
+            </p>
+          </div>
+        </div>
+      
+        <!-- Full-page LaTeX & Visual Formula Detail Cards for Fig 2 -->
+        <div class="border-t border-slate-200 bg-slate-50/50 p-5 sm:p-6">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <h4 class="text-sm sm:text-base font-bold text-slate-900">图 2 · 各模块深度拆解（LaTeX 公式 + 专属原理配图 + 论文切入点）</h4>
+            <a href="#fig2" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 shrink-0">↑ 回到图 2</a>
+          </div>
+          <div id="details-fig2" class="grid grid-cols-1 lg:grid-cols-2 gap-5"></div>
+        </div>
+      </section>
+
+      <!-- ==================== PART 2 HEADER ==================== -->
+      <div class="part-header flex items-center gap-3 px-1 pt-2" data-part="system">
+        <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-bold">第二部分</span>
+        <h2 class="text-lg font-bold text-slate-900">外围数据链与系统架构可视化（图 3 — 图 6）</h2>
+      </div>
+
+      <!-- ==================== FIG 3 ==================== -->
+      <section id="fig3" class="fig-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-bold text-emerald-700">图 3 · 训练侧外围数据链</span>
+            <h3 class="text-lg font-bold text-slate-900 mt-0.5">RLVR 可验证自举数据飞轮</h3>
+          </div>
+          <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 self-start sm:self-center">环境试错 + 自动判分闭环</span>
+        </div>
+
+        <div class="px-5 py-3 bg-emerald-50/50 border-b border-emerald-100 text-xs sm:text-sm text-slate-700">
+          <strong>看图要点：</strong>解决互联网人类语料枯竭的核心方案——不再只靠“爬取静态文本”，而是靠“环境试错 + 确定性验证器”自己生产高质量推理与纠错数据。
+        </div>
+
+        <div class="p-4 sm:p-6 bg-slate-50/60 overflow-x-auto">
+          <svg viewBox="0 0 820 270" class="w-full min-w-[640px] h-auto block mx-auto" role="img" aria-label="图 3：RLVR 可验证自举数据飞轮">
+            <defs>
+              <marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+            </defs>
+
+            <g class="svg-node" data-tip="f3-clean" tabindex="0">
+              <rect x="16" y="24" width="110" height="44" rx="10" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.4"/>
+              <text x="71" y="50" text-anchor="middle" font-size="12" font-weight="700" fill="#0d47a1">原始多源语料</text>
+            </g>
+            <line x1="126" y1="46" x2="148" y2="46" stroke="#1565c0" stroke-width="1.6" marker-end="url(#a3)"/>
+
+            <g class="svg-node" data-tip="f3-clean" tabindex="0">
+              <rect x="152" y="18" width="166" height="56" rx="10" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.4"/>
+              <text x="235" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="#0d47a1">模型驱动清洗与打分</text>
+              <text x="235" y="59" text-anchor="middle" font-size="10.5" fill="#1565c0">去重 + 难度分层 + 课程配比</text>
+            </g>
+            <line x1="318" y1="46" x2="342" y2="46" stroke="#6a1b9a" stroke-width="1.6" marker-end="url(#a3)"/>
+
+            <g class="svg-node" data-tip="f3-policy" tabindex="0">
+              <rect x="346" y="22" width="144" height="48" rx="12" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.6"/>
+              <text x="418" y="43" text-anchor="middle" font-size="12.5" font-weight="700" fill="#4a148c">策略模型</text>
+              <text x="418" y="59" text-anchor="middle" font-size="10.5" fill="#6a1b9a">Policy LLM</text>
+            </g>
+            <line x1="490" y1="46" x2="544" y2="46" stroke="#ea580c" stroke-width="1.6" marker-end="url(#a3)"/>
+            <text x="517" y="38" text-anchor="middle" font-size="9.5" fill="#c2410c">海量轨迹</text>
+
+            <g class="svg-node" data-tip="f3-env" tabindex="0">
+              <rect x="548" y="16" width="254" height="60" rx="12" fill="#fff3e0" stroke="#ef6c00" stroke-width="1.5"/>
+              <text x="675" y="39" text-anchor="middle" font-size="12" font-weight="700" fill="#e65100">确定性沙盒环境（Agentic Gym）</text>
+              <text x="675" y="58" text-anchor="middle" font-size="10.5" fill="#c2410c">编译器/单测 · Lean 证明器 · OS/浏览器 VM</text>
+            </g>
+            <line x1="675" y1="76" x2="675" y2="100" stroke="#ef6c00" stroke-width="1.6" marker-end="url(#a3)"/>
+
+            <g class="svg-node" data-tip="f3-ver" tabindex="0">
+              <rect x="565" y="104" width="220" height="42" rx="21" fill="#ffedd5" stroke="#ea580c" stroke-width="1.6"/>
+              <text x="675" y="129" text-anchor="middle" font-size="12" font-weight="700" fill="#9a3412">确定性验证器（自动判分，无需人工）</text>
+            </g>
+
+            <!-- Pass branch -->
+            <path d="M 565 125 L 490 125" fill="none" stroke="#16a34a" stroke-width="1.6" marker-end="url(#a3)"/>
+            <text x="528" y="118" text-anchor="middle" font-size="10" font-weight="600" fill="#15803d">验证通过</text>
+            <g class="svg-node" data-tip="f3-pos" tabindex="0">
+              <rect x="294" y="104" width="192" height="42" rx="10" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.4"/>
+              <text x="390" y="129" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1b5e20">沉淀：高密度正确推理轨迹</text>
+            </g>
+
+            <!-- Error branch -->
+            <path d="M 675 146 L 675 186" fill="none" stroke="#dc2626" stroke-width="1.6" marker-end="url(#a3)"/>
+            <text x="706" y="170" text-anchor="middle" font-size="10" font-weight="600" fill="#b91c1c">运行报错</text>
+            <g class="svg-node" data-tip="f3-fix" tabindex="0">
+              <rect x="548" y="190" width="254" height="48" rx="10" fill="#fff3e0" stroke="#ef6c00" stroke-width="1.4"/>
+              <text x="675" y="210" text-anchor="middle" font-size="11.5" font-weight="700" fill="#e65100">反馈报错日志给模型</text>
+              <text x="675" y="227" text-anchor="middle" font-size="10.5" fill="#c2410c">引导诊断与自我修复</text>
+            </g>
+            <line x1="548" y1="214" x2="490" y2="214" stroke="#16a34a" stroke-width="1.6" marker-end="url(#a3)"/>
+            <text x="519" y="206" text-anchor="middle" font-size="10" font-weight="600" fill="#15803d">修复成功</text>
+            <g class="svg-node" data-tip="f3-fix" tabindex="0">
+              <rect x="294" y="190" width="192" height="48" rx="10" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.4"/>
+              <text x="390" y="210" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1b5e20">沉淀：报错→排查→自纠错</text>
+              <text x="390" y="227" text-anchor="middle" font-size="10.5" fill="#2e7d32">高价值反思轨迹</text>
+            </g>
+
+            <!-- Into Pool -->
+            <path d="M 294 125 L 240 165" fill="none" stroke="#1565c0" stroke-width="1.6" marker-end="url(#a3)"/>
+            <path d="M 294 214 L 240 182" fill="none" stroke="#1565c0" stroke-width="1.6" marker-end="url(#a3)"/>
+
+            <g class="svg-node" data-tip="f3-pool" tabindex="0">
+              <rect x="34" y="148" width="202" height="54" rx="12" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.6"/>
+              <text x="135" y="171" text-anchor="middle" font-size="12" font-weight="700" fill="#0d47a1">RLVR 强化学习与退火数据池</text>
+              <text x="135" y="189" text-anchor="middle" font-size="10.5" fill="#1565c0">闭环反哺更新策略模型权重</text>
+            </g>
+
+            <!-- Closed loop back to Policy -->
+            <path d="M 135 148 L 135 94 L 418 94 L 418 74" fill="none" stroke="#6a1b9a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#a3)"/>
+            <text x="276" y="88" text-anchor="middle" font-size="10.5" font-weight="700" fill="#6a1b9a">闭环更新权重（越练越强）</text>
+          </svg>
+        </div>
+
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 bg-white">
+          <div class="rounded-xl bg-indigo-50/50 border border-indigo-100 p-4">
+            <div class="text-xs font-bold text-indigo-800 mb-1">数学原理解析</div>
+            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              策略梯度 <span class="math-formula font-semibold">∇J(θ) = E[(R_ver(τ) − b)·∇log π_θ(τ)]</span> 中，确定性验证器 <span class="math-formula font-semibold">R_ver ∈ {0, 1}</span> 彻底消除了人工奖励模型的拟合偏差（Reward Hacking）；报错再修复轨迹等价于带环境反馈的策略改进。
+            </p>
+          </div>
+          <div class="rounded-xl bg-amber-50/80 border border-amber-200/80 p-4">
+            <div class="text-xs font-bold text-amber-900 mb-1">为什么好 &amp; 为什么适合写论文</div>
+            <p class="text-xs sm:text-sm text-amber-950/90 leading-relaxed">
+              摆脱人类文本枯竭与昂贵标注！高校实验室只需搭开源代码/Lean 证明沙盒就能 100% 客观复现，审稿人极难挑出主观评估的硬伤。
+            </p>
+          </div>
+        </div>
+      
+        <!-- Full-page LaTeX & Visual Formula Detail Cards for Fig 3 -->
+        <div class="border-t border-slate-200 bg-slate-50/50 p-5 sm:p-6">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <h4 class="text-sm sm:text-base font-bold text-slate-900">图 3 · 各模块深度拆解（LaTeX 公式 + 专属原理配图 + 论文切入点）</h4>
+            <a href="#fig3" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 shrink-0">↑ 回到图 3</a>
+          </div>
+          <div id="details-fig3" class="grid grid-cols-1 lg:grid-cols-2 gap-5"></div>
+        </div>
+      </section>
+
+      <!-- ==================== FIG 4 ==================== -->
+      <section id="fig4" class="fig-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-bold text-emerald-700">图 4 · 推理侧上下文与外部记忆</span>
+            <h3 class="text-lg font-bold text-slate-900 mt-0.5">操作系统级 MemOS 与主动混合检索</h3>
+          </div>
+          <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 self-start sm:self-center">L1 工作台 + L2 长期经验 + L3 主动检索</span>
+        </div>
+
+        <div class="px-5 py-3 bg-emerald-50/50 border-b border-emerald-100 text-xs sm:text-sm text-slate-700">
+          <strong>看图要点：</strong>即使模型有 1M 窗口也不能硬塞（会导致注意力腐烂和天价账单），必须像操作系统管理内存一样分层治理上下文。
+        </div>
+
+        <div class="p-4 sm:p-6 bg-slate-50/60 overflow-x-auto">
+          <svg viewBox="0 0 820 356" class="w-full min-w-[640px] h-auto block mx-auto" role="img" aria-label="图 4：操作系统级 MemOS 与主动混合检索">
+            <defs>
+              <marker id="a4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+            </defs>
+
+            <!-- User Request -->
+            <g class="svg-node" data-tip="f4-l1" tabindex="0">
+              <rect x="20" y="20" width="210" height="42" rx="21" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+              <text x="125" y="45" text-anchor="middle" font-size="12" font-weight="700" fill="#4a148c">用户新请求 / Agent 任务</text>
+            </g>
+            <line x1="230" y1="41" x2="266" y2="41" stroke="#15803d" stroke-width="1.6" marker-end="url(#a4)"/>
+
+            <!-- L1 Box -->
+            <rect x="270" y="14" width="530" height="82" rx="14" fill="#f0fdf4" stroke="#86efac" stroke-width="1.4"/>
+            <text x="284" y="34" font-size="11.5" font-weight="700" fill="#166534">L1：工作记忆（高信噪比活跃上下文窗口）</text>
+            <g class="svg-node" data-tip="f4-l1" tabindex="0">
+              <rect x="284" y="44" width="214" height="40" rx="9" fill="#ffffff" stroke="#16a34a" stroke-width="1.4"/>
+              <text x="391" y="68" text-anchor="middle" font-size="11.5" font-weight="700" fill="#14532d">活跃 Prompt + 核心代码/证据</text>
+            </g>
+            <line x1="502" y1="64" x2="536" y2="64" stroke="#16a34a" stroke-width="1.5" marker-end="url(#a4)"/>
+            <line x1="536" y1="64" x2="502" y2="64" stroke="#16a34a" stroke-width="1.5" marker-end="url(#a4)"/>
+            <g class="svg-node" data-tip="f4-comp" tabindex="0">
+              <rect x="540" y="42" width="246" height="44" rx="9" fill="#dcfce7" stroke="#15803d" stroke-width="1.4"/>
+              <text x="663" y="61" text-anchor="middle" font-size="11.5" font-weight="700" fill="#14532d">动态上下文压缩器（Compaction）</text>
+              <text x="663" y="77" text-anchor="middle" font-size="10" fill="#166534">折叠过期步骤 · 裁剪冗长报错日志</text>
+            </g>
+
+            <!-- L1 -> LLM -->
+            <line x1="391" y1="96" x2="391" y2="132" stroke="#6a1b9a" stroke-width="1.8" marker-end="url(#a4)"/>
+            <text x="444" y="118" text-anchor="middle" font-size="10.5" fill="#6b21a8">输入纯净上下文</text>
+
+            <g class="svg-node" data-tip="f4-l1" tabindex="0">
+              <rect x="306" y="136" width="170" height="44" rx="12" fill="#4a148c"/>
+              <text x="391" y="162" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">LLM 推理核心</text>
+            </g>
+
+            <!-- L2 Box (Left) -->
+            <rect x="20" y="122" width="248" height="120" rx="14" fill="#fff7ed" stroke="#fdba74" stroke-width="1.4"/>
+            <text x="34" y="142" font-size="11.5" font-weight="700" fill="#c2410c">L2：情景与技能记忆（跨会话）</text>
+            <g class="svg-node" data-tip="f4-l2" tabindex="0">
+              <rect x="34" y="154" width="220" height="74" rx="10" fill="#ffffff" stroke="#ea580c" stroke-width="1.4"/>
+              <text x="144" y="176" text-anchor="middle" font-size="12" font-weight="700" fill="#9a3412">结构化提炼存储</text>
+              <text x="144" y="195" text-anchor="middle" font-size="10.5" fill="#c2410c">用户偏好 · 历史踩坑记录</text>
+              <text x="144" y="212" text-anchor="middle" font-size="10.5" fill="#c2410c">可复用 Skills / Playbook</text>
+            </g>
+            <!-- LLM -> L2 -->
+            <line x1="306" y1="166" x2="272" y2="166" stroke="#ea580c" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#a4)"/>
+            <text x="288" y="158" text-anchor="middle" font-size="9.5" fill="#c2410c">提炼</text>
+            <!-- L2 -> L1 -->
+            <path d="M 144 122 L 144 82 L 280 82" fill="none" stroke="#ea580c" stroke-width="1.6" marker-end="url(#a4)"/>
+            <text x="206" y="75" text-anchor="middle" font-size="10" fill="#c2410c">注入关键技能</text>
+
+            <!-- L3 Box (Bottom Right) -->
+            <rect x="290" y="206" width="510" height="136" rx="14" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.4"/>
+            <text x="304" y="226" font-size="11.5" font-weight="700" fill="#1d4ed8">L3：主动混合检索引擎（Agentic Hybrid Retrieval）</text>
+
+            <line x1="391" y1="180" x2="391" y2="236" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#a4)"/>
+            <text x="456" y="198" text-anchor="middle" font-size="10" fill="#1d4ed8">信息不足时主动多跳检索</text>
+
+            <g class="svg-node" data-tip="f4-l3" tabindex="0">
+              <rect x="306" y="240" width="110" height="84" rx="10" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.4"/>
+              <text x="361" y="278" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">检索调度器</text>
+              <text x="361" y="296" text-anchor="middle" font-size="10" fill="#1d4ed8">三路并行</text>
+            </g>
+
+            <g class="svg-node" data-tip="f4-l3" tabindex="0">
+              <rect x="440" y="236" width="194" height="26" rx="7" fill="#ffffff" stroke="#3b82f6" stroke-width="1.2"/>
+              <text x="537" y="253" text-anchor="middle" font-size="11" font-weight="600" fill="#1e3a8a">精准词法 / 代码 AST &amp; Grep</text>
+            </g>
+            <g class="svg-node" data-tip="f4-l3" tabindex="0">
+              <rect x="440" y="268" width="194" height="26" rx="7" fill="#ffffff" stroke="#3b82f6" stroke-width="1.2"/>
+              <text x="537" y="285" text-anchor="middle" font-size="11" font-weight="600" fill="#1e3a8a">语义向量库（Dense Vector）</text>
+            </g>
+            <g class="svg-node" data-tip="f4-l3" tabindex="0">
+              <rect x="440" y="300" width="194" height="26" rx="7" fill="#ffffff" stroke="#3b82f6" stroke-width="1.2"/>
+              <text x="537" y="317" text-anchor="middle" font-size="11" font-weight="600" fill="#1e3a8a">实体关系图谱（GraphRAG）</text>
+            </g>
+
+            <line x1="416" y1="260" x2="438" y2="249" stroke="#2563eb" stroke-width="1.3" marker-end="url(#a4)"/>
+            <line x1="416" y1="282" x2="438" y2="282" stroke="#2563eb" stroke-width="1.3" marker-end="url(#a4)"/>
+            <line x1="416" y1="302" x2="438" y2="313" stroke="#2563eb" stroke-width="1.3" marker-end="url(#a4)"/>
+
+            <g class="svg-node" data-tip="f4-l3" tabindex="0">
+              <rect x="662" y="248" width="122" height="68" rx="10" fill="#1d4ed8"/>
+              <text x="723" y="276" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">重排与去重</text>
+              <text x="723" y="294" text-anchor="middle" font-size="10.5" fill="#dbeafe">仅回填高相关</text>
+            </g>
+            <line x1="634" y1="249" x2="658" y2="268" stroke="#2563eb" stroke-width="1.3" marker-end="url(#a4)"/>
+            <line x1="634" y1="282" x2="658" y2="282" stroke="#2563eb" stroke-width="1.3" marker-end="url(#a4)"/>
+            <line x1="634" y1="313" x2="658" y2="296" stroke="#2563eb" stroke-width="1.3" marker-end="url(#a4)"/>
+
+            <!-- Backfill to L1 -->
+            <path d="M 784 282 L 808 282 L 808 64 L 790 64" fill="none" stroke="#1d4ed8" stroke-width="1.7" marker-end="url(#a4)"/>
+          </svg>
+        </div>
+
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 bg-white">
+          <div class="rounded-xl bg-indigo-50/50 border border-indigo-100 p-4">
+            <div class="text-xs font-bold text-indigo-800 mb-1">数学原理解析</div>
+            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              Softmax 在超长噪声上下文下熵增导致注意力稀释；MemOS 通过动态压缩压低分母 |C|，并用混合打分 <span class="math-formula font-semibold">λ₁BM25 + λ₂Dense + λ₃Graph</span> 最大化窗口内有效互信息信噪比 <span class="math-formula font-semibold">I(Y; C_rel)/|C|</span>。
+            </p>
+          </div>
+          <div class="rounded-xl bg-amber-50/80 border border-amber-200/80 p-4">
+            <div class="text-xs font-bold text-amber-900 mb-1">为什么好 &amp; 为什么适合写论文</div>
+            <p class="text-xs sm:text-sm text-amber-950/90 leading-relaxed">
+              不用从头训底座模型，直接外挂在开源 LLM 上就能在长对话和代码仓库 Agent 基准上大幅涨点，属于低算力高产出的 ACL/EMNLP/ICLR 常青树选题。
+            </p>
+          </div>
+        </div>
+      
+        <!-- Full-page LaTeX & Visual Formula Detail Cards for Fig 4 -->
+        <div class="border-t border-slate-200 bg-slate-50/50 p-5 sm:p-6">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <h4 class="text-sm sm:text-base font-bold text-slate-900">图 4 · 各模块深度拆解（LaTeX 公式 + 专属原理配图 + 论文切入点）</h4>
+            <a href="#fig4" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 shrink-0">↑ 回到图 4</a>
+          </div>
+          <div id="details-fig4" class="grid grid-cols-1 lg:grid-cols-2 gap-5"></div>
+        </div>
+      </section>
+
+      <!-- ==================== FIG 5 ==================== -->
+      <section id="fig5" class="fig-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-bold text-emerald-700">图 5 · 推理编排与校验链</span>
+            <h3 class="text-lg font-bold text-slate-900 mt-0.5">异构路由 + System-2 测试时验证</h3>
+          </div>
+          <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 self-start sm:self-center">70% 小模型省钱 + 30% 旗舰树搜索校验</span>
+        </div>
+
+        <div class="px-5 py-3 bg-emerald-50/50 border-b border-emerald-100 text-xs sm:text-sm text-slate-700">
+          <strong>看图要点：</strong>用“低成本路由 + 过程验证器 + 搜索剪枝”替代“所有问题都盲调最贵模型单次瞎猜（Pass@1）”，同时把成本压低、把准确率拉高。
+        </div>
+
+        <div class="p-4 sm:p-6 bg-slate-50/60 overflow-x-auto">
+          <svg viewBox="0 0 820 246" class="w-full min-w-[640px] h-auto block mx-auto" role="img" aria-label="图 5：异构路由与 System-2 测试时验证">
+            <defs>
+              <marker id="a5" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+            </defs>
+
+            <g class="svg-node" data-tip="f5-router" tabindex="0">
+              <rect x="14" y="88" width="90" height="44" rx="22" fill="#fff3e0" stroke="#ef6c00" stroke-width="1.5"/>
+              <text x="59" y="114" text-anchor="middle" font-size="12" font-weight="700" fill="#e65100">用户请求</text>
+            </g>
+            <line x1="104" y1="110" x2="128" y2="110" stroke="#ef6c00" stroke-width="1.6" marker-end="url(#a5)"/>
+
+            <g class="svg-node" data-tip="f5-router" tabindex="0">
+              <rect x="132" y="80" width="136" height="60" rx="14" fill="#ffedd5" stroke="#ea580c" stroke-width="1.6"/>
+              <text x="200" y="105" text-anchor="middle" font-size="12" font-weight="700" fill="#9a3412">轻量级入口路由器</text>
+              <text x="200" y="123" text-anchor="middle" font-size="10.5" fill="#c2410c">复杂度 / 意图评估</text>
+            </g>
+
+            <!-- Top path: 70% Small -->
+            <path d="M 200 80 L 200 42 L 326 42" fill="none" stroke="#16a34a" stroke-width="1.7" marker-end="url(#a5)"/>
+            <text x="268" y="34" text-anchor="middle" font-size="10.5" font-weight="700" fill="#15803d">~70% 简单任务</text>
+
+            <g class="svg-node" data-tip="f5-small" tabindex="0">
+              <rect x="330" y="18" width="194" height="48" rx="10" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+              <text x="427" y="39" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">高稀疏小 MoE</text>
+              <text x="427" y="55" text-anchor="middle" font-size="10.5" fill="#2e7d32">（10B~20B 激活）</text>
+            </g>
+            <line x1="524" y1="42" x2="634" y2="42" stroke="#16a34a" stroke-width="1.7" marker-end="url(#a5)"/>
+            <g class="svg-node" data-tip="f5-small" tabindex="0">
+              <rect x="638" y="22" width="166" height="40" rx="20" fill="#16a34a"/>
+              <text x="721" y="46" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">极速低成本直接返回</text>
+            </g>
+
+            <!-- Bottom path: 30% Big -->
+            <path d="M 200 140 L 200 172 L 268 172" fill="none" stroke="#6a1b9a" stroke-width="1.7" marker-end="url(#a5)"/>
+            <text x="234" y="190" text-anchor="middle" font-size="10.5" font-weight="700" fill="#6a1b9a">~30% 复杂高价值</text>
+
+            <g class="svg-node" data-tip="f5-big" tabindex="0">
+              <rect x="272" y="142" width="150" height="60" rx="12" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+              <text x="347" y="167" text-anchor="middle" font-size="12" font-weight="700" fill="#4a148c">旗舰推理模型</text>
+              <text x="347" y="185" text-anchor="middle" font-size="10" fill="#6a1b9a">Best-of-N / 树搜索</text>
+            </g>
+
+            <!-- Branches -->
+            <g class="svg-node" data-tip="f5-big" tabindex="0">
+              <rect x="444" y="128" width="66" height="22" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.1"/>
+              <text x="477" y="143" text-anchor="middle" font-size="10" font-weight="600" fill="#5b21b6">分支 1</text>
+              <rect x="444" y="156" width="66" height="22" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.1"/>
+              <text x="477" y="171" text-anchor="middle" font-size="10" font-weight="600" fill="#5b21b6">分支 2</text>
+              <rect x="444" y="184" width="66" height="22" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.1"/>
+              <text x="477" y="199" text-anchor="middle" font-size="10" font-weight="600" fill="#5b21b6">分支 N</text>
+            </g>
+            <line x1="422" y1="160" x2="442" y2="140" stroke="#7c3aed" stroke-width="1.2"/>
+            <line x1="422" y1="168" x2="442" y2="168" stroke="#7c3aed" stroke-width="1.2"/>
+            <line x1="422" y1="176" x2="442" y2="195" stroke="#7c3aed" stroke-width="1.2"/>
+
+            <!-- Verifier -->
+            <g class="svg-node" data-tip="f5-ver" tabindex="0">
+              <rect x="530" y="138" width="144" height="66" rx="12" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.6"/>
+              <text x="602" y="162" text-anchor="middle" font-size="12" font-weight="700" fill="#0d47a1">过程验证器 Verifier</text>
+              <text x="602" y="179" text-anchor="middle" font-size="10" fill="#1565c0">PRM 打分 / 代码沙盒</text>
+              <text x="602" y="193" text-anchor="middle" font-size="10" fill="#1565c0">外部工具核验</text>
+            </g>
+            <line x1="510" y1="140" x2="528" y2="156" stroke="#1565c0" stroke-width="1.3" marker-end="url(#a5)"/>
+            <line x1="510" y1="168" x2="528" y2="168" stroke="#1565c0" stroke-width="1.3" marker-end="url(#a5)"/>
+            <line x1="510" y1="195" x2="528" y2="180" stroke="#1565c0" stroke-width="1.3" marker-end="url(#a5)"/>
+
+            <!-- Prune loop -->
+            <path d="M 602 204 L 602 228 L 347 228 L 347 206" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#a5)"/>
+            <rect x="412" y="216" width="136" height="20" rx="6" fill="#ffebee" stroke="#ef4444" stroke-width="1"/>
+            <text x="480" y="230" text-anchor="middle" font-size="10" font-weight="600" fill="#b91c1c">逻辑报错：剪枝回溯重试</text>
+
+            <!-- Safe Out -->
+            <line x1="674" y1="171" x2="696" y2="171" stroke="#1565c0" stroke-width="1.7" marker-end="url(#a5)"/>
+            <g class="svg-node" data-tip="f5-ver" tabindex="0">
+              <rect x="700" y="148" width="106" height="46" rx="14" fill="#1565c0"/>
+              <text x="753" y="168" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">高可靠性</text>
+              <text x="753" y="184" text-anchor="middle" font-size="11" fill="#dbeafe">最终输出</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 bg-white">
+          <div class="rounded-xl bg-indigo-50/50 border border-indigo-100 p-4">
+            <div class="text-xs font-bold text-indigo-800 mb-1">数学原理解析</div>
+            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              若旗舰单次求解成功率为 p，Best-of-N 配合过程验证器将成功率指数抬升至 <span class="math-formula font-semibold">1 − (1−p)^N</span>；同时期望成本 <span class="math-formula font-semibold">0.7·C_small + 0.3·N·C_big</span> 远低于全量盲调最贵模型。
+            </p>
+          </div>
+          <div class="rounded-xl bg-amber-50/80 border border-amber-200/80 p-4">
+            <div class="text-xs font-bold text-amber-900 mb-1">为什么好 &amp; 为什么适合写论文</div>
+            <p class="text-xs sm:text-sm text-amber-950/90 leading-relaxed">
+              极其容易做出“花一半钱却反超纯旗舰模型”的 Cost-Accuracy Pareto 惊艳主表，且非常适合在数学、代码、金融等垂直高可靠场景做实证论文。
+            </p>
+          </div>
+        </div>
+      
+        <!-- Full-page LaTeX & Visual Formula Detail Cards for Fig 5 -->
+        <div class="border-t border-slate-200 bg-slate-50/50 p-5 sm:p-6">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <h4 class="text-sm sm:text-base font-bold text-slate-900">图 5 · 各模块深度拆解（LaTeX 公式 + 专属原理配图 + 论文切入点）</h4>
+            <a href="#fig5" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 shrink-0">↑ 回到图 5</a>
+          </div>
+          <div id="details-fig5" class="grid grid-cols-1 lg:grid-cols-2 gap-5"></div>
+        </div>
+      </section>
+
+      <!-- ==================== FIG 6 ==================== -->
+      <section id="fig6" class="fig-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-bold text-emerald-700">图 6 · 底层推理数据流系统</span>
+            <h3 class="text-lg font-bold text-slate-900 mt-0.5">PD 分离 + 全局三级 KV Cache 池 + 端到端低比特</h3>
+          </div>
+          <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 self-start sm:self-center">以存储换算力 · 读写集群拆机</span>
+        </div>
+
+        <div class="px-5 py-3 bg-emerald-50/50 border-b border-emerald-100 text-xs sm:text-sm text-slate-700">
+          <strong>看图要点：</strong>把“重算力（Prefill）”和“重带宽（Decode）”拆到不同硬件集群，再把重复前缀的 KV Cache 池化复用，以存储换算力。
+        </div>
+
+        <div class="p-4 sm:p-6 bg-slate-50/60 overflow-x-auto">
+          <svg viewBox="0 0 820 264" class="w-full min-w-[640px] h-auto block mx-auto" role="img" aria-label="图 6：PD 分离与全局三级 KV Cache 池">
+            <defs>
+              <marker id="a6" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+            </defs>
+
+            <g class="svg-node" data-tip="f6-match" tabindex="0">
+              <rect x="14" y="34" width="112" height="44" rx="22" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+              <text x="70" y="60" text-anchor="middle" font-size="12" font-weight="700" fill="#0d47a1">海量并发请求</text>
+            </g>
+            <line x1="126" y1="56" x2="148" y2="56" stroke="#1565c0" stroke-width="1.6" marker-end="url(#a6)"/>
+
+            <g class="svg-node" data-tip="f6-match" tabindex="0">
+              <rect x="152" y="26" width="166" height="60" rx="12" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/>
+              <text x="235" y="51" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a8a">全局前缀 KV 路由</text>
+              <text x="235" y="69" text-anchor="middle" font-size="10" fill="#1d4ed8">检查系统提示词 / 代码库前缀</text>
+            </g>
+
+            <!-- Miss -> Prefill -->
+            <line x1="235" y1="86" x2="235" y2="152" stroke="#1565c0" stroke-width="1.6" marker-end="url(#a6)"/>
+            <text x="190" y="122" text-anchor="middle" font-size="10" font-weight="600" fill="#1565c0">未命中：算新前缀</text>
+            <g class="svg-node" data-tip="f6-prefill" tabindex="0">
+              <rect x="146" y="156" width="178" height="60" rx="12" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.6"/>
+              <text x="235" y="181" text-anchor="middle" font-size="12" font-weight="700" fill="#0d47a1">Prefill 集群</text>
+              <text x="235" y="199" text-anchor="middle" font-size="10" fill="#1565c0">高算力配比（Compute-Bound）</text>
+            </g>
+
+            <!-- Hit -> KV Pool -->
+            <line x1="318" y1="56" x2="380" y2="56" stroke="#ea580c" stroke-width="1.7" marker-end="url(#a6)"/>
+            <text x="349" y="48" text-anchor="middle" font-size="10" font-weight="700" fill="#c2410c">前缀命中</text>
+
+            <!-- Prefill -> HBM -->
+            <path d="M 324 186 L 362 186 L 362 80 L 380 80" fill="none" stroke="#1565c0" stroke-width="1.5" marker-end="url(#a6)"/>
+            <text x="348" y="140" text-anchor="middle" font-size="9.5" fill="#1565c0" transform="rotate(-90 348 140)">写入缓存</text>
+
+            <!-- KV Pool Subgraph -->
+            <rect x="384" y="16" width="174" height="228" rx="14" fill="#fff7ed" stroke="#fdba74" stroke-width="1.4"/>
+            <text x="471" y="35" text-anchor="middle" font-size="11" font-weight="700" fill="#c2410c">全局三级 KV Cache 池</text>
+            <text x="471" y="49" text-anchor="middle" font-size="9.5" fill="#ea580c">Mooncake / LMCache 思路</text>
+
+            <g class="svg-node" data-tip="f6-pool" tabindex="0">
+              <rect x="398" y="58" width="146" height="42" rx="9" fill="#ffffff" stroke="#ea580c" stroke-width="1.5"/>
+              <text x="471" y="83" text-anchor="middle" font-size="11.5" font-weight="700" fill="#9a3412">L1：GPU HBM 池</text>
+            </g>
+            <line x1="471" y1="100" x2="471" y2="122" stroke="#ea580c" stroke-width="1.4" marker-end="url(#a6)"/>
+            <line x1="471" y1="122" x2="471" y2="100" stroke="#ea580c" stroke-width="1.4" marker-end="url(#a6)"/>
+            <g class="svg-node" data-tip="f6-pool" tabindex="0">
+              <rect x="398" y="124" width="146" height="42" rx="9" fill="#ffedd5" stroke="#fb923c" stroke-width="1.3"/>
+              <text x="471" y="149" text-anchor="middle" font-size="11.5" font-weight="700" fill="#9a3412">L2：CPU DRAM 池</text>
+            </g>
+            <line x1="471" y1="166" x2="471" y2="188" stroke="#ea580c" stroke-width="1.4" marker-end="url(#a6)"/>
+            <line x1="471" y1="188" x2="471" y2="166" stroke="#ea580c" stroke-width="1.4" marker-end="url(#a6)"/>
+            <g class="svg-node" data-tip="f6-pool" tabindex="0">
+              <rect x="398" y="190" width="146" height="42" rx="9" fill="#ffedd5" stroke="#fb923c" stroke-width="1.3"/>
+              <text x="471" y="215" text-anchor="middle" font-size="11.5" font-weight="700" fill="#9a3412">L3：NVMe SSD 池</text>
+            </g>
+
+            <!-- RDMA arrow -->
+            <line x1="544" y1="79" x2="606" y2="79" stroke="#6a1b9a" stroke-width="1.8" marker-end="url(#a6)"/>
+            <text x="575" y="65" text-anchor="middle" font-size="9.5" font-weight="700" fill="#6a1b9a">RDMA</text>
+            <text x="575" y="95" text-anchor="middle" font-size="9.5" fill="#6a1b9a">FP8/FP4</text>
+
+            <!-- Decode Cluster -->
+            <rect x="610" y="16" width="194" height="170" rx="14" fill="#faf5ff" stroke="#d8b4fe" stroke-width="1.4"/>
+            <text x="707" y="36" text-anchor="middle" font-size="11" font-weight="700" fill="#6b21a8">Decode 集群（带宽受限）</text>
+
+            <g class="svg-node" data-tip="f6-decode" tabindex="0">
+              <rect x="622" y="48" width="170" height="54" rx="10" fill="#ffffff" stroke="#7e22ce" stroke-width="1.5"/>
+              <text x="707" y="70" text-anchor="middle" font-size="11.5" font-weight="700" fill="#4a148c">高显存带宽推理节点</text>
+              <text x="707" y="88" text-anchor="middle" font-size="10" fill="#6b21a8">+ 专家并行 All-to-All</text>
+            </g>
+            <line x1="707" y1="102" x2="707" y2="128" stroke="#7e22ce" stroke-width="1.4" marker-end="url(#a6)"/>
+            <line x1="707" y1="128" x2="707" y2="102" stroke="#7e22ce" stroke-width="1.4" marker-end="url(#a6)"/>
+            <g class="svg-node" data-tip="f6-decode" tabindex="0">
+              <rect x="622" y="132" width="170" height="40" rx="10" fill="#f3e5f5" stroke="#7e22ce" stroke-width="1.4"/>
+              <text x="707" y="156" text-anchor="middle" font-size="11.5" font-weight="700" fill="#4a148c">MTP 自投机解码引擎</text>
+            </g>
+
+            <!-- Output -->
+            <line x1="707" y1="186" x2="707" y2="206" stroke="#16a34a" stroke-width="1.8" marker-end="url(#a6)"/>
+            <g class="svg-node" data-tip="f6-decode" tabindex="0">
+              <rect x="610" y="210" width="194" height="38" rx="19" fill="#16a34a"/>
+              <text x="707" y="233" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">低首字延迟 + 高吞吐流式输出</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 bg-white">
+          <div class="rounded-xl bg-indigo-50/50 border border-indigo-100 p-4">
+            <div class="text-xs font-bold text-indigo-800 mb-1">数学原理解析</div>
+            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              Prefill 算术强度 <span class="math-formula font-semibold">AI = O(N)</span>（计算受限），Decode 仅 <span class="math-formula font-semibold">O(1)</span>（显存带宽受限），拆机消除互相抢占；因果注意力保证前缀 <span class="math-formula font-semibold">KV_j = f(x₁…xⱼ)</span> 与后续新词独立，池化复用 100% 数学无损。
+            </p>
+          </div>
+          <div class="rounded-xl bg-amber-50/80 border border-amber-200/80 p-4">
+            <div class="text-xs font-bold text-amber-900 mb-1">为什么好 &amp; 为什么适合写论文</div>
+            <p class="text-xs sm:text-sm text-amber-950/90 leading-relaxed">
+              OSDI / SOSP / MLSys 顶会最爱的系统工程题材！把 TTFT / TPOT 延迟拆解图和集群吞吐提升倍数测扎实，就具备极强的工程说服力与落地价值。
+            </p>
+          </div>
+        </div>
+      
+        <!-- Full-page LaTeX & Visual Formula Detail Cards for Fig 6 -->
+        <div class="border-t border-slate-200 bg-slate-50/50 p-5 sm:p-6">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <h4 class="text-sm sm:text-base font-bold text-slate-900">图 6 · 各模块深度拆解（LaTeX 公式 + 专属原理配图 + 论文切入点）</h4>
+            <a href="#fig6" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 shrink-0">↑ 回到图 6</a>
+          </div>
+          <div id="details-fig6" class="grid grid-cols-1 lg:grid-cols-2 gap-5"></div>
+        </div>
+      </section>
+
+      <!-- ==================== SYNERGY SUMMARY ==================== -->
+      <section class="bg-slate-900 text-white rounded-2xl p-6 shadow-sm">
+        <h2 class="text-lg font-bold">一眼看懂这 6 张图的协同关系</h2>
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 text-sm">
+          <div class="rounded-xl bg-white/10 border border-white/15 p-4">
+            <div class="text-xs font-bold text-indigo-300">图 1 + 图 2</div>
+            <div class="mt-1 font-semibold">脑力上限与单位计算效率</div>
+            <p class="mt-1 text-xs text-slate-300 leading-relaxed">决定单次思考能有多深、显存能压多低、每吐一个字花多少算力。</p>
+          </div>
+          <div class="rounded-xl bg-white/10 border border-white/15 p-4">
+            <div class="text-xs font-bold text-amber-300">图 3</div>
+            <div class="mt-1 font-semibold">摆脱人类语料实现自我进化</div>
+            <p class="mt-1 text-xs text-slate-300 leading-relaxed">靠沙盒试错和自动判分源源不断自产高质量推理与纠错轨迹。</p>
+          </div>
+          <div class="rounded-xl bg-white/10 border border-white/15 p-4">
+            <div class="text-xs font-bold text-emerald-300">图 4 + 图 5</div>
+            <div class="mt-1 font-semibold">不失忆、不胡说、花小钱办大事</div>
+            <p class="mt-1 text-xs text-slate-300 leading-relaxed">分层管理记忆并先分诊再质检，让复杂 Agent 真正能在业务落地。</p>
+          </div>
+          <div class="rounded-xl bg-white/10 border border-white/15 p-4">
+            <div class="text-xs font-bold text-sky-300">图 6</div>
+            <div class="mt-1 font-semibold">大规模商用扛住显存与电费</div>
+            <p class="mt-1 text-xs text-slate-300 leading-relaxed">PD 拆机 + 三级 KV 共享池 + 低比特流，把万亿级模型推上高并发生产。</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const FORMULA_SVGS = {
+      'f1-in': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="多模态统一线性投影拼装图">
+          <defs><marker id="u1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1.5 L8 5 L1 8.5" fill="none" stroke="#1d4ed8" stroke-width="1.8"/></marker></defs>
+          <rect x="12" y="12" width="112" height="28" rx="7" fill="#dbeafe" stroke="#2563eb"/><text x="68" y="30" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">文本 Token</text>
+          <rect x="12" y="50" width="112" height="28" rx="7" fill="#dcfce7" stroke="#16a34a"/><text x="68" y="68" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532d">图像 Patch 切块</text>
+          <rect x="12" y="88" width="112" height="28" rx="7" fill="#fef3c7" stroke="#d97706"/><text x="68" y="106" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">音频帧 Frame</text>
+          <line x1="124" y1="26" x2="176" y2="56" stroke="#1d4ed8" stroke-width="1.5" marker-end="url(#u1)"/>
+          <line x1="124" y1="64" x2="176" y2="64" stroke="#1d4ed8" stroke-width="1.5" marker-end="url(#u1)"/>
+          <line x1="124" y1="102" x2="176" y2="72" stroke="#1d4ed8" stroke-width="1.5" marker-end="url(#u1)"/>
+          <rect x="180" y="38" width="84" height="52" rx="10" fill="#eef2ff" stroke="#4f46e5"/>
+          <text x="222" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#312e81">统一线性投影</text>
+          <text x="222" y="76" text-anchor="middle" font-size="9.5" fill="#4f46e5">去独立编码器</text>
+          <line x1="264" y1="64" x2="294" y2="64" stroke="#1d4ed8" stroke-width="1.7" marker-end="url(#u1)"/>
+          <rect x="298" y="26" width="130" height="76" rx="10" fill="#1e3a8a"/>
+          <text x="363" y="54" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">统一序列 X</text>
+          <text x="363" y="74" text-anchor="middle" font-size="10.5" fill="#bfdbfe">ℝ^{N × d}</text>
+          <text x="363" y="92" text-anchor="middle" font-size="9.5" fill="#93c5fd">底层原生跨模态交互</text>
+        </svg>`,
+      'f1-engram': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="FFN软查表转Engram多表哈希硬查表">
+          <defs><marker id="u2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1.5 L8 5 L1 8.5" fill="none" stroke="#ea580c" stroke-width="1.8"/></marker></defs>
+          <rect x="10" y="14" width="166" height="100" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+          <text x="93" y="32" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">Vanilla FFN 软键值查表</text>
+          <text x="93" y="54" text-anchor="middle" font-size="10" fill="#64748b">x 点积全部 d_ff 个 kᵢ</text>
+          <text x="93" y="72" text-anchor="middle" font-size="10" fill="#64748b">Σ σ(kᵢᵀx)·vᵢ</text>
+          <rect x="34" y="84" width="118" height="20" rx="6" fill="#fee2e2"/><text x="93" y="98" text-anchor="middle" font-size="9.5" font-weight="700" fill="#b91c1c">耗时 O(d · d_ff)</text>
+          <line x1="180" y1="64" x2="210" y2="64" stroke="#ea580c" stroke-width="1.8" marker-end="url(#u2)"/>
+          <rect x="214" y="14" width="216" height="100" rx="10" fill="#fff7ed" stroke="#fb923c"/>
+          <text x="322" y="32" text-anchor="middle" font-size="10.5" font-weight="700" fill="#9a3412">Engram 多表哈希 O(1) 硬查表</text>
+          <rect x="226" y="46" width="84" height="32" rx="7" fill="#ffffff" stroke="#ea580c"/><text x="268" y="66" text-anchor="middle" font-size="10" font-weight="700" fill="#9a3412">Hashₘ(ngram)</text>
+          <line x1="310" y1="62" x2="338" y2="62" stroke="#ea580c" stroke-width="1.6" marker-end="url(#u2)"/>
+          <rect x="342" y="42" width="76" height="40" rx="8" fill="#ea580c"/><text x="380" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">直取 v_idx</text><text x="380" y="74" text-anchor="middle" font-size="9" fill="#ffedd5">328B+ 字典</text>
+          <text x="322" y="102" text-anchor="middle" font-size="9.5" font-weight="600" fill="#c2410c">几乎零 GPU FLOPs</text>
+        </svg>`,
+      'f1-dram': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="CPU DRAM异步预取隐藏延迟甘特图">
+          <text x="16" y="24" font-size="10.5" font-weight="700" fill="#334155">时间轴（流水线重叠隐藏 PCIe 延迟） →</text>
+          <text x="16" y="54" font-size="10" font-weight="700" fill="#15803d">GPU 计算轨</text>
+          <rect x="86" y="38" width="110" height="24" rx="6" fill="#dcfce7" stroke="#16a34a"/><text x="141" y="54" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">Layer 1~3 计算</text>
+          <rect x="200" y="38" width="130" height="24" rx="6" fill="#16a34a"/><text x="265" y="54" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">门控融合注入记忆</text>
+          <rect x="334" y="38" width="92" height="24" rx="6" fill="#dcfce7" stroke="#16a34a"/><text x="380" y="54" text-anchor="middle" font-size="10" fill="#14532d">后续层</text>
+
+          <text x="16" y="92" font-size="10" font-weight="700" fill="#c2410c">DRAM 预取</text>
+          <rect x="86" y="76" width="94" height="24" rx="6" fill="#ffedd5" stroke="#ea580c"/><text x="133" y="92" text-anchor="middle" font-size="10" font-weight="700" fill="#9a3412">PCIe 异步拉取</text>
+          <line x1="180" y1="88" x2="200" y2="62" stroke="#ea580c" stroke-width="1.6" stroke-dasharray="3 2"/>
+          <text x="275" y="92" font-size="10" font-weight="700" fill="#059669">T_prefetch ≤ T_compute（零等待！）</text>
+          <text x="220" y="118" text-anchor="middle" font-size="9.5" fill="#64748b">廉价主机内存存 300B+ 参数，不占昂贵 GPU HBM</text>
+        </svg>`,
+      'f1-enc': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="mHC流形约束多通道残差流示意图">
+          <defs><marker id="u4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1.5 L8 5 L1 8.5" fill="none" stroke="#4f46e5" stroke-width="1.8"/></marker></defs>
+          <rect x="14" y="20" width="110" height="84" rx="10" fill="#eef2ff" stroke="#818cf8"/>
+          <text x="69" y="40" text-anchor="middle" font-size="10.5" font-weight="700" fill="#312e81">多通道残差流</text>
+          <line x1="26" y1="54" x2="112" y2="54" stroke="#4f46e5" stroke-width="2"/>
+          <line x1="26" y1="68" x2="112" y2="68" stroke="#6366f1" stroke-width="2"/>
+          <line x1="26" y1="82" x2="112" y2="82" stroke="#818cf8" stroke-width="2"/>
+          <text x="69" y="98" text-anchor="middle" font-size="9.5" fill="#4338ca">矩阵 H⁽ˡ⁾</text>
+
+          <line x1="124" y1="62" x2="162" y2="62" stroke="#4f46e5" stroke-width="1.8" marker-end="url(#u4)"/>
+
+          <ellipse cx="242" cy="64" rx="70" ry="44" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.6" stroke-dasharray="4 3"/>
+          <text x="242" y="48" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">稳定流形 M</text>
+          <text x="242" y="66" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">‖A_l‖₂ ≤ 1</text>
+          <text x="242" y="84" text-anchor="middle" font-size="9.5" fill="#15803d">Sinkhorn 双随机投影</text>
+
+          <line x1="312" y1="62" x2="342" y2="62" stroke="#4f46e5" stroke-width="1.8" marker-end="url(#u4)"/>
+          <rect x="346" y="34" width="82" height="56" rx="10" fill="#16a34a"/>
+          <text x="387" y="58" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">梯度有界</text>
+          <text x="387" y="75" text-anchor="middle" font-size="9.5" fill="#dcfce7">深层不发散</text>
+        </svg>`,
+      'f1-linear': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="线性注意力矩阵结合律折叠图">
+          <defs><marker id="u5" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1.5 L8 5 L1 8.5" fill="none" stroke="#4f46e5" stroke-width="1.8"/></marker></defs>
+          <rect x="8" y="14" width="164" height="100" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="4 3"/>
+          <text x="90" y="32" text-anchor="middle" font-size="10.5" font-weight="700" fill="#475569">Vanilla: (Q · Kᵀ) · V</text>
+          <rect x="20" y="42" width="64" height="62" rx="6" fill="#e2e8f0" stroke="#94a3b8"/>
+          <text x="52" y="70" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">N × N</text>
+          <text x="52" y="86" text-anchor="middle" font-size="9" fill="#64748b">显存爆炸</text>
+          <text x="96" y="76" text-anchor="middle" font-size="12" fill="#475569">×</text>
+          <rect x="108" y="42" width="50" height="62" rx="6" fill="#dbeafe" stroke="#60a5fa"/><text x="133" y="76" text-anchor="middle" font-size="10" font-weight="700" fill="#1e40af">V(N×d)</text>
+          <line x1="176" y1="64" x2="212" y2="64" stroke="#4f46e5" stroke-width="2" marker-end="url(#u5)"/>
+          <text x="194" y="55" text-anchor="middle" font-size="9.5" font-weight="700" fill="#4f46e5">结合律</text>
+          <rect x="218" y="14" width="214" height="100" rx="10" fill="#eef2ff" stroke="#818cf8"/>
+          <text x="325" y="32" text-anchor="middle" font-size="10.5" font-weight="700" fill="#312e81">线性: φ(Q) · (φ(K)ᵀV)</text>
+          <rect x="230" y="42" width="52" height="62" rx="6" fill="#ffffff" stroke="#6366f1"/><text x="256" y="76" text-anchor="middle" font-size="10" font-weight="700" fill="#312e81">φ(Q)</text>
+          <text x="294" y="76" text-anchor="middle" font-size="12" fill="#4f46e5">×</text>
+          <rect x="306" y="48" width="50" height="50" rx="8" fill="#4f46e5"/><text x="331" y="70" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">Sₜ</text><text x="331" y="86" text-anchor="middle" font-size="9.5" fill="#e0e7ff">d × d</text>
+          <text x="394" y="68" text-anchor="middle" font-size="10" font-weight="700" fill="#059669">O(1)</text><text x="394" y="83" text-anchor="middle" font-size="9" fill="#047857">恒定显存</text>
+        </svg>`,
+      'f1-sparse': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="MLA低秩压缩与矩阵吸收示意图">
+          <defs><marker id="u6" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1.5 L8 5 L1 8.5" fill="none" stroke="#059669" stroke-width="1.8"/></marker></defs>
+          <rect x="10" y="18" width="88" height="90" rx="8" fill="#f1f5f9" stroke="#94a3b8"/>
+          <text x="54" y="56" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">原 KV Cache</text>
+          <text x="54" y="74" text-anchor="middle" font-size="10" fill="#64748b">n_h × d_h</text>
+          <line x1="102" y1="63" x2="134" y2="63" stroke="#059669" stroke-width="1.8" marker-end="url(#u6)"/>
+          <text x="118" y="54" text-anchor="middle" font-size="9.5" fill="#047857">Wᴰᴷⱽ</text>
+          <rect x="138" y="40" width="54" height="46" rx="8" fill="#10b981"/><text x="165" y="61" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">cⱼ</text><text x="165" y="76" text-anchor="middle" font-size="9.5" fill="#d1fae5">压 90%</text>
+          <rect x="214" y="14" width="216" height="100" rx="10" fill="#eef2ff" stroke="#818cf8"/>
+          <text x="322" y="34" text-anchor="middle" font-size="10.5" font-weight="700" fill="#312e81">矩阵吸收（低秩内严格等价）</text>
+          <rect x="226" y="46" width="102" height="34" rx="7" fill="#4f46e5"/><text x="277" y="67" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">W̃ᑫ = (Wᑫ)ᵀWᵁᴷ</text>
+          <text x="340" y="67" text-anchor="middle" font-size="12" font-weight="700" fill="#4f46e5">·</text>
+          <rect x="352" y="46" width="64" height="34" rx="7" fill="#10b981"/><text x="384" y="67" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">cⱼ 缓存</text>
+          <text x="322" y="100" text-anchor="middle" font-size="9.5" fill="#4338ca">推理零解压直接点积，100% 等价</text>
+        </svg>`,
+      'f1-gate': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="逐维度Sigmoid门控融合调音台图">
+          <defs><marker id="u7" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1.5 L8 5 L1 8.5" fill="none" stroke="#16a34a" stroke-width="1.8"/></marker></defs>
+          <rect x="14" y="16" width="122" height="36" rx="8" fill="#dcfce7" stroke="#16a34a"/><text x="75" y="38" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532d">主干特征 h_core</text>
+          <rect x="14" y="76" width="122" height="36" rx="8" fill="#ffedd5" stroke="#ea580c"/><text x="75" y="98" text-anchor="middle" font-size="10.5" font-weight="700" fill="#9a3412">查表记忆 h_engram</text>
+          <circle cx="196" cy="34" r="16" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/><text x="196" y="38" text-anchor="middle" font-size="10" font-weight="700" fill="#15803d">× g</text>
+          <circle cx="196" cy="94" r="16" fill="#ffffff" stroke="#ea580c" stroke-width="1.5"/><text x="196" y="98" text-anchor="middle" font-size="9.5" font-weight="700" fill="#c2410c">×1−g</text>
+          <line x1="136" y1="34" x2="178" y2="34" stroke="#16a34a" stroke-width="1.5" marker-end="url(#u7)"/>
+          <line x1="136" y1="94" x2="178" y2="94" stroke="#ea580c" stroke-width="1.5" marker-end="url(#u7)"/>
+          <line x1="212" y1="34" x2="262" y2="56" stroke="#16a34a" stroke-width="1.5" marker-end="url(#u7)"/>
+          <line x1="212" y1="94" x2="262" y2="72" stroke="#ea580c" stroke-width="1.5" marker-end="url(#u7)"/>
+          <circle cx="278" cy="64" r="15" fill="#16a34a"/><text x="278" y="69" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">+</text>
+          <line x1="293" y1="64" x2="322" y2="64" stroke="#16a34a" stroke-width="1.7" marker-end="url(#u7)"/>
+          <rect x="326" y="34" width="102" height="60" rx="10" fill="#14532d"/>
+          <text x="377" y="58" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">融合输出 h_out</text>
+          <text x="377" y="76" text-anchor="middle" font-size="9.5" fill="#bbf7d0">冲突时自动关门</text>
+        </svg>`,
+      'f1-moe': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="幂律长尾分布与Dynamic-k截断误差图">
+          <path d="M 32 16 L 32 102 L 254 102" fill="none" stroke="#64748b" stroke-width="1.4"/>
+          <path d="M 33 22 Q 48 70 80 86 L 80 101 L 33 101 Z" fill="#c7d2fe"/>
+          <path d="M 33 22 Q 50 74 88 88 T 248 99" fill="none" stroke="#4f46e5" stroke-width="2.4" stroke-linecap="round"/>
+          <line x1="80" y1="18" x2="80" y2="102" stroke="#059669" stroke-width="1.6" stroke-dasharray="4 3"/>
+          <text x="56" y="116" text-anchor="middle" font-size="9.5" font-weight="700" fill="#059669">Top-k(x)</text>
+          <text x="172" y="80" text-anchor="middle" font-size="10" fill="#64748b">90% 专家权重 ≈ 0</text>
+          <text x="172" y="116" text-anchor="middle" font-size="9.5" fill="#64748b">简单词 k=0 直接跳过</text>
+          <rect x="270" y="18" width="160" height="88" rx="10" fill="#eef2ff" stroke="#818cf8"/>
+          <text x="350" y="38" text-anchor="middle" font-size="10.5" font-weight="700" fill="#312e81">三角不等式误差上界</text>
+          <text x="350" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4f46e5">Err ≤ (Σ_{i>k} |gᵢ|)·‖E‖</text>
+          <text x="350" y="82" text-anchor="middle" font-size="9.5" fill="#475569">按门控熵 H(g) 动态选 k</text>
+          <text x="350" y="96" text-anchor="middle" font-size="9.5" fill="#059669">误差严控在 ε 以内</text>
+        </svg>`,
+      'f1-loop': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="难度门控与不动点指数收敛图">
+          <circle cx="92" cy="62" r="46" fill="none" stroke="#cbd5e1" stroke-width="1.3" stroke-dasharray="4 3"/>
+          <circle cx="92" cy="62" r="30" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <circle cx="92" cy="62" r="15" fill="none" stroke="#4f46e5" stroke-width="1.7"/>
+          <circle cx="92" cy="62" r="4.5" fill="#059669"/>
+          <circle cx="138" cy="62" r="3.5" fill="#64748b"/><text x="146" y="66" font-size="10" fill="#64748b">h⁽⁰⁾</text>
+          <circle cx="92" cy="32" r="3.5" fill="#4f46e5"/><text x="100" y="30" font-size="10" fill="#4f46e5">h⁽¹⁾</text>
+          <text x="92" y="120" text-anchor="middle" font-size="9.5" font-weight="700" fill="#065f46">收敛不动点 h* = T(h*)</text>
+          <rect x="186" y="16" width="242" height="94" rx="10" fill="#f0fdf4" stroke="#86efac"/>
+          <text x="307" y="36" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">Banach 不动点收敛律</text>
+          <text x="307" y="58" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">‖h⁽ᵏ⁾ − h*‖ ≤ γᵏ ‖h⁽⁰⁾ − h*‖</text>
+          <text x="307" y="79" text-anchor="middle" font-size="10" fill="#15803d">• 简单词 k=1 圈直接放行</text>
+          <text x="307" y="96" text-anchor="middle" font-size="10" fill="#15803d">• 难题循环 k 圈误差指数收缩</text>
+        </svg>`,
+      'f1-mtp': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="MTP投机解码拒绝采样面积守恒图">
+          <path d="M 30 102 L 230 102" stroke="#64748b" stroke-width="1.4"/>
+          <rect x="48" y="62" width="44" height="40" rx="4" fill="#fde68a" stroke="#d97706"/><text x="70" y="86" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">q(x)</text>
+          <text x="70" y="117" text-anchor="middle" font-size="9.5" fill="#64748b">草稿概率</text>
+          <rect x="130" y="62" width="54" height="40" fill="#a7f3d0" stroke="#059669"/>
+          <rect x="130" y="26" width="54" height="36" rx="4" fill="#bfdbfe" stroke="#2563eb"/>
+          <text x="157" y="86" text-anchor="middle" font-size="9.5" font-weight="700" fill="#065f46">min(p,q)</text>
+          <text x="157" y="48" text-anchor="middle" font-size="9.5" font-weight="700" fill="#1e40af">补 p−q</text>
+          <text x="157" y="117" text-anchor="middle" font-size="9.5" font-weight="700" fill="#047857">总高 ≡ p(x)</text>
+          <rect x="244" y="16" width="186" height="94" rx="10" fill="#ecfdf5" stroke="#34d399"/>
+          <text x="337" y="36" text-anchor="middle" font-size="10.5" font-weight="700" fill="#065f46">面积严格守恒（0 误差）</text>
+          <text x="337" y="58" text-anchor="middle" font-size="10" fill="#047857">绿块：直接接受 min(p,q)</text>
+          <text x="337" y="76" text-anchor="middle" font-size="10" fill="#1d4ed8">蓝块：拒绝重采样 max(0,p−q)</text>
+          <text x="337" y="96" text-anchor="middle" font-size="10.5" font-weight="700" fill="#064e3b">绿 + 蓝 ≡ 100% 原分布</text>
+        </svg>`,
+      'f2-loop': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="隐空间循环与显式CoT效率对比图">
+          <rect x="12" y="14" width="416" height="44" rx="9" fill="#fef2f2" stroke="#fca5a5"/>
+          <text x="24" y="32" font-size="10.5" font-weight="700" fill="#991b1b">传统显式文字 CoT（每吐 1 字搬 1 次全模型权重）</text>
+          <text x="24" y="49" font-size="10" fill="#b91c1c">[词1] → [词2] → [词3] → … → [词500]  （极度吃显存带宽）</text>
+          <rect x="12" y="70" width="416" height="44" rx="9" fill="#ecfdf5" stroke="#34d399"/>
+          <text x="24" y="88" font-size="10.5" font-weight="700" fill="#065f46">Looped 隐空间循环（连续高维向量内部迭代）</text>
+          <text x="24" y="105" font-size="10" font-weight="600" fill="#047857">h⁽⁰⁾ ⟳ 共享核心层 × 8~16 圈 → 直接输出高密度答案（图灵完备）</text>
+        </svg>`,
+      'f2-titans': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="Titans快权重Delta Rule正交擦除与写入图">
+          <rect x="10" y="14" width="186" height="100" rx="10" fill="#fffbeb" stroke="#fcd34d"/>
+          <text x="103" y="34" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">① 擦除旧冲突记忆</text>
+          <text x="103" y="56" text-anchor="middle" font-size="11" font-weight="700" fill="#b45309">Wₜ₋₁(I − ηkₜkₜᵀ)</text>
+          <text x="103" y="78" text-anchor="middle" font-size="9.5" fill="#78350f">沿新键 kₜ 正交投影擦除</text>
+          <text x="103" y="96" text-anchor="middle" font-size="9.5" fill="#78350f">避免旧错记忆干扰新值</text>
+          <text x="210" y="68" text-anchor="middle" font-size="16" font-weight="700" fill="#d97706">+</text>
+          <rect x="224" y="14" width="206" height="100" rx="10" fill="#eef2ff" stroke="#818cf8"/>
+          <text x="327" y="34" text-anchor="middle" font-size="10.5" font-weight="700" fill="#312e81">② 写入新环境记忆</text>
+          <text x="327" y="56" text-anchor="middle" font-size="11" font-weight="700" fill="#4f46e5">+ η · vₜ · kₜᵀ</text>
+          <text x="327" y="78" text-anchor="middle" font-size="9.5" fill="#3730a3">与线性注意力外积完全对偶</text>
+          <text x="327" y="96" text-anchor="middle" font-size="9.5" fill="#059669">跨会话在线记住新代码库</text>
+        </svg>`,
+      'f3-clean': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="模型清洗质量过滤与课程阶梯图">
+          <rect x="10" y="14" width="200" height="100" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+          <text x="110" y="32" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">质量分过滤 Q(x) &gt; τ</text>
+          <rect x="26" y="66" width="26" height="34" fill="#fca5a5"/><rect x="56" y="52" width="26" height="48" fill="#fca5a5"/>
+          <line x1="88" y1="38" x2="88" y2="104" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="3 2"/>
+          <rect x="94" y="42" width="26" height="58" fill="#60a5fa"/><rect x="124" y="50" width="26" height="50" fill="#2563eb"/><rect x="154" y="68" width="26" height="32" fill="#1d4ed8"/>
+          <text x="54" y="110" text-anchor="middle" font-size="9" fill="#b91c1c">丢弃噪声</text>
+          <text x="140" y="110" text-anchor="middle" font-size="9" font-weight="700" fill="#1d4ed8">保留高质样本</text>
+          <rect x="224" y="14" width="206" height="100" rx="10" fill="#eff6ff" stroke="#93c5fd"/>
+          <text x="327" y="32" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">从易到难课程阶梯</text>
+          <rect x="240" y="84" width="52" height="18" rx="4" fill="#93c5fd"/><text x="266" y="96" text-anchor="middle" font-size="9" fill="#1e3a8a">基础</text>
+          <rect x="300" y="66" width="52" height="36" rx="4" fill="#3b82f6"/><text x="326" y="88" text-anchor="middle" font-size="9" fill="#ffffff">进阶</text>
+          <rect x="360" y="46" width="54" height="56" rx="4" fill="#1d4ed8"/><text x="387" y="78" text-anchor="middle" font-size="9" font-weight="700" fill="#ffffff">退火难题</text>
+        </svg>`,
+      'f3-policy': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="策略模型在线采样扩张能力边界图">
+          <circle cx="110" cy="64" r="48" fill="#f3e5f5" stroke="#a855f7" stroke-dasharray="4 3"/>
+          <circle cx="110" cy="64" r="30" fill="#e9d5ff" stroke="#7e22ce"/>
+          <circle cx="110" cy="64" r="14" fill="#6b21a8"/>
+          <text x="110" y="68" text-anchor="middle" font-size="9.5" font-weight="700" fill="#ffffff">π_θ</text>
+          <text x="110" y="122" text-anchor="middle" font-size="9.5" font-weight="700" fill="#6b21a8">每轮迭代能力圈向外扩张</text>
+          <rect x="190" y="16" width="238" height="96" rx="10" fill="#faf5ff" stroke="#d8b4fe"/>
+          <text x="309" y="38" text-anchor="middle" font-size="10.5" font-weight="700" fill="#581c87">On-Policy 自举采样</text>
+          <text x="309" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#7e22ce">τ₁, τ₂, …, τ_G ~ π_θ(·|x)</text>
+          <text x="309" y="82" text-anchor="middle" font-size="9.5" fill="#6b21a8">既是“做题考生”，也是“新教材作者”</text>
+          <text x="309" y="99" text-anchor="middle" font-size="9.5" fill="#475569">持续把训练分布推向当前能力边界</text>
+        </svg>`,
+      'f3-env': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="MDP确定性沙盒状态转移图">
+          <defs><marker id="u15" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1.5 L8 5 L1 8.5" fill="none" stroke="#ea580c" stroke-width="1.8"/></marker></defs>
+          <rect x="14" y="38" width="90" height="46" rx="10" fill="#f3e5f5" stroke="#7c3aed"/><text x="59" y="65" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4c1d95">Agent 动作 aₜ</text>
+          <line x1="104" y1="61" x2="146" y2="61" stroke="#ea580c" stroke-width="1.8" marker-end="url(#u15)"/>
+          <rect x="150" y="20" width="144" height="82" rx="12" fill="#fff7ed" stroke="#ea580c" stroke-width="1.6"/>
+          <text x="222" y="44" text-anchor="middle" font-size="11" font-weight="700" fill="#9a3412">确定性沙盒 Sandbox</text>
+          <text x="222" y="64" text-anchor="middle" font-size="9.5" fill="#c2410c">编译器 · Lean · 虚拟机</text>
+          <text x="222" y="84" text-anchor="middle" font-size="9.5" font-weight="700" fill="#ea580c">严格无幻觉状态转移</text>
+          <line x1="294" y1="61" x2="334" y2="61" stroke="#ea580c" stroke-width="1.8" marker-end="url(#u15)"/>
+          <rect x="338" y="34" width="90" height="54" rx="10" fill="#ecfdf5" stroke="#10b981"/>
+          <text x="383" y="57" text-anchor="middle" font-size="10" font-weight="700" fill="#065f46">新状态 sₜ₊₁</text>
+          <text x="383" y="74" text-anchor="middle" font-size="9.5" fill="#047857">+ 真实日志</text>
+        </svg>`,
+      'f3-ver': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="RLHF奖励漂移与RLVR二值阶跃对比图">
+          <rect x="10" y="14" width="202" height="100" rx="10" fill="#fef2f2" stroke="#fca5a5"/>
+          <text x="111" y="32" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">旧 RLHF 人工奖励模型</text>
+          <path d="M 28 88 Q 80 40 130 68 T 194 42" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="4 2"/>
+          <text x="111" y="102" text-anchor="middle" font-size="9.5" fill="#b91c1c">拟合误差 → 容易拍马屁刷分</text>
+          <rect x="226" y="14" width="204" height="100" rx="10" fill="#ecfdf5" stroke="#34d399"/>
+          <text x="328" y="32" text-anchor="middle" font-size="10.5" font-weight="700" fill="#065f46">新 RLVR 确定性验证器</text>
+          <path d="M 244 88 L 320 88 L 320 44 L 410 44" fill="none" stroke="#059669" stroke-width="2.6"/>
+          <text x="282" y="80" text-anchor="middle" font-size="10" font-weight="700" fill="#b91c1c">R = 0</text>
+          <text x="366" y="62" text-anchor="middle" font-size="10" font-weight="700" fill="#059669">R = 1（通过）</text>
+          <text x="328" y="104" text-anchor="middle" font-size="9.5" fill="#047857">客观 0/1 阶跃 · 杜绝作弊</text>
+        </svg>`,
+      'f3-pos': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="拒绝采样微调分布截断图">
+          <path d="M 24 98 Q 100 22 180 98" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+          <path d="M 136 62 Q 158 76 180 98 L 136 98 Z" fill="#34d399" stroke="#059669" stroke-width="1.5"/>
+          <line x1="136" y1="30" x2="136" y2="104" stroke="#059669" stroke-width="1.6" stroke-dasharray="3 2"/>
+          <text x="80" y="88" text-anchor="middle" font-size="9.5" fill="#64748b">错题丢弃</text>
+          <text x="160" y="114" text-anchor="middle" font-size="9.5" font-weight="700" fill="#059669">只留 R=1</text>
+          <rect x="206" y="16" width="222" height="94" rx="10" fill="#ecfdf5" stroke="#86efac"/>
+          <text x="317" y="38" text-anchor="middle" font-size="10.5" font-weight="700" fill="#166534">拒绝采样微调（RFT）</text>
+          <text x="317" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532d">L = −E_{τ∈D_pos}[log π_θ(τ)]</text>
+          <text x="317" y="82" text-anchor="middle" font-size="9.5" fill="#15803d">哪怕试 16 次才对 1 次，</text>
+          <text x="317" y="98" text-anchor="middle" font-size="9.5" fill="#15803d">筛出的正确轨迹也是黄金教材</text>
+        </svg>`,
+      'f3-fix': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="报错自修复轨迹链图">
+          <defs><marker id="u18" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1.5 L8 5 L1 8.5" fill="none" stroke="#059669" stroke-width="1.8"/></marker></defs>
+          <rect x="12" y="34" width="76" height="42" rx="8" fill="#f1f5f9" stroke="#94a3b8"/><text x="50" y="59" text-anchor="middle" font-size="10" font-weight="700" fill="#334155">初稿 a₁</text>
+          <line x1="88" y1="55" x2="112" y2="55" stroke="#dc2626" stroke-width="1.6" marker-end="url(#u18)"/>
+          <rect x="116" y="34" width="84" height="42" rx="8" fill="#fee2e2" stroke="#ef4444"/><text x="158" y="59" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">报错 err₁</text>
+          <line x1="200" y1="55" x2="224" y2="55" stroke="#ea580c" stroke-width="1.6" marker-end="url(#u18)"/>
+          <rect x="228" y="34" width="92" height="42" rx="8" fill="#ffedd5" stroke="#ea580c"/><text x="274" y="59" text-anchor="middle" font-size="10" font-weight="700" fill="#9a3412">诊断 diag₁</text>
+          <line x1="320" y1="55" x2="344" y2="55" stroke="#059669" stroke-width="1.6" marker-end="url(#u18)"/>
+          <rect x="348" y="30" width="80" height="50" rx="10" fill="#059669"/><text x="388" y="52" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">修复 a₂</text><text x="388" y="68" text-anchor="middle" font-size="9.5" fill="#d1fae5">R = 1 ✓</text>
+          <text x="220" y="106" text-anchor="middle" font-size="10" font-weight="700" fill="#166534">多步纠错使总成功率从 p 抬升至 1 − (1−p)^T</text>
+        </svg>`,
+      'f3-pool': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="GRPO组内相对优势计算图">
+          <text x="16" y="24" font-size="10.5" font-weight="700" fill="#1e3a8a">GRPO 组内相对优势（省掉一半显存的 Critic 网络）</text>
+          <rect x="16" y="36" width="84" height="30" rx="7" fill="#dcfce7" stroke="#16a34a"/><text x="58" y="55" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">τ₁: R=1</text>
+          <rect x="108" y="36" width="84" height="30" rx="7" fill="#fee2e2" stroke="#ef4444"/><text x="150" y="55" text-anchor="middle" font-size="10" font-weight="700" fill="#991b1b">τ₂: R=0</text>
+          <rect x="200" y="36" width="84" height="30" rx="7" fill="#dcfce7" stroke="#16a34a"/><text x="242" y="55" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">τ₃: R=1</text>
+          <rect x="292" y="36" width="132" height="30" rx="7" fill="#e0e7ff" stroke="#4f46e5"/><text x="358" y="55" text-anchor="middle" font-size="10" font-weight="700" fill="#312e81">组均值 b = 0.67</text>
+          <rect x="16" y="78" width="408" height="36" rx="9" fill="#eff6ff" stroke="#93c5fd"/>
+          <text x="220" y="100" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e40af">优势 Aᵢ = Rᵢ − b ：τ₁,τ₃ (+0.33 强化) ｜ τ₂ (−0.67 抑制)</text>
+        </svg>`,
+      'f4-l1': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="上下文噪声稀释与精简L1尖峰对比图">
+          <rect x="10" y="14" width="198" height="100" rx="10" fill="#fef2f2" stroke="#fca5a5"/>
+          <text x="109" y="32" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">硬塞 1M 噪声（注意力稀释）</text>
+          <rect x="24" y="72" width="170" height="14" rx="4" fill="#fca5a5"/>
+          <text x="109" y="62" text-anchor="middle" font-size="9.5" fill="#b91c1c">分母过大 → Softmax 权重摊平</text>
+          <text x="109" y="102" text-anchor="middle" font-size="9.5" fill="#7f1d1d">信噪比 I(Y;C)/|C| 极低</text>
+          <rect x="224" y="14" width="206" height="100" rx="10" fill="#ecfdf5" stroke="#34d399"/>
+          <text x="327" y="32" text-anchor="middle" font-size="10.5" font-weight="700" fill="#065f46">精简 L1 工作台（高信噪比）</text>
+          <path d="M 244 86 L 306 86 L 327 42 L 348 86 L 410 86" fill="#a7f3d0" stroke="#059669" stroke-width="2"/>
+          <text x="327" y="104" text-anchor="middle" font-size="9.5" font-weight="700" fill="#047857">注意力精准聚焦核心证据</text>
+        </svg>`,
+      'f4-comp': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="率失真上下文压缩折叠图">
+          <defs><marker id="u21" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1.5 L8 5 L1 8.5" fill="none" stroke="#16a34a" stroke-width="1.8"/></marker></defs>
+          <rect x="12" y="16" width="176" height="94" rx="10" fill="#f1f5f9" stroke="#94a3b8"/>
+          <text x="100" y="36" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">原始冗长上下文 C_old</text>
+          <rect x="24" y="46" width="152" height="14" rx="4" fill="#cbd5e1"/><text x="100" y="56" text-anchor="middle" font-size="8.5" fill="#475569">500 行报错堆栈日志…</text>
+          <rect x="24" y="66" width="152" height="14" rx="4" fill="#cbd5e1"/><text x="100" y="76" text-anchor="middle" font-size="8.5" fill="#475569">已完成的旧探索步骤…</text>
+          <rect x="24" y="86" width="152" height="14" rx="4" fill="#bbf7d0"/><text x="100" y="96" text-anchor="middle" font-size="8.5" font-weight="700" fill="#14532d">真正关键根因（5%）</text>
+          <line x1="192" y1="63" x2="232" y2="63" stroke="#16a34a" stroke-width="2" marker-end="url(#u21)"/>
+          <text x="212" y="54" text-anchor="middle" font-size="9.5" font-weight="700" fill="#15803d">折叠</text>
+          <rect x="238" y="30" width="190" height="66" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+          <text x="333" y="52" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532d">压缩后 C_new（省 85%）</text>
+          <text x="333" y="72" text-anchor="middle" font-size="10" fill="#166534">信息保留 ≥ (1−ε)·I(Y;C_old)</text>
+          <text x="333" y="88" text-anchor="middle" font-size="9" fill="#15803d">率失真最优压缩</text>
+        </svg>`,
+      'f4-l2': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="跨会话经验蒸馏与注入图">
+          <defs><marker id="u22" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1.5 L8 5 L1 8.5" fill="none" stroke="#ea580c" stroke-width="1.8"/></marker></defs>
+          <rect x="12" y="20" width="106" height="84" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+          <text x="65" y="42" text-anchor="middle" font-size="10" font-weight="700" fill="#475569">历史会话</text>
+          <text x="65" y="62" text-anchor="middle" font-size="9.5" fill="#64748b">Session 1</text>
+          <text x="65" y="78" text-anchor="middle" font-size="9.5" fill="#64748b">Session 2</text>
+          <text x="65" y="94" text-anchor="middle" font-size="9.5" fill="#64748b">Session 3</text>
+          <line x1="118" y1="62" x2="152" y2="62" stroke="#ea580c" stroke-width="1.7" marker-end="url(#u22)"/>
+          <text x="135" y="53" text-anchor="middle" font-size="9" fill="#c2410c">蒸馏</text>
+          <rect x="156" y="24" width="132" height="76" rx="10" fill="#fff7ed" stroke="#ea580c" stroke-width="1.5"/>
+          <text x="222" y="46" text-anchor="middle" font-size="10.5" font-weight="700" fill="#9a3412">L2 技能库 M_L2</text>
+          <text x="222" y="66" text-anchor="middle" font-size="9.5" fill="#c2410c">偏好 · 踩坑 · 规则</text>
+          <text x="222" y="84" text-anchor="middle" font-size="9.5" fill="#ea580c">不改权重持续进化</text>
+          <line x1="288" y1="62" x2="322" y2="62" stroke="#16a34a" stroke-width="1.7" marker-end="url(#u22)"/>
+          <text x="305" y="53" text-anchor="middle" font-size="9" fill="#15803d">注入</text>
+          <rect x="326" y="34" width="102" height="56" rx="10" fill="#16a34a"/><text x="377" y="58" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">新任务 L1</text><text x="377" y="75" text-anchor="middle" font-size="9.5" fill="#dcfce7">开局自带经验</text>
+        </svg>`,
+      'f4-l3': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="三路混合检索重排漏斗图">
+          <defs><marker id="u23" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1.5 L8 5 L1 8.5" fill="none" stroke="#1d4ed8" stroke-width="1.8"/></marker></defs>
+          <rect x="12" y="14" width="136" height="28" rx="7" fill="#dbeafe" stroke="#2563eb"/><text x="80" y="32" text-anchor="middle" font-size="10" font-weight="700" fill="#1e3a8a">λ₁ · AST / Grep 词法</text>
+          <rect x="12" y="50" width="136" height="28" rx="7" fill="#dbeafe" stroke="#2563eb"/><text x="80" y="68" text-anchor="middle" font-size="10" font-weight="700" fill="#1e3a8a">λ₂ · Dense 语义向量</text>
+          <rect x="12" y="86" width="136" height="28" rx="7" fill="#dbeafe" stroke="#2563eb"/><text x="80" y="104" text-anchor="middle" font-size="10" font-weight="700" fill="#1e3a8a">λ₃ · GraphRAG 图谱</text>
+          <line x1="148" y1="28" x2="196" y2="54" stroke="#1d4ed8" stroke-width="1.5" marker-end="url(#u23)"/>
+          <line x1="148" y1="64" x2="196" y2="64" stroke="#1d4ed8" stroke-width="1.5" marker-end="url(#u23)"/>
+          <line x1="148" y1="100" x2="196" y2="74" stroke="#1d4ed8" stroke-width="1.5" marker-end="url(#u23)"/>
+          <polygon points="200,32 308,32 288,96 220,96" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+          <text x="254" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">重排去重</text>
+          <text x="254" y="76" text-anchor="middle" font-size="9.5" fill="#1d4ed8">Reranker</text>
+          <line x1="302" y1="64" x2="332" y2="64" stroke="#1d4ed8" stroke-width="1.7" marker-end="url(#u23)"/>
+          <rect x="336" y="34" width="92" height="60" rx="10" fill="#1d4ed8"/><text x="382" y="58" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">Top-k 片段</text><text x="382" y="75" text-anchor="middle" font-size="9.5" fill="#dbeafe">精准回填 L1</text>
+        </svg>`,
+      'f5-router': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="路由阈值扫描Cost-Accuracy Pareto曲线图">
+          <path d="M 38 16 L 38 102 L 244 102" fill="none" stroke="#64748b" stroke-width="1.4"/>
+          <path d="M 62 84 Q 108 32 218 24" fill="none" stroke="#4f46e5" stroke-width="2.4"/>
+          <circle cx="62" cy="84" r="4.5" fill="#94a3b8"/><text x="86" y="92" font-size="9" fill="#64748b">全小模型</text>
+          <circle cx="122" cy="40" r="6.5" fill="#ea580c"/><text x="166" y="43" font-size="9.5" font-weight="700" fill="#c2410c">最优阈值 τ*</text>
+          <circle cx="218" cy="24" r="4.5" fill="#94a3b8"/><text x="206" y="40" font-size="9" fill="#64748b">全旗舰</text>
+          <text x="142" y="118" text-anchor="middle" font-size="9.5" fill="#64748b">平均算力成本 Cost →</text>
+          <rect x="260" y="18" width="170" height="88" rx="10" fill="#fff7ed" stroke="#fb923c"/>
+          <text x="345" y="40" text-anchor="middle" font-size="10.5" font-weight="700" fill="#9a3412">阈值 τ 扫出 Pareto 边界</text>
+          <text x="345" y="62" text-anchor="middle" font-size="10" fill="#c2410c">P(Complex | x) &gt; τ → 旗舰</text>
+          <text x="345" y="82" text-anchor="middle" font-size="9.5" fill="#7c2d12">按业务预算与 SLA 自由调节</text>
+        </svg>`,
+      'f5-small': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="70/30分流期望成本对比柱状图">
+          <path d="M 28 102 L 228 102" stroke="#64748b" stroke-width="1.4"/>
+          <rect x="50" y="24" width="52" height="78" rx="5" fill="#fca5a5" stroke="#dc2626"/>
+          <text x="76" y="66" text-anchor="middle" font-size="10.5" font-weight="700" fill="#7f1d1d">100%</text>
+          <text x="76" y="116" text-anchor="middle" font-size="9.5" fill="#64748b">全调旗舰</text>
+          <rect x="140" y="68" width="52" height="34" rx="5" fill="#34d399" stroke="#059669"/>
+          <text x="166" y="89" text-anchor="middle" font-size="10.5" font-weight="700" fill="#064e3b">~38%</text>
+          <text x="166" y="116" text-anchor="middle" font-size="9.5" font-weight="700" fill="#059669">70/30 分流</text>
+          <rect x="242" y="18" width="188" height="88" rx="10" fill="#ecfdf5" stroke="#34d399"/>
+          <text x="336" y="38" text-anchor="middle" font-size="10.5" font-weight="700" fill="#065f46">期望成本公式</text>
+          <text x="336" y="60" text-anchor="middle" font-size="10" font-weight="700" fill="#047857">0.7·C_small + 0.3·C_big</text>
+          <text x="336" y="82" text-anchor="middle" font-size="9.5" fill="#065f46">70% 简单流量吃小 MoE，</text>
+          <text x="336" y="96" text-anchor="middle" font-size="9.5" font-weight="700" fill="#059669">整体账单立省 50%~70%</text>
+        </svg>`,
+      'f5-big': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="Best-of-N指数成功率爬坡曲线图">
+          <path d="M 38 16 L 38 102 L 236 102" fill="none" stroke="#64748b" stroke-width="1.4"/>
+          <path d="M 48 64 Q 96 26 220 20" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
+          <circle cx="48" cy="64" r="4" fill="#7c3aed"/><text x="68" y="76" font-size="9" fill="#5b21b6">N=1 (50%)</text>
+          <circle cx="104" cy="36" r="4.5" fill="#7c3aed"/><text x="118" y="48" font-size="9" fill="#5b21b6">N=2 (75%)</text>
+          <circle cx="188" cy="22" r="5" fill="#4f46e5"/><text x="178" y="36" font-size="9" font-weight="700" fill="#312e81">N=4 (93.8%)</text>
+          <text x="136" y="118" text-anchor="middle" font-size="9.5" fill="#64748b">候选分支数 N →</text>
+          <rect x="248" y="18" width="182" height="88" rx="10" fill="#faf5ff" stroke="#c084fc"/>
+          <text x="339" y="40" text-anchor="middle" font-size="10.5" font-weight="700" fill="#581c87">指数抬升上限</text>
+          <text x="339" y="64" text-anchor="middle" font-size="11" font-weight="700" fill="#7c3aed">P_pass(N) = 1 − (1−p)^N</text>
+          <text x="339" y="88" text-anchor="middle" font-size="9.5" fill="#6b21a8">把难题从赌运气变为稳过</text>
+        </svg>`,
+      'f5-ver': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="树搜索过程验证剪枝示意图">
+          <circle cx="48" cy="64" r="14" fill="#4f46e5"/><text x="48" y="68" text-anchor="middle" font-size="9.5" font-weight="700" fill="#ffffff">根</text>
+          <line x1="62" y1="58" x2="128" y2="28" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="3 2"/>
+          <line x1="62" y1="64" x2="128" y2="64" stroke="#059669" stroke-width="2.2"/>
+          <line x1="62" y1="70" x2="128" y2="100" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="3 2"/>
+          <circle cx="140" cy="28" r="11" fill="#fee2e2" stroke="#dc2626"/><text x="140" y="32" text-anchor="middle" font-size="10" font-weight="700" fill="#b91c1c">✕</text>
+          <circle cx="140" cy="64" r="11" fill="#dcfce7" stroke="#059669"/><text x="140" y="68" text-anchor="middle" font-size="10" font-weight="700" fill="#047857">✓</text>
+          <circle cx="140" cy="100" r="11" fill="#fee2e2" stroke="#dc2626"/><text x="140" y="104" text-anchor="middle" font-size="10" font-weight="700" fill="#b91c1c">✕</text>
+          <line x1="151" y1="64" x2="206" y2="64" stroke="#059669" stroke-width="2.2"/>
+          <rect x="210" y="46" width="66" height="36" rx="9" fill="#059669"/><text x="243" y="68" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">最优解 y*</text>
+          <rect x="288" y="18" width="142" height="90" rx="10" fill="#eff6ff" stroke="#93c5fd"/>
+          <text x="359" y="40" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">过程剪枝止损</text>
+          <text x="359" y="62" text-anchor="middle" font-size="9.5" fill="#1d4ed8">中间步报错立刻砍掉</text>
+          <text x="359" y="80" text-anchor="middle" font-size="9.5" fill="#1d4ed8">不把算力浪费在死胡同</text>
+        </svg>`,
+      'f6-match': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="下三角因果掩码前缀独立性证明图">
+          <rect x="22" y="16" width="96" height="96" rx="6" fill="#f8fafc" stroke="#94a3b8"/>
+          <polygon points="22,16 118,112 22,112" fill="#dbeafe"/>
+          <polygon points="22,16 70,64 22,64" fill="#2563eb"/>
+          <line x1="22" y1="64" x2="118" y2="64" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="3 2"/>
+          <text x="44" y="54" text-anchor="middle" font-size="9" font-weight="700" fill="#ffffff">前缀</text>
+          <text x="90" y="44" text-anchor="middle" font-size="9" fill="#94a3b8">掩码=0</text>
+          <text x="70" y="96" text-anchor="middle" font-size="9" font-weight="600" fill="#1e40af">新提问区</text>
+          <rect x="138" y="18" width="290" height="92" rx="10" fill="#eff6ff" stroke="#93c5fd"/>
+          <text x="283" y="40" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">因果掩码保证：前缀复用 100% 数学无损</text>
+          <text x="283" y="64" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2563eb">KV(x₁…x_m) ⊥ x_{m+1:N}</text>
+          <text x="283" y="88" text-anchor="middle" font-size="9.5" fill="#1e40af">深蓝前缀区右上角全为 0，永远不受后续新提问影响</text>
+        </svg>`,
+      'f6-prefill': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="Prefill处于Roofline右侧算力平台图">
+          <path d="M 38 16 L 38 100 L 250 100" fill="none" stroke="#64748b" stroke-width="1.4"/>
+          <path d="M 42 96 L 122 30 L 244 30" fill="none" stroke="#cbd5e1" stroke-width="2.2"/>
+          <line x1="122" y1="30" x2="244" y2="30" stroke="#059669" stroke-width="3.2"/>
+          <circle cx="192" cy="30" r="6.5" fill="#059669"/>
+          <text x="192" y="50" text-anchor="middle" font-size="10" font-weight="700" fill="#047857">Prefill: AI = O(N)</text>
+          <text x="142" y="116" text-anchor="middle" font-size="9.5" fill="#64748b">算术强度 AI (FLOPs/Byte) →</text>
+          <rect x="264" y="18" width="166" height="88" rx="10" fill="#ecfdf5" stroke="#34d399"/>
+          <text x="347" y="40" text-anchor="middle" font-size="10.5" font-weight="700" fill="#065f46">算力受限平台</text>
+          <text x="347" y="62" text-anchor="middle" font-size="9.5" fill="#047857">长输入矩阵乘极密集</text>
+          <text x="347" y="80" text-anchor="middle" font-size="9.5" fill="#047857">独享高算力集群，不卡 Decode</text>
+        </svg>`,
+      'f6-pool': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="三级KV缓存存储金字塔图">
+          <polygon points="116,14 164,46 68,46" fill="#ea580c"/><text x="116" y="38" text-anchor="middle" font-size="9.5" font-weight="700" fill="#ffffff">L1 HBM</text>
+          <polygon points="64,50 168,50 194,80 38,80" fill="#fb923c"/><text x="116" y="69" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">L2 CPU DRAM</text>
+          <polygon points="34,84 198,84 222,112 10,112" fill="#fed7aa" stroke="#ea580c"/><text x="116" y="102" text-anchor="middle" font-size="10" font-weight="700" fill="#9a3412">L3 高速 NVMe SSD 池</text>
+          <rect x="236" y="18" width="194" height="90" rx="10" fill="#fff7ed" stroke="#fdba74"/>
+          <text x="333" y="40" text-anchor="middle" font-size="10.5" font-weight="700" fill="#9a3412">以存储换算力成立条件</text>
+          <text x="333" y="64" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ea580c">T_load &lt; T_recompute</text>
+          <text x="333" y="86" text-anchor="middle" font-size="9.5" fill="#7c2d12">越往下容量大 100×、越省钱</text>
+        </svg>`,
+      'f6-decode': `
+        <svg viewBox="0 0 440 128" class="w-full h-auto block" role="img" aria-label="Decode低比特与MTP沿Roofline爬坡图">
+          <defs><marker id="u31" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1.5 L8 5 L1 8.5" fill="none" stroke="#7c3aed" stroke-width="1.8"/></marker></defs>
+          <path d="M 38 16 L 38 100 L 250 100" fill="none" stroke="#64748b" stroke-width="1.4"/>
+          <path d="M 42 96 L 130 28 L 244 28" fill="none" stroke="#7c3aed" stroke-width="2.4"/>
+          <circle cx="64" cy="79" r="5" fill="#94a3b8"/><text x="98" y="88" font-size="9" fill="#64748b">原 Decode O(1)</text>
+          <line x1="70" y1="74" x2="112" y2="42" stroke="#7c3aed" stroke-width="2" marker-end="url(#u31)"/>
+          <circle cx="118" cy="38" r="6" fill="#7c3aed"/><text x="176" y="43" font-size="9.5" font-weight="700" fill="#5b21b6">FP8/FP4 + MTP</text>
+          <text x="142" y="116" text-anchor="middle" font-size="9.5" fill="#64748b">算术强度向右上方爬坡 →</text>
+          <rect x="264" y="18" width="166" height="88" rx="10" fill="#faf5ff" stroke="#d8b4fe"/>
+          <text x="347" y="40" text-anchor="middle" font-size="10.5" font-weight="700" fill="#581c87">带宽爬坡三板斧</text>
+          <text x="347" y="62" text-anchor="middle" font-size="9.5" fill="#6b21a8">1. 高带宽硬件节点</text>
+          <text x="347" y="78" text-anchor="middle" font-size="9.5" fill="#6b21a8">2. FP8/MXFP4 减负 2~4×</text>
+          <text x="347" y="94" text-anchor="middle" font-size="9.5" fill="#6b21a8">3. MTP 并行验 k 词</text>
+        </svg>`
+    };
+
+    const TIPS = {
+      'f1-in': { latex: 'X = \\operatorname{Concat}\\!\\big(E_{\\text{txt}}(w),\\; W_{\\text{img}}\\operatorname{Patch}(I),\\; W_{\\text{aud}}\\operatorname{Frame}(A)\\big) \\in \\mathbb{R}^{N \\times d}',
+        badge: '图 1 · 输入层', title: '原生统一多模态输入（去独立编码器）', eqTag: '统一表征空间', svg: 'matmul-fold',
+        plain: '传统多模态模型要给图片外挂一个 ViT 编码器、给音频外挂一个 Whisper 编码器，再用转接头硬拼给语言模型，信息在转接头处大量丢失。新一代架构直接把文字 Token、图像小块（Patch）和音频帧线性投影进同一个维度 d 的隐空间，让主干从第 1 层起就原生理解跨模态关系。',
+        formula: 'X = Concat(E_txt(w), W_img·Patch(I), W_aud·Frame(A)) ∈ ℝ^{N×d}',
+        symbols: '• <b>N</b>：所有模态拼在一起的总序列长度；<b>d</b>：模型统一隐藏维度；<b>Patch(I)</b>：图像切块后的展平像素向量。',
+        math: '去掉独立编码器后，跨模态注意力矩阵可以直接在底层对齐像素与文字语义，避免信息瓶颈定理（Information Bottleneck）下的特征压缩损失。',
+        compare: '替代了 Vanilla LLM + 外挂 ViT/Adapter 拼接方案。优势：端到端统一训练、细粒度跨模态推理强；代价：多模态序列长度 N 暴增，倒逼主干必须使用线性注意力。',
+        paper: '写论文可强调“Early-Fusion Native Multimodality”，在图文交错推理与细粒度 OCR 基准上对比 Late-Fusion 外挂编码器，极易做出亮眼对比。'
+      },
+      'f1-engram': { latex: '\\operatorname{FFN}(x) = \\sum_{i=1}^{d_{\\text{ff}}} \\sigma(k_i^\\top x)\\,v_i \\;\\longrightarrow\\; h_{\\text{mem}} = \\sum_{m=1}^{M} \\operatorname{Table}_m\\!\\big[\\operatorname{Hash}_m(w_{t-n+1:t})\\big]',
+        badge: '图 1 · 记忆解耦核心', title: 'Engram 超大稀疏查表层（N-gram Memory）', eqTag: '软查表 → 硬查表', svg: 'engram-lookup',
+        plain: '大模型平时有大量昂贵的 GPU 参数只是在“死记硬背”诸如某年某人某地名之类的静态事实。Engram 把局部连续几个词（N-gram）做哈希，直接以 O(1) 复杂度去超大外部字典表里取出对应的事实向量，几乎不消耗任何 GPU 矩阵乘算力。',
+        formula: 'FFN(x) = Σᵢ σ(kᵢᵀx)·vᵢ  ⟶  h_mem = Σₘ Table_m[Hash_m(w_{t-n+1:t})]',
+        symbols: '• <b>Hash_m</b>：第 m 组独立哈希函数（多表抗冲突）；<b>Table_m</b>：超大稀疏嵌入表（可达 300B+ 参数）；<b>w_{t-n+1:t}</b>：当前局部 N-gram 词组。',
+        math: '经典研究（Geva et al.）证明标准 FFN 展开后本质是“软键值查表”。对高频静态词组，σ(kᵢᵀx) 极度尖锐近似 one-hot，改用哈希硬查表可在近零 FLOPs 下逼近同等记忆检索效果。',
+        compare: '替代了 Vanilla 底层专门负责死记硬背的稠密 FFN 参数。优势：记忆容量与计算量彻底解耦；代价：只能处理局部静态事实，跨句复杂推理仍需主干网络。',
+        paper: '非常适合发架构论文：既能测知识密集型 QA 涨点与 GPU FLOPs 下降，还能顺手做“无需微调直接编辑字典条目”的 Knowledge Editing 附加实验！'
+      },
+      'f1-dram': { latex: 'T_{\\text{PCIe\\_prefetch}}\\!\\big(\\operatorname{Table}[\\text{idx}]\\big) \\;\\le\\; T_{\\text{GPU\\_compute}}\\!\\big(\\text{Layers } 1 \\dots k\\big)',
+        badge: '图 1 · 异构存储预取', title: '低成本 CPU DRAM 异步预取', eqTag: '计算隐藏访存', svg: 'engram-lookup',
+        plain: '300B+ 的查表参数如果全塞进 GPU 显存会贵到破产。妙就妙在：N-gram 哈希地址在刚拿到输入文本时就能提前算好！于是系统可以趁 GPU 算第 1~3 层的时候，悄悄从便宜十倍的主机 CPU 内存里把查到的向量异步搬到 GPU，真正做到“零等待”。',
+        formula: 'T_PCIe_prefetch(Table[idx]) ≤ T_GPU_compute(Layers 1…k)',
+        symbols: '• <b>T_PCIe_prefetch</b>：通过 PCIe/CXL 从主机内存拉取极少数命中行的时间；<b>T_GPU_compute</b>：GPU 执行前几层主干计算的时间。',
+        math: '只要每次查表搬运的字节数极小（仅 O(k·d)），流水线重叠就能把访存延迟完全隐藏在计算时间之下，实现 10× 显存成本缩减。',
+        compare: '替代了“把所有参数硬塞进昂贵 HBM 显存”的做法。优势：大幅降低硬件采购门槛；代价：高度依赖工程级异步预取调度，大 Batch 随机读需防带宽拥塞。',
+        paper: '系统/架构结合论文的绝佳亮点：放一张“开启/关闭异步预取的延迟拆解图（Overlap Breakdown）”，审稿人一眼就能看懂工程含金量。'
+      },
+      'f1-enc': { latex: 'H^{(l+1)} = \\operatorname{Proj}_{\\mathcal{M}}\\!\\Big(A_l H^{(l)} + B_l F\\!\\big(H^{(l)}\\big)\\Big), \\quad \\|A_l\\|_2 \\le 1',
+        badge: '图 1 · 主干残差流', title: '统一底层嵌入 + mHC 流形约束多通道残差流', eqTag: '流形稳定约束', svg: 'loop-fixedpoint',
+        plain: '传统 Transformer 只有一条单车道残差流（x + F(x)），网络越深越容易梯度爆炸或特征坍塌。mHC 相当于把单车道扩成多通道立交桥，同时加上几何流形约束，保证无论信息在异构混合层里怎么传都不会发散失真。',
+        formula: 'H^{(l+1)} = Proj_M(A_l · H^{(l)} + B_l · F(H^{(l)}))',
+        symbols: '• <b>H^{(l)}</b>：多通道残差状态矩阵；<b>A_l, B_l</b>：受双随机/正交约束的通道混合矩阵；<b>Proj_M</b>：向稳定几何流形的投影。',
+        math: '通过约束混合矩阵谱范数 ≤ 1（如 Sinkhorn 投影到双随机矩阵流形），数学上保证了前向信号与反向梯度在超深网络中的范数有界，根治训练发散。',
+        compare: '替代了 Vanilla 的单路无约束残差连接。优势：显著提升超深异构网络（线性+稀疏+MoE）的训练稳定性；代价：多通道略微增加激活显存与算子融合复杂度。',
+        paper: '可作为训练稳定性理论小节：给出“混合矩阵谱范数 ≤ 1 ⇒ 梯度范数不爆炸”的 3 行引理，搭配 Loss Spike 对比曲线非常有说服力。'
+      },
+      'f1-linear': { latex: 'S_t = \\alpha_t S_{t-1} + \\phi(k_t) v_t^\\top, \\quad y_t = \\phi(q_t)^\\top S_t, \\quad \\operatorname{rank}(S_t) \\le d',
+        badge: '图 1 · 75% 主干层', title: '线性/增量注意力（KDA / Mamba）', eqTag: '矩阵结合律 O(1) 显存', svg: 'matmul-fold',
+        plain: '看 10 万字长文时，如果每层都让每个字回头看遍前面所有字，显存和算力会按平方级爆炸。线性注意力像“边读边做压缩笔记”——把读过的所有历史信息不断折叠进一个固定大小（d×d）的状态矩阵里，不管文章多长，显存永远不变！',
+        formula: 'Sₜ = αₜSₜ₋₁ + φ(kₜ)vₜᵀ,   yₜ = φ(qₜ)ᵀ Sₜ',
+        symbols: '• <b>Sₜ ∈ ℝ^{d×d}</b>：压缩历史记忆的固定大小状态矩阵；<b>αₜ</b>：数据相关的选择性遗忘门控；<b>φ(·)</b>：核特征映射函数。',
+        math: '由 Bochner 核展开近似指数项，再利用矩阵乘法结合律把 (φ(Q)φ(K)ᵀ)V 改写成 φ(Q)(φ(K)ᵀV)，复杂度从 O(N²d) 暴降至 O(Nd²)。但因 rank(Sₜ) ≤ d，无法无损记住超过 d 组正交键值对，故需 25% 全局层兜底。',
+        compare: '替代了 Vanilla 75% 层的 O(N²) Softmax 注意力。优势：百万长上下文吞吐飙升、显存恒定；代价：超长精确拷贝（大海捞针）能力弱于全局注意力。',
+        paper: '用 rank(Sₜ) ≤ d 解释“为什么纯线性必败、必须 3:1 混合”，是顶会审稿人最买账的“理论指导架构设计”经典叙事。'
+      },
+      'f1-sparse': { latex: 'c_j = W^{DKV} h_j, \\quad q_t^\\top (W^{UK} c_j) = h_t^\\top \\Big((W^Q)^\\top W^{UK}\\Big) c_j',
+        badge: '图 1 · 25% 精读层', title: '稀疏全局注意力（Gated DSA / MLA）', eqTag: '低秩压缩 + 矩阵吸收', svg: 'mla-absorb',
+        plain: '这 25% 的层是专门用来“精准翻原页查细节”的！为了不让它们拖垮显存，用了两招：一是 MLA 把庞大的多头 K、V 压成一个极小的潜在向量 cⱼ 存进显存（省 90%+）；二是 Gated DSA 只挑相关性最高的少数历史片段算注意力，扔掉 90% 废话。',
+        formula: 'cⱼ = Wᴰᴷⱽ hⱼ,   qₜᵀ(Wᵁᴷ cⱼ) = hₜᵀ [(Wᑫ)ᵀ Wᵁᴷ] cⱼ',
+        symbols: '• <b>cⱼ ∈ ℝ^{d_c}</b>：低维压缩后的共享 KV 缓存（d_c ≪ n_h·d_h）；<b>Wᵁᴷ</b>：升维权重；<b>(Wᑫ)ᵀWᵁᴷ</b>：离线合并后的吸收矩阵。',
+        math: '压缩保真由 Eckart-Young 低秩逼近定理支撑；推理时的矩阵吸收纯靠结合律，无需把 cⱼ 解压还原成 kⱼ，在低秩子空间内与全量计算数学上 100% 严格等价！',
+        compare: '替代了 Vanilla 剩余 25% 层的稠密全量 KV Cache 注意力。优势：保住 128K+ 精准大海捞针能力且 KV 显存狂降 90%+；代价：需要解耦 RoPE 位置编码。',
+        paper: 'MLA 矩阵吸收 + 稀疏比例消融实验（3:1 vs 7:1）极其严谨，既有经典线性代数定理背书，又能直接测出 128K NIAH 曲线。'
+      },
+      'f1-gate': { latex: 'h_{\\text{out}} = g(x) \\odot h_{\\text{core}} + \\big(1 - g(x)\\big) \\odot h_{\\text{engram}}, \\quad g(x) = \\sigma\\!\\big(W_g [h_{\\text{core}};\\, h_{\\text{engram}}]\\big)',
+        badge: '图 1 · 动态门控', title: '门控融合（Gated Fusion）', eqTag: '自适应权重融合', svg: 'engram-lookup',
+        plain: '并不是每个词都需要查外部字典（比如写数学推导时更依赖上下文逻辑，写历史人名时更依赖静态记忆）。门控融合就像一个智能调音台，逐个 Token、逐个维度自动决定注入多少 Engram 查表记忆。',
+        formula: 'h_out = g(x) ⊙ h_core + (1 − g(x)) ⊙ h_engram,   g(x) = σ(W_g [h_core; h_engram])',
+        symbols: '• <b>g(x) ∈ (0, 1)^d</b>：逐维度门控权重向量；<b>⊙</b>：逐元素哈达玛积；<b>σ</b>：Sigmoid 激活函数。',
+        math: '通过可微 Sigmoid 门控实现端到端梯度回传，当哈希发生碰撞或查表无关时，模型自动将 1−g(x) 压向 0，数学上防止外部记忆噪声破坏主干特征。',
+        compare: '替代了简单的直接相加（h_core + h_engram）。优势：抗哈希冲突和噪声能力极强；代价：仅增加微不足道的线性门控投影开销。',
+        paper: '在消融实验中对比“直接相加 vs 门控融合”，并可视化不同词性（实体名词 vs 逻辑连词）的门控激活值热力图，审稿人极爱这种可解释性分析！'
+      },
+      'f1-moe': { latex: '\\operatorname{MoE}(x) = E_{\\text{shared}}(x) + \\sum_{i \\in \\operatorname{TopK}(x)} g_i(x) E_i(x), \\quad \\|\\text{Err}\\|_2 \\le \\Big(\\sum_{i \\notin \\operatorname{TopK}} |g_i|\\Big)\\max_i \\|E_i\\|_2',
+        badge: '图 1 · 动态稀疏计算', title: 'Dynamic-k 稀疏 MoE + 共享专家', eqTag: '幂律长尾截断上界', svg: 'sparse-tail',
+        plain: '传统稠密 FFN 不管遇到“的/了”还是微积分，都要把所有脑细胞 100% 算一遍。这里把大 FFN 拆成“1~2 个常驻共享专家（处理基础语法）”+“几十上百个领域路由专家”，而且按当前词的难度动态决定请 0 个还是 k 个专家，简单词直接跳过！',
+        formula: 'MoE(x) = E_shared(x) + Σ_{i∈TopK(x)} gᵢ(x) Eᵢ(x),   ‖Err‖₂ ≤ (Σ_{i∉TopK} |gᵢ|)·max‖Eᵢ‖',
+        symbols: '• <b>E_shared</b>：所有词共用的基础专家；<b>TopK(x)</b>：按门控概率熵动态选出的专家集合；<b>gᵢ(x)</b>：路由归一化权重。',
+        math: '高维激活服从极端幂律长尾分布（前 5%~10% 专家占 95%+ 权重）。由三角不等式，砍掉后 90% 近零专家的输出误差严格小于被丢弃尾部权重之和，Dynamic-k 则确保该上界恒低于预设阈值 ε。',
+        compare: '替代了 Vanilla 的全参稠密 FFN。优势：总参数可达万亿级而单字算力仅占 5%~10%；代价：总显存仍高、多卡需要高频 All-to-All 通信。',
+        paper: '高校发算法论文的绝佳切入点：只需改进路由门控规则（如熵阈值 Dynamic-k），在 Iso-FLOPs 同算力预算下超越固定 Top-2 MoE 就能成文。'
+      },
+      'f1-loop': { latex: 'h^{(t+1)} = h^{(t)} + f\\!\\big(h^{(t)};\\, \\theta\\big), \\quad \\big\\|h^{(k)} - h^*\\big\\|_2 \\le \\gamma^k \\big\\|h^{(0)} - h^*\\big\\|_2 \\;\\; (0 < \\gamma < 1)',
+        badge: '图 1 · 隐空间动态深度', title: '难度门控与隐空间循环判断', eqTag: '不动点指数收敛', svg: 'loop-fixedpoint',
+        plain: '以前大模型遇到难题只能靠“在屏幕上疯狂打草稿（输出几百个 CoT 废话词）”来换取更多思考步数。难度门控让模型在遇到难词时，直接把内部隐向量送回核心层再默默循环 k 圈，想透了再吐出精准答案。',
+        formula: 'h⁽ᵗ⁺¹⁾ = h⁽ᵗ⁾ + f(h⁽ᵗ⁾; θ),   ‖h⁽ᵏ⁾ − h*‖ ≤ γᵏ ‖h⁽⁰⁾ − h*‖  (γ < 1)',
+        symbols: '• <b>θ</b>：各圈共享的同一套核心层权重；<b>k(x)</b>：由难度门控动态决定的循环次数；<b>h*</b>：收敛不动点。',
+        math: '从 Neural ODE 与 Banach 不动点定理视角看，只要局部算子满足压缩映射，增加循环圈数即可使误差按 γᵏ 指数级逼近精确解；且理论上单块循环 Transformer 具备图灵完备性。',
+        compare: '替代了 Vanilla 固定 L 层单遍前向传播。优势：用时间换深度、隐空间思考密度远超文字 CoT；代价：同 Batch 不同词循环次数不一会影响 GPU 并行规整度。',
+        paper: '极适合小算力实验室：在 100M~500M 模型上测试算法/数学推理的长度外推（训练 4 圈、测试 16 圈），极易做出惊艳的缩放曲线。'
+      },
+      'f1-mtp': { latex: 'P(X = x) = \\min\\!\\big(p(x), q(x)\\big) + \\beta \\cdot \\frac{\\max\\!\\big(0,\\, p(x) - q(x)\\big)}{\\beta} \\equiv p(x)',
+        badge: '图 1 · 并行解码头', title: '原生 MTP 多 Token 预测 + 投机无损校验', eqTag: '100% 严格零误差', svg: 'spec-reject',
+        plain: 'Vanilla 每吐 1 个字都要把几百 GB 参数从显存搬一遍，极其浪费时间。MTP 让模型在训练时就学会一口气往后猜 3~5 个字，推理时先并行猜出来，再让主干一次并行验收，猜对直接放行、猜错当场修正。',
+        formula: 'P(X=x) = min(p(x), q(x)) + β · [max(0, p(x)−q(x)) / β] ≡ p(x)',
+        symbols: '• <b>q(x)</b>：MTP 草稿头猜出的分布；<b>p(x)</b>：主干并行算出的真实分布；<b>β = 1 − Σ min(p,q)</b>：总拒绝概率（恰好与残差归一化分母相消）。',
+        math: '把“直接接受概率”和“拒绝后从残差分布重采样概率”相加，代数上精确化简为 p(x)——无论草稿猜得准不准，最终输出分布与 Vanilla 逐字生成 100% 严格一致，零精度损失！',
+        compare: '替代了 Vanilla 严格串行的 1 Token/步解码。优势：实打实提速 1.8×~3× 且绝对不降智；代价：高温度创意写作下草稿命中率下降。',
+        paper: '拥有最硬的论文护城河：5 行代数就能写进正文当作 Theorem 1，审稿人无法质疑生成质量受损，只需补齐不同温度和 Batch Size 的加速比表格。'
+      },
+      'f2-loop': { latex: 'h^{(t+1)} = h^{(t)} + f\\!\\big(h^{(t)};\\, \\theta\\big), \\quad \\operatorname{Compute}(x) \\propto k(x) \\in [1, K_{\\max}]',
+        badge: '图 2 · 机制 A 详解', title: 'Looped Transformer 隐空间循环深度', eqTag: '不动点 + 图灵完备', svg: 'loop-fixedpoint',
+        plain: '把简单词（如“的/了”）和奥数推理词彻底分开对待：简单词只走 1 圈核心层毫秒直出；高难逻辑词在共享权重的连续隐空间里反复推演 8~16 圈，相当于用“思考时间”替代“堆叠几百层独立参数”。',
+        formula: 'h⁽ᵗ⁺¹⁾ = h⁽ᵗ⁾ + f(h⁽ᵗ⁾; θ),   Compute(x) ∝ k(x) ∈ [1, K_max]',
+        symbols: '• <b>k(x)</b>：按难度门控动态分配的思考步数；<b>K_max</b>：最大允许循环上限（如 16 圈）。',
+        math: 'Giannou et al. 构造性证明了单个循环 Transformer Block 可模拟通用指令集（读取-计算-写回），具备图灵完备性，只要步数够就能表达任意深度的展开计算图。',
+        compare: '替代了固定深度独立层堆叠。优势：极高参数效率、天然支持 Test-Time Compute 缩放；代价：训练期跨多圈 BPTT 显存开销大，需截断反向传播或隐式微分。',
+        paper: '热门 Test-Time Scaling 赛道核心机制，非常适合研究“隐空间循环 vs 显式 CoT 的 FLOPs-精度权衡”。'
+      },
+      'f2-titans': { latex: 'W_t = W_{t-1} - \\eta \\nabla_W \\!\\left(\\tfrac{1}{2}\\|W_{t-1} k_t - v_t\\|_2^2\\right) = W_{t-1}\\big(I - \\eta k_t k_t^\\top\\big) + \\eta v_t k_t^\\top',
+        badge: '图 2 · 机制 B 详解', title: 'Titans / Nested Learning 测试时在线快权重', eqTag: '梯度下降 ≡ 注意力', svg: 'delta-dual',
+        plain: '传统大模型考前训练完权重就彻底冻死了，推理时只能把几十万行代码硬塞进 KV Cache。Titans 给模型配了一块“快权重工作记忆”：读新代码库或长对话时，边读边做局部梯度微调，把新规则真正刻进快权重里！',
+        formula: 'Wₜ = Wₜ₋₁ − η∇(½‖Wₜ₋₁kₜ − vₜ‖²) = Wₜ₋₁(I − ηkₜkₜᵀ) + ηvₜkₜᵀ',
+        symbols: '• <b>Wₜ</b>：推理期在线更新的快权重矩阵；<b>η</b>：在线学习率（需满足 0 < η‖kₜ‖² < 2 保证稳定）；<b>(I − ηkₜkₜᵀ)</b>：正交擦除投影算子。',
+        math: '将 Delta Rule 梯度下降展开后，与线性注意力状态更新完全对偶！不同的是它自带 −η(Wₜ₋₁kₜ)kₜᵀ 纠错项：遇到冲突记忆时先沿 kₜ 方向擦除旧错，再写入新值。',
+        compare: '替代了“推理期权重完全冻结 + 纯堆 KV Cache”。优势：真正跨会话在线适应、记忆抗覆盖能力强；代价：高并发服务需按用户隔离维护快权重状态。',
+        paper: '极其优雅的数学对偶视角！NeurIPS/ICLR 审稿人非常偏爱这种把“优化（梯度下降）”和“架构（注意力）”统一起来的理论+实验文章。'
+      },
+      'f3-clean': { latex: '\\mathcal{D}_{\\text{clean}} = \\big\\{x \\in \\mathcal{D}_{\\text{raw}} \\mid Q_{\\text{model}}(x) > \\tau\\big\\}, \\quad P_{\\text{curriculum}}(x) \\propto \\operatorname{Difficulty}(x)',
+        badge: '图 3 · 数据基石', title: '模型驱动清洗与课程配比', eqTag: '降低梯度方差', svg: 'rlvr-loop',
+        plain: '垃圾进、垃圾出。在进入强化学习刷题之前，先用专门的打分模型把原始网页语料做去重、去噪、难度分层，并按“从易到难”的课程表配比喂给模型，打好扎实的通识底座。',
+        formula: 'D_clean = {x ∈ D_raw | Q_model(x) > τ},   P_curriculum(x) ∝ Difficulty(x)',
+        symbols: '• <b>Q_model(x)</b>：数据质量打分器；<b>τ</b>：过滤阈值；<b>P_curriculum</b>：退火阶段的高难数据采样配比。',
+        math: '从随机梯度下降理论看，剔除低信噪比样本直接压低了梯度估计方差 Var(∇L)，让同等 Token 预算下的收敛损失显著更低。',
+        compare: '替代了粗放的规则清洗与均匀随机采样。优势：同等算力下模型底座能力大幅跃升；代价：前置清洗打分需要消耗可观的离线推理算力。',
+        paper: 'Data-Centric AI 方向极易出高引论文（如 FineWeb/DCLM 范式），在固定 1B 模型上证明你的筛选公式比随机采样省 40% 训练 Token 就能发顶会。'
+      },
+      'f3-policy': { latex: '\\tau = (s_0, a_0, \\dots, s_T) \\sim \\pi_\\theta(\\cdot \\mid x)',
+        badge: '图 3 · 策略主体', title: '策略模型（Policy LLM）', eqTag: '采样与进化闭环', svg: 'rlvr-loop',
+        plain: '它是整个飞轮的“考生”：先放出去在沙盒里做大量题目生成求解轨迹，再根据沙盒的客观判分结果更新自己的大脑权重，下一轮变成更强的考生继续刷更难的题。',
+        formula: 'τ = (s₀, a₀, …, s_T) ~ π_θ(· | x)',
+        symbols: '• <b>π_θ</b>：当前参数为 θ 的大语言模型策略；<b>τ</b>：包含思考、写代码、看报错、修改的完整交互轨迹。',
+        math: '策略同时充当“数据生成器”和“被优化对象”，通过在线采样不断把数据分布推向当前能力边界（On-policy 探索）。',
+        compare: '替代了静态离线监督微调（SFT）。优势：能持续发现超越人类示范的新解题路径；代价：容易出现探索熵坍塌，需 KL 散度约束或温度控制。',
+        paper: '可重点研究 On-policy 探索效率、熵维持策略或课程难度自适应调度。'
+      },
+      'f3-env': { latex: '(s_{t+1},\\, \\text{log}_{t+1}) = \\operatorname{Sandbox}(s_t,\\, a_t)',
+        badge: '图 3 · 练兵场', title: '确定性沙盒环境（Agentic Gym）', eqTag: '真实状态转移', svg: 'rlvr-loop',
+        plain: '给模型配齐真实可执行的工具环境：代码编译器与单元测试、Lean 形式化数学证明器、带真实 DOM 的浏览器和操作系统虚拟机。模型不再纸上谈兵，必须真刀真枪跑通才算数。',
+        formula: 's_{t+1}, log_{t+1} = Sandbox(s_t, action_t)',
+        symbols: '• <b>action_t</b>：模型发出的代码、命令或点击操作；<b>log_{t+1}</b>：环境返回的真实运行结果或报错堆栈。',
+        math: '将语言生成转化为马尔可夫决策过程（MDP），外部环境提供了严格、无幻觉的状态转移函数。',
+        compare: '替代了纯文本单轮对话环境。优势：练出真正能干活的 Agent；代价：高并发隔离沙盒（容器/VM）的调度和算力开销高。',
+        paper: '构建高质量、可复现的开源 Agentic Gym 基准环境本身就是 NeurIPS Datasets & Benchmarks 赛道的热门高引方向。'
+      },
+      'f3-ver': { latex: 'R_{\\text{ver}}(\\tau) = \\mathbb{I}\\!\\big[\\operatorname{AllUnitTestsPass}(\\tau)\\big] \\in \\{0, 1\\}',
+        badge: '图 3 · 自动判卷机', title: '确定性验证器（Verifier）', eqTag: '零主观偏差奖励', svg: 'rlvr-loop',
+        plain: '以前 RLHF 要花大价钱雇人标好坏，再训一个奖励模型，结果大模型很快学会“写长废话拍马屁骗高分”。确定性验证器只认客观事实：单测全过=1 分，报错=0 分，彻底堵死作弊空间。',
+        formula: 'R_ver(τ) = 1[AllUnitTestsPass(τ)] ∈ {0, 1}',
+        symbols: '• <b>R_ver(τ)</b>：无噪声的二值确定性奖励信号，不需要任何神经网络去拟合人类偏好。',
+        math: '彻底消除了奖励模型近似误差 |R̂ − R*| 导致的 Goodhart 定律（Reward Hacking），使策略梯度方向与真实任务目标完全对齐。',
+        compare: '替代了昂贵且易被钻空子的 RLHF 人工奖励模型。优势：零人工边际成本、可扩展至千万级轨迹；代价：难以直接覆盖开放写作与审美任务。',
+        paper: '高校实验室极友好的 RL 方向：无需请标注员，靠开源编译器/数学验证器就能做出 100% 客观可复现的强化学习论文。'
+      },
+      'f3-pos': { latex: '\\mathcal{L}_{\\text{RFT}}(\\theta) = -\\mathbb{E}_{\\tau \\sim \\mathcal{D}_{\\text{pos}}}\\!\\big[\\log \\pi_\\theta(\\tau)\\big]',
+        badge: '图 3 · 正向沉淀', title: '高密度正确推理轨迹', eqTag: '拒绝采样微调', svg: 'rlvr-loop',
+        plain: '把沙盒里验证通过的漂亮解题过程筛选出来沉淀进数据池。哪怕同一道难题模型试了 16 次才对 1 次，那 1 次正确的轨迹就是极高价值的黄金教材。',
+        formula: 'L_RFT(θ) = − E_{τ ~ D_pos} [ log π_θ(τ) ]',
+        symbols: '• <b>D_pos</b>：经确定性验证器过滤出的高密度正确样本集合。',
+        math: '数学上等价于在受限于高回报子集上的极大似然估计（Rejection Sampling Fine-Tuning），极其稳定且不易崩坏。',
+        compare: '替代了低质量网络爬取推理文本。优势：每条步骤都经过逻辑闭环检验；代价：如果只学“一次做对”的样本，模型遇到报错时仍会手足无措。',
+        paper: '可结合难度加权采样（重点沉淀 Pass@16 才做对的难题）做出显著的 Data Efficiency 涨点。'
+      },
+      'f3-fix': { latex: '\\tau_{\\text{fix}} = (a_1, \\text{err}_1, \\text{diag}_1, a_2, \\dots, R_{\\text{ver}} = 1), \\quad P_{\\text{succ}}(T) = 1 - (1 - p)^T',
+        badge: '图 3 · 反思纠错沉淀', title: '报错 → 排查 → 自纠错轨迹', eqTag: '多步反馈修正', svg: 'rlvr-loop',
+        plain: '真正让模型变聪明的数据往往不是“顺风局”，而是“逆风翻盘局”！沙盒把报错日志喂回给模型，引导它定位 Bug 并修好，把整段“犯错→看日志→排查→修复”的轨迹存下来，模型就学会了自我反思。',
+        formula: 'τ_fix = (a₁, err₁, diag₁, a₂, …, R_ver=1)',
+        symbols: '• <b>err₁</b>：编译器/沙盒返回的精准报错信息；<b>diag₁</b>：模型针对报错的诊断与修复推理。',
+        math: '在条件概率分布 π_θ(a₂ | a₁, err₁) 上显式训练纠错转移，将多步任务的整体成功率从 p 抬升至 1 − (1−p)^T。',
+        compare: '弥补了纯正向轨迹缺乏容错能力的短板。优势：大幅提升真实编程与 Agent 任务的端到端完成率；代价：轨迹更长，训练上下文开销增加。',
+        paper: '“Self-Correction from Execution Feedback”是 ICLR/ACL 的超热门主题，极易在 SWE-bench 等代码修复榜单上刷出强力结果。'
+      },
+      'f3-pool': { latex: '\\nabla_\\theta J(\\theta) = \\mathbb{E}_{\\tau \\sim \\pi_\\theta}\\!\\left[\\big(R_{\\text{ver}}(\\tau) - b\\big) \\sum_{t=1}^{T} \\nabla_\\theta \\log \\pi_\\theta(a_t \\mid s_t)\\right]',
+        badge: '图 3 · 飞轮闭环', title: 'RLVR 强化学习与退火数据池', eqTag: '策略梯度闭环', svg: 'rlvr-loop',
+        plain: '把正向轨迹和纠错轨迹统一汇入数据池，通过 GRPO/PPO 等强化学习算法或退火微调反哺更新策略模型权重，让模型一轮比一轮强，彻底摆脱人类语料枯竭的天花板。',
+        formula: '∇J(θ) = E_{τ~π_θ} [ (R_ver(τ) − b) · Σₜ ∇log π_θ(aₜ | sₜ) ]',
+        symbols: '• <b>b</b>：组内平均基线（如 GRPO 的组均值，省去昂贵的 Critic 网络）；<b>R_ver − b</b>：优势函数（Advantage）。',
+        math: '使用组内相对优势替代独立 Value 网络，既保持梯度无偏又省下一半训练显存，使大规模 RLVR 闭环在工程上高效可行。',
+        compare: '替代了单纯依赖人类语料规模堆叠的旧范式。优势：测试时/训练时算力可持续转化为推理智商；代价：需要防范过拟合单一题型和分布偏移。',
+        paper: 'GRPO 变体、优势归一化、长尾难题配比都是当前顶会非常吃香的 RL 算法创新点。'
+      },
+      'f4-l1': { latex: '\\operatorname{SNR}(C) = \\frac{I(Y;\\, C_{\\text{rel}})}{|C|}',
+        badge: '图 4 · L1 工作台', title: '高信噪比活跃上下文窗口', eqTag: '互信息信噪比', svg: 'memos-snr',
+        plain: '就像学霸整洁的书桌，只放当前正在解的题、最核心的几段代码和刚查回来的关键证据。绝不把昨天聊的闲话和几千行过期日志堆在桌面上干扰视线。',
+        formula: 'SNR(C) = I(Y; C_rel) / |C|',
+        symbols: '• <b>I(Y; C_rel)</b>：上下文中真正与目标答案 Y 相关的有效互信息；<b>|C|</b>：当前上下文总 Token 数。',
+        math: '随无关噪声 Token 增加，Softmax 分母 Σ exp(zⱼ) 不断膨胀，导致真正关键 Token 的注意力权重被稀释（Lost-in-the-Middle 现象）。维持高 SNR 直接提升推理准确率。',
+        compare: '替代了“把所有历史对话无脑全塞进 1M 窗口”。优势：既省 70%+ Token 账单又防注意力腐烂；代价：需要设计精准的 L1 进出调度策略。',
+        paper: '无需重训大模型，直接套在开源模型上做长程 Agent 基准对比，极易写出低算力高影响的实证论文。'
+      },
+      'f4-comp': { latex: '\\min |C_{\\text{new}}| \\quad \\text{s.t.} \\quad I(Y;\\, C_{\\text{new}}) \\ge (1 - \\varepsilon)\\, I(Y;\\, C_{\\text{old}})',
+        badge: '图 4 · 内存回收', title: '动态上下文压缩器（Compaction）', eqTag: '信息率失真压缩', svg: 'memos-snr',
+        plain: '像操作系统的垃圾回收机制一样，定期把已经执行完的中间步骤折叠成 1 句摘要、把 500 行报错堆栈裁成最核心的 5 行根因，把宝贵的 L1 窗口腾出来给新任务。',
+        formula: 'min |C_new|   s.t.   I(Y; C_new) ≥ (1 − ε) · I(Y; C_old)',
+        symbols: '• <b>C_new</b>：压缩后的精简上下文；<b>ε</b>：允许的最大信息损失容忍度。',
+        math: '本质是信息论中的率失真优化（Rate-Distortion）：在保证目标答案条件分布变化小于 ε 的前提下，最大化压缩比 |C_old|/|C_new|。',
+        compare: '替代了粗暴的“超出窗口直接截断最早消息”。优势：不丢关键前置约束又能无限续命对话；代价：压缩过激可能误删后面突然要用到的细节。',
+        paper: '非常适合做“压缩比 vs 长程任务成功率”的折线图对比，证明你的结构化摘要/分层折叠优于滑动窗口与简单截断。'
+      },
+      'f4-l2': { latex: '\\mathcal{M}_{L2} \\leftarrow \\mathcal{M}_{L2} \\cup \\operatorname{Distill}(\\tau_{\\text{done}}), \\quad L_1 \\leftarrow L_1 \\cup \\operatorname{Retrieve}(\\mathcal{M}_{L2},\\, \\text{task})',
+        badge: '图 4 · L2 长期外存', title: '情景与技能记忆（跨会话）', eqTag: '经验蒸馏与注入', svg: 'memos-snr',
+        plain: 'LLM 干完活后在后台异步复盘，把你的代码风格偏好、踩过的环境坑和可复用的操作手册（Playbook）提炼存进长期外存；下次遇到类似任务自动匹配注入到 L1 桌面。',
+        formula: 'M_L2 ← M_L2 ∪ Distill(τ_done),   L1 ← L1 ∪ Retrieve(M_L2, task)',
+        symbols: '• <b>Distill(τ_done)</b>：从已完成会话中异步提炼的结构化规则/技能；<b>Retrieve</b>：按当前任务意图匹配的技能召回。',
+        math: '把跨会话的隐式经验显式化为可检索的外部先验知识，在不修改主干权重的前提下实现跨天持续进化。',
+        compare: '替代了“每次开新对话都从零教 AI 你的习惯”。优势：越用越顺手、复盘经验可跨任务复用；代价：若写入错误经验会产生“记忆投毒”，需版本管理与置信度衰减。',
+        paper: 'Lifelong / Continual Agent Memory 是 ACL/ICLR 热门方向，可重点研究“如何防止错误记忆污染后续任务”。'
+      },
+      'f4-l3': { latex: '\\operatorname{Score}(q, d) = \\lambda_1 \\operatorname{BM25/AST}(q,d) + \\lambda_2 \\cos(e_q, e_d) + \\lambda_3 \\operatorname{GraphHop}(q,d)',
+        badge: '图 4 · L3 主动混合检索', title: '三路混合检索 + 重排裁剪', eqTag: '多路融合召回', svg: 'memos-snr',
+        plain: '单靠语义向量搜代码经常搜偏（比如精准函数名搜不到）。L3 让 LLM 觉得信息不够时主动发起多跳检索，同时派三路人马：AST/Grep 精准查代码符号、向量库查语义、GraphRAG 查跨文件实体关系，最后重排只拿最相关的几段回填。',
+        formula: 'Score(q, d) = λ₁·BM25/AST(q,d) + λ₂·cos(e_q, e_d) + λ₃·GraphHop(q,d)',
+        symbols: '• <b>BM25/AST</b>：精确词法与语法树匹配；<b>cos(e_q,e_d)</b>：稠密向量余弦相似度；<b>GraphHop</b>：知识图谱多跳关联度。',
+        math: '三路检索在误差分布上高度互补（词法保精确匹配、向量保同义泛化、图谱保跨文档多跳），融合重排可显著抬高 Recall@k 与 MRR。',
+        compare: '替代了单一稠密向量 RAG。优势：大幅减少代码库和复杂企业知识库中的漏召回与幻觉；代价：多跳检索会增加端到端响应延迟。',
+        paper: '可直接在开源代码仓库 QA 或多跳文档问答基准上做三路消融，证明“主动多跳 + 混合重排”显著碾压朴素 RAG。'
+      },
+      'f5-router': { latex: '\\operatorname{Route}(x) = \\begin{cases} \\text{Big}, & P_{\\text{router}}(\\text{Complex} \\mid x) > \\tau \\\\ \\text{Small}, & \\text{otherwise} \\end{cases}',
+        badge: '图 5 · 入口分诊', title: '轻量级入口路由器（复杂度评估）', eqTag: 'Cost-Accuracy Pareto', svg: 'pareto-route',
+        plain: '像医院的导诊台：来了一个请求，先用极小成本（毫秒级分类器）判断是“普通感冒（简单改写/查常识）”还是“疑难杂症（架构设计/复杂数学）”，分别派给最合适的模型。',
+        formula: 'Route(x) = Big  if  P_router(Complex | x) > τ  else  Small',
+        symbols: '• <b>P_router</b>：轻量级复杂度评估模型；<b>τ ∈ [0, 1]</b>：可调分流阈值。',
+        math: '通过扫描阈值 τ，可在“全小模型”到“全旗舰模型”之间平滑扫出一条成本-准确率 Pareto 曲线，精准满足不同业务的预算与 SLA 要求。',
+        compare: '替代了“不管什么问题都盲调最贵旗舰模型”。优势：立省 50%~70% 算力账单；代价：路由器若误把难题错派给小模型会导致回答翻车。',
+        paper: 'Routing / Cascading LLM 论文极易出彩：只要画出你的路由器在相同预算下准确率大幅高于随机分流和单模型，审稿人就会买单。'
+      },
+      'f5-small': { latex: '\\mathbb{E}[\\text{Cost}] = (1 - \\rho)\\,C_{\\text{small}} + \\rho N\\,C_{\\text{big}} \\quad (\\rho \\approx 0.3,\\; C_{\\text{small}} \\ll C_{\\text{big}})',
+        badge: '图 5 · 70% 常规流量', title: '高稀疏小 MoE（极速低成本）', eqTag: '帕累托降本核心', svg: 'pareto-route',
+        plain: '真实线上流量里约 70% 都是翻译、摘要、日常问答等常规任务，交给激活仅 10B~20B 参数的高稀疏小 MoE 就能毫秒级高质量搞定，成本不到旗舰模型的十分之一。',
+        formula: 'E[Cost] = (1 − ρ)·C_small + ρ·N·C_big   (ρ ≈ 0.3, C_small ≪ C_big)',
+        symbols: '• <b>ρ</b>：进入复杂深算通道的流量占比；<b>C_small, C_big</b>：小模型与旗舰模型的单次调用成本。',
+        math: '因为 C_small 远小于 C_big，只要把 70% 简单流量拦截在这一层，就能腾出充足预算给剩下 30% 难题开启多分支树搜索！',
+        compare: '替代了用旗舰大模型处理简单日常请求。优势：极低延迟、极大改善用户体验与商业毛利；代价：需配合置信度兜底（小模型没把握时自动升级给旗舰）。',
+        paper: '把“小模型置信度自检 + 失败升级（Cascade）”写进方法里，能完美堵住审稿人关于“路由误判”的质疑。'
+      },
+      'f5-big': { latex: 'P_{\\text{pass}}(N) = 1 - (1 - p)^N',
+        badge: '图 5 · 30% 难题深算', title: '旗舰推理模型（Best-of-N / 树搜索）', eqTag: '成功率指数放大', svg: 'pareto-route',
+        plain: '遇到真正难啃的硬骨头，不再只赌单次 Pass@1 的运气，而是让旗舰模型同时展开 N 条候选解题分支（或树搜索），广撒网找最优解。',
+        formula: 'P_pass(N) = 1 − (1 − p)^N',
+        symbols: '• <b>p</b>：旗舰模型单次独立求解的成功率；<b>N</b>：并行展开的候选思路分支数。',
+        math: '假设单次做对一道奥数题的概率只有 p=0.5，只要展开 N=4 条独立分支，至少有一条做对的概率瞬间飙升到 1−0.5⁴ = 93.75%！',
+        compare: '替代了单次贪心瞎猜（Pass@1）。优势：显著抬高复杂任务上限；代价：算力与延迟随 N 线性增长，必须搭配精准的验证器才能把对的那条挑出来。',
+        paper: 'Test-Time Compute Scaling 的核心支柱，非常适合研究“如何用更小的 N 结合树搜索剪枝达到同样的 Pass@N 效果”。'
+      },
+      'f5-ver': { latex: 'y^* = \\arg\\max_{y_i \\in \\mathcal{B}} \\prod_{t=1}^{T} V_{\\text{PRM}}(x,\\, s_{1:t})',
+        badge: '图 5 · 过程质检', title: '过程验证器（Verifier）与局部剪枝回溯', eqTag: '生成难 · 验证易', svg: 'pareto-route',
+        plain: '展开 N 条分支后谁来挑最好的？过程验证器（PRM 打分模型、代码沙盒或外部工具）一步步给每条分支打分，一旦发现某步逻辑有漏洞或代码报错，立刻剪枝丢弃并局部回溯重试。',
+        formula: 'y* = argmax_{yᵢ ∈ B} Πₜ V_PRM(x, s₁…sₜ)',
+        symbols: '• <b>V_PRM</b>：过程奖励模型对每一步推理的正确性打分；<b>B</b>：候选分支集合。',
+        math: '利用计算复杂性中的“验证比生成更容易（NP 特性）”，在中间步骤提前剪掉错误分支，大幅节省无效搜索算力并压低最终幻觉率。',
+        compare: '替代了仅看最终答案投票（Majority Voting）。优势：能在推理中途及时止损，不把算力浪费在走偏的死胡同里；代价：高质量 PRM 本身训练与跨领域泛化难度高。',
+        paper: '过程监督（Process Supervision）与剪枝策略是顶级推理会议的核心热点，适合做“剪枝阈值 vs 算力节省与准确率”的深度实验。'
+      },
+      'f6-match': { latex: '\\operatorname{KV}(x_{1:m}) \\perp x_{m+1:N} \\;\\implies\\; \\operatorname{Reuse}(\\operatorname{KV}_{\\text{prefix}}) \\equiv \\operatorname{Recompute}',
+        badge: '图 6 · 前缀路由', title: '全局前缀 KV 路由', eqTag: '因果独立零损复用', svg: 'pd-roofline',
+        plain: '线上很多用户都会共用同一段几千字的系统提示词、同一份企业知识库或同一个代码仓库前缀。请求一进来先查全局索引：如果前缀已经算过 KV Cache，直接跳过重算！',
+        formula: 'KV(x₁…x_m) ⊥ x_{m+1:N}   ⇒   Reuse(KV_prefix) ≡ Recompute',
+        symbols: '• <b>⊥</b>：因果掩码保证历史前缀的 K,V 矩阵完全独立于后面新追加的用户问题。',
+        math: '因为自回归注意力是下三角因果掩码，前 m 个词的 Key 和 Value 只依赖自身及更早的词，因此池化复用在数学上 100% 严格无损。',
+        compare: '替代了每次请求都从第 1 个字重新计算 Prefill。优势：多轮对话与长系统提示词场景首字延迟（TTFT）狂降 5×~10×；代价：需维护全局分布式前缀树路由表。',
+        paper: '系统顶会非常看重真实线上工作负载的 Prefix Hit Rate（前缀命中率）分布分析与缓存淘汰算法设计。'
+      },
+      'f6-prefill': { latex: '\\operatorname{AI}_{\\text{prefill}} = \\frac{\\text{FLOPs}}{\\text{Bytes}} = \\mathcal{O}(N) \\gg \\operatorname{AI}_{\\text{ridge}}',
+        badge: '图 6 · 算力型集群', title: 'Prefill 集群（Compute-Bound）', eqTag: 'Roofline 算力平台', svg: 'pd-roofline',
+        plain: '一次性把几万字长文档编码成 KV Cache 时，矩阵乘法极其密集，GPU 算力核心完全吃满（处于 Roofline 右侧平坦平台）。把它独立拆到高算力配比的 Prefill 集群，就不会卡住正在流式吐字的其他用户！',
+        formula: 'AI_prefill = FLOPs / Bytes = O(N) ≫ AI_ridge',
+        symbols: '• <b>AI_prefill</b>：算术强度（每搬运 1 字节权重能做多少次浮点运算）；<b>AI_ridge</b>：GPU 硬件的屋脊拐点。',
+        math: '在 Roofline 模型中，Prefill 算术强度随输入长度 N 增长，远超硬件拐点，属于典型的 Compute-Bound；与 Decode 拆机后两者的硬件利用率都能逼近峰值。',
+        compare: '替代了单机混跑 Prefill 和 Decode。优势：彻底消灭长输入突刺导致的吐字卡顿（Jitter）；代价：需要高速网络把算好的 KV 传给 Decode 节点。',
+        paper: 'OSDI/MLSys 经典系统架构（如 Splitwise/DistServe/Mooncake），画出一张 Roofline 硬件利用率对比图就极具说服力。'
+      },
+      'f6-pool': { latex: 'T_{\\text{load}}(\\operatorname{KV}_{\\text{pool}}) < T_{\\text{recompute}}(\\text{Prefill})',
+        badge: '图 6 · 三级存储池', title: '全局分布式 KV Cache 三级池（HBM/DRAM/SSD）', eqTag: '以存储换算力', svg: 'pd-roofline',
+        plain: '单靠 GPU 显存（HBM）存不下全网所有用户的历史前缀缓存，于是按热度分级：最热的放 GPU HBM，温数据放主机 CPU 内存，海量冷前缀放高速 NVMe 固态硬盘，用廉价存储空间换取昂贵 GPU 算力！',
+        formula: 'T_load(KV_pool) < T_recompute(Prefill)   ⇒   以存储换算力成立',
+        symbols: '• <b>T_load</b>：从 HBM/DRAM/SSD 拉取缓存前缀的耗时；<b>T_recompute</b>：用 GPU 重算该前缀的耗时。',
+        math: '只要长前缀重算时间大于从 DRAM/SSD 读取的时间，三级池化就是净赚算力与电费的数学最优解。',
+        compare: '替代了用完即扔的无状态 KV Cache。优势：把可复用缓存容量扩大百倍，极大压低超长上下文商用成本；代价：三级缓存迁移、淘汰与一致性调度非常复杂。',
+        paper: '系统论文可重点优化“基于访问频率与重算代价的加权缓存淘汰策略（Cost-Aware Eviction）”。'
+      },
+      'f6-decode': { latex: '\\operatorname{AI}_{\\text{decode}} : \\mathcal{O}(1) \\;\\xrightarrow{\\text{FP8/FP4 + MTP } k \\text{ 词}}\\; \\mathcal{O}\\!\\big(k \\cdot \\text{bit\\_ratio}\\big)',
+        badge: '图 6 · 带宽型集群', title: 'Decode 集群 + MTP + 低比特流', eqTag: 'Roofline 带宽爬坡', svg: 'spec-reject',
+        plain: '逐字往外吐答案时，每步只算 1 个词却要搬运全模型权重，完全卡死在显存带宽上（Roofline 左侧斜坡）。这里组合三板斧：配高显存带宽节点 + 用 FP8/MXFP4 压缩搬运字节数 + 用 MTP 一次并行验多词抬高算术强度！',
+        formula: 'AI_decode: O(1) ──(FP8/FP4 + MTP k词)──▶ O(k · bit_ratio)',
+        symbols: '• <b>bit_ratio</b>：从 FP16 降到 FP8/FP4 带来的 2×~4× 显存带宽减负；<b>k</b>：MTP 单步并行验证的词数。',
+        math: '三招叠加直接把 Decode 沿着 Roofline 斜坡大幅向右上方推升，在不损失精度的前提下实现极低首字延迟（TTFT）与高吞吐流式输出（TPOT）。',
+        compare: '替代了 FP16 单机串行逐字解码。优势：万亿级大模型大规模商用的成本救星；代价：强依赖 RDMA/NVLink 高速互联与低比特量化校准。',
+        paper: '端到端系统论文的压轴收尾：测出 TTFT、TPOT 和每百万 Token 电费/美元成本的三维对比表，工程落地价值无可挑剔。'
+      }
+    };
+
+    const FIG_GROUPS = {
+      fig1: ['f1-in', 'f1-engram', 'f1-dram', 'f1-enc', 'f1-linear', 'f1-sparse', 'f1-gate', 'f1-moe', 'f1-loop', 'f1-mtp'],
+      fig2: ['f2-loop', 'f2-titans'],
+      fig3: ['f3-clean', 'f3-policy', 'f3-env', 'f3-ver', 'f3-pos', 'f3-fix', 'f3-pool'],
+      fig4: ['f4-l1', 'f4-comp', 'f4-l2', 'f4-l3'],
+      fig5: ['f5-router', 'f5-small', 'f5-big', 'f5-ver'],
+      fig6: ['f6-match', 'f6-prefill', 'f6-pool', 'f6-decode']
+    };
+
+    function renderFullPageCards() {
+      Object.entries(FIG_GROUPS).forEach(([figId, keys]) => {
+        const container = document.getElementById(`details-${figId}`);
+        if (!container) return;
+        container.innerHTML = keys.map(key => {
+          const t = TIPS[key];
+          if (!t) return '';
+          return `
+            <article id="detail-${key}" class="anchor-card bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 flex flex-col gap-3.5">
+              <div class="flex items-start justify-between gap-2 pb-3 border-b border-slate-100">
+                <div>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">${t.badge}</span>
+                    <span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600">${t.eqTag || '数学解析'}</span>
+                  </div>
+                  <h5 class="mt-1.5 text-base font-bold text-slate-900">${t.title}</h5>
+                </div>
+                <a href="#${figId}" class="text-[11px] font-semibold px-2 py-1 rounded-lg bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 shrink-0">↑ 回图</a>
+              </div>
+
+              <div class="rounded-xl bg-slate-50 border border-slate-200/80 p-3.5">
+                <div class="text-xs font-bold text-slate-500 mb-1">一、大白话深讲</div>
+                <p class="text-xs sm:text-sm text-slate-800 leading-relaxed">${t.plain}</p>
+              </div>
+
+              <div class="rounded-xl bg-indigo-50/50 border border-indigo-200/80 p-3.5 space-y-2.5">
+                <div class="text-xs font-bold text-indigo-800">二、LaTeX 核心公式 &amp; 专属矢量配图</div>
+                <div class="latex-slot bg-white border border-indigo-100 rounded-lg px-3 py-2 text-center overflow-x-auto" data-latex-key="${key}"></div>
+                <div class="rounded-xl bg-white border border-indigo-100 p-2 overflow-hidden">${FORMULA_SVGS[key] || ''}</div>
+                <div class="text-xs text-slate-700 leading-relaxed bg-white/80 rounded-lg px-3 py-2 border border-indigo-100/80">${t.symbols || ''}</div>
+                <p class="text-xs sm:text-sm text-slate-800 leading-relaxed">${t.math}</p>
+              </div>
+
+              <div class="rounded-xl bg-emerald-50/60 border border-emerald-200/80 p-3.5">
+                <div class="text-xs font-bold text-emerald-800 mb-1">三、替换了 Vanilla 什么？收益与代价</div>
+                <p class="text-xs sm:text-sm text-emerald-950/90 leading-relaxed">${t.compare}</p>
+              </div>
+
+              <div class="rounded-xl bg-amber-50/80 border border-amber-200/80 p-3.5">
+                <div class="text-xs font-bold text-amber-900 mb-1">四、为什么好 &amp; 博士生写论文切入点</div>
+                <p class="text-xs sm:text-sm text-amber-950/90 leading-relaxed">${t.paper}</p>
+              </div>
+            </article>
+          `;
+        }).join('');
+      });
+    }
+
+    function renderAllLatex() {
+      document.querySelectorAll('.latex-slot').forEach(el => {
+        const key = el.getAttribute('data-latex-key');
+        const t = TIPS[key];
+        if (!t) return;
+        const tex = t.latex || t.formula;
+        if (window.katex && typeof window.katex.render === 'function') {
+          try {
+            window.katex.render(tex, el, { displayMode: true, throwOnError: false });
+          } catch (e) {
+            el.textContent = t.formula;
+          }
+        } else {
+          el.textContent = t.formula;
+        }
+      });
+    }
+
+    function scrollToAnchor(targetId) {
+      const el = document.getElementById(targetId);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('is-flash');
+      setTimeout(() => el.classList.remove('is-flash'), 1800);
+    }
+
+    // Top nav buttons act purely as smooth-scroll anchors
+    const navBtns = document.querySelectorAll('.nav-btn');
+    navBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.getAttribute('data-fig');
+        navBtns.forEach(b => {
+          const active = b === btn;
+          b.className = active
+            ? 'nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 text-white'
+            : 'nav-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200';
+        });
+        if (target === 'all') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          const sec = document.getElementById(target);
+          if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    document.getElementById('btn-show-all').addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Clicking any SVG node acts purely as a smooth anchor to its full-page detail card
+    document.addEventListener('click', e => {
+      const node = e.target.closest('[data-tip]');
+      if (!node) return;
+      const key = node.getAttribute('data-tip');
+      scrollToAnchor(`detail-${key}`);
+    });
+
+    renderFullPageCards();
+    renderAllLatex();
+    window.addEventListener('load', renderAllLatex);
+  </script>
+</body>
+</html>

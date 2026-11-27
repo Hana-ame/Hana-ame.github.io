@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>强秦为何二世而亡？马斯克那套错在哪？好组织靠哪两条？——多格式对比阅读工作台</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+    .serif-title {
+      font-family: 'Noto Serif SC', serif;
+    }
+    .mindmap-node {
+      transition: all 0.2s ease;
+    }
+    .mindmap-node:hover {
+      transform: translateY(-2px);
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.05);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.3);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body id="appBody" class="bg-slate-50 text-slate-800 min-h-screen transition-colors duration-200">
+
+  <!-- Top Navigation & Header -->
+  <header id="appHeader" class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm transition-colors duration-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+              巨魔茶会 · 2026.10.19 直播节选
+            </span>
+            <a href="https://www.bilibili.com/video/BV1W5nw6PExs/" target="_blank" rel="noopener noreferrer" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 underline flex items-center gap-1">
+              <span>原视频 BV1W5nw6PExs</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+            </a>
+          </div>
+          <h1 class="text-lg sm:text-xl font-bold tracking-tight mt-1 serif-title">
+            强秦为何二世而亡？马斯克那套错在哪？好组织靠哪两条？
+          </h1>
+        </div>
+
+        <div class="flex items-center gap-2 self-start md:self-auto">
+          <button id="btnCompareToggle" class="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path></svg>
+            <span id="compareBtnText">开启分栏对比视图</span>
+          </button>
+          <button id="btnCopyCurrent" class="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            <span>复制当前文本</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Format Tabs -->
+      <nav id="tabNav" class="flex items-center gap-1 sm:gap-2 mt-3 overflow-x-auto pb-1">
+        <button data-tab="summary" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-slate-900 text-white whitespace-nowrap transition">
+          1. 摘要与核心概括
+        </button>
+        <button data-tab="notes" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:bg-slate-100 whitespace-nowrap transition">
+          2. 深度阅读笔记
+        </button>
+        <button data-tab="mindmap" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:bg-slate-100 whitespace-nowrap transition">
+          3. 交互式思维导图
+        </button>
+        <button data-tab="glossary" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:bg-slate-100 whitespace-nowrap transition">
+          4. 原文勘误与黑话对照
+        </button>
+        <button data-tab="markdown" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:bg-slate-100 whitespace-nowrap transition">
+          5. Raw Markdown 源码
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Toast Notification -->
+  <div id="toastMsg" class="fixed bottom-5 right-5 z-50 hidden px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-medium shadow-lg flex items-center gap-2">
+    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+    <span id="toastText">已复制到剪贴板</span>
+  </div>
+
+  <!-- Main Workspace Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- Format Comparison Quick Guide Bar -->
+    <div class="mb-6 p-4 rounded-xl bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white shadow-md">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div class="space-y-1">
+          <div class="text-xs uppercase tracking-wider text-amber-300 font-semibold">核心论断速览 · 30秒读懂全篇</div>
+          <p class="text-sm sm:text-base text-slate-100 leading-relaxed">
+            无论是<strong>强秦二世而亡</strong>、<strong>马斯克政府效率部（DOGE）败走</strong>，还是<strong>日本名企僵化衰落</strong>，病根皆在于将单一维度的短期考核模板（砍人纳粮 / 短期盈亏）复制固化为不动脑子的<strong>“本本主义（SOP）”</strong>，最终摧毁组织的<strong>经济基础（物资分配与再生产）</strong>或<strong>信任基础（信息有序流通与团结）</strong>。
+          </p>
+        </div>
+        <div class="flex shrink-0 gap-3 text-center">
+          <div class="px-3.5 py-2 rounded-lg bg-white/10 backdrop-blur border border-white/15">
+            <div class="text-xs text-slate-300">案例横跨</div>
+            <div class="text-base font-bold text-amber-300">3 大历史/现实样本</div>
+          </div>
+          <div class="px-3.5 py-2 rounded-lg bg-white/10 backdrop-blur border border-white/15">
+            <div class="text-xs text-slate-300">好组织生命线</div>
+            <div class="text-base font-bold text-emerald-300">物资 + 信息双支柱</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Split Screen Selector (Hidden unless Compare Mode is active) -->
+    <div id="compareControls" class="hidden mb-4 p-3 rounded-xl bg-indigo-50 border border-indigo-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="text-xs sm:text-sm font-medium text-indigo-900 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+        <span>分栏对比模式：可自由组合左侧与右侧展示的格式，直观比较不同整理方式的效果。</span>
+      </div>
+      <div class="flex items-center gap-3 flex-wrap">
+        <label class="text-xs font-semibold text-indigo-800 flex items-center gap-1.5">
+          左栏：
+          <select id="leftPaneSelect" class="rounded-lg border-indigo-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-800 shadow-sm">
+            <option value="summary" selected>1. 摘要与核心概括</option>
+            <option value="notes">2. 深度阅读笔记</option>
+            <option value="mindmap">3. 交互式思维导图</option>
+            <option value="glossary">4. 原文勘误与黑话对照</option>
+            <option value="markdown">5. Raw Markdown 源码</option>
+          </select>
+        </label>
+        <label class="text-xs font-semibold text-indigo-800 flex items-center gap-1.5">
+          右栏：
+          <select id="rightPaneSelect" class="rounded-lg border-indigo-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-800 shadow-sm">
+            <option value="summary">1. 摘要与核心概括</option>
+            <option value="notes">2. 深度阅读笔记</option>
+            <option value="mindmap" selected>3. 交互式思维导图</option>
+            <option value="glossary">4. 原文勘误与黑话对照</option>
+            <option value="markdown">5. Raw Markdown 源码</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <!-- Grid Wrapper for Single or Split Mode -->
+    <div id="workspaceGrid" class="grid grid-cols-1 gap-6">
+
+      <!-- SECTION 1: SUMMARY & OVERVIEW -->
+      <section id="pane-summary" data-pane="summary" class="pane-section space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Format 01 · Executive Summary & Abstract</span>
+              <h2 class="text-xl font-bold text-slate-900 mt-0.5">核心概括与完整内容摘要</h2>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 font-medium">适合：快速 nắm 握主旨、转发分享</span>
+          </div>
+
+          <!-- Three Core Questions Answered -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-200/80">
+              <div class="text-xs font-bold text-amber-800 uppercase tracking-wide">问题一：强秦为何二世而亡？</div>
+              <p class="mt-2 text-sm text-slate-700 leading-relaxed">
+                秦朝制度本质是<strong>纯为征战设计的“耕战机器”</strong>，将社会一切行为简化为“上阵砍人”和“缴纳军粮”两个指标。它只研究了怎么<strong>打天下</strong>，严重缺乏<strong>治天下</strong>的经验；和平年代战争机器一旦停转就会内部失衡（甚至被迫远征安南县），最终因僵化执行摧毁国本。
+              </p>
+            </div>
+            <div class="p-4 rounded-xl bg-rose-50/70 border border-rose-200/80">
+              <div class="text-xs font-bold text-rose-800 uppercase tracking-wide">问题二：马斯克那套错在哪？</div>
+              <p class="mt-2 text-sm text-slate-700 leading-relaxed">
+                马斯克操盘“政府效率部（DOGE）”陷入了<strong>数字化短期 KPI 陷阱</strong>：纯从短期财务盈亏衡量公共部门存废，无视看似“赔钱”的部门在社会稳定、公共管理、文化领域的隐性正面价值。生搬硬套导致治理体系震荡，最终如汉代<strong>“诛晁错”</strong>般被特朗普当作替罪羊抛弃。
+              </p>
+            </div>
+            <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200/80">
+              <div class="text-xs font-bold text-emerald-800 uppercase tracking-wide">问题三：好组织靠哪两条？</div>
+              <p class="mt-2 text-sm text-slate-700 leading-relaxed">
+                <strong>第一条（物资/经济线）</strong>：保证物资在组织内合理分配与流通，并投入<strong>生产再循环</strong>以促进生产力发展。<br>
+                <strong>第二条（信息/信任线）</strong>：保证所有信息（情报）在内部有序流通，且能<strong>团结所有人而非制造分裂</strong>。两条崩其一则组织必亡。
+              </p>
+            </div>
+          </div>
+
+          <!-- Narrative Abstract Paragraphs -->
+          <div class="space-y-4">
+            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <span class="w-1.5 h-4 rounded-full bg-indigo-600"></span>
+              <span>段落逻辑递进全脉络（四步论证法）</span>
+            </h3>
+            <div class="space-y-3 text-sm text-slate-700 leading-relaxed">
+              <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70">
+                <strong class="text-slate-900">1. 破题与古今呼应（00:00 - 01:45）：</strong>
+                从观众提问“强秦武备强大为何二世而亡、管理上如何低代价修正”切入。主播先评点古文：贾谊《过秦论》虽在技术细节上有商榷余地，但基本逻辑扎实；而宋代“三苏”（苏洵、苏轼、苏辙）写的策论则相对空泛扯淡。随后主播将强秦耕战制度与热搜上的“马斯克帮特朗普搞政府效率部（DOGE）失败”并置，指出二者底层病灶完全一致。
+              </div>
+              <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70">
+                <strong class="text-slate-900">2. 剖析管理退化模型：SOP 与本本主义（01:45 - 03:30）：</strong>
+                为什么单一指标会害死组织？因为管理问题高度复杂，单凭一件事的结果和是非做判断，只对该单一事件有效。但管理者为节约精力（不可能每次从头调查），总会把单次成功经验<code>Ctrl+C / Ctrl+V</code>总结成标准作业程序（SOP）交由下属照章执行。由于下属的系统理解力不如顶层设计者，必然沦为机械僵硬的<strong>本本主义</strong>。当生产力发展、现状改变后，老办法解决不了新问题，若管理者未及时察觉纠偏，本本主义狂奔就会摧毁<strong>经济基础</strong>或<strong>信任基础</strong>。
+              </div>
+              <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70">
+                <strong class="text-slate-900">3. 提炼好组织的两大黄金律（03:30 - 04:15）：</strong>
+                正面回答“好组织如何良好运作”：① <strong>物资线</strong>——管理者有能力保证物资在组织范围内合理分配与流通，并投入生产再循环，促进生产力发展；② <strong>信息线</strong>——管理者保证所有信息（情报）在内部有序流通，且起团结作用而非制造分裂。两条线崩塌任何一条，组织颠覆只是时间问题。
+              </div>
+              <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70">
+                <strong class="text-slate-900">4. 观众定位拷打与“诛晁错”典故收尾（04:15 - 结尾）：</strong>
+                回应弹幕“能执行好本本主义已算好部下”：客观上确实如此，听话的部下配强力担责的领导，战斗力强且无内耗；但直播间将观众视为“当前或未来的管理者”，安于本本主义是没志气的丧气话（并以日本企业老高管死后按年序升职者照本宣科搞垮公司为例）。最后指出马斯克砍部门引发建制派反扑（搞政变/哭爹塔），特朗普为自保将其踢出局，正是汉景帝（大汉棋圣）<strong>“朝服腰斩晁错于东市”</strong>的现代文明版重演。
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: STRUCTURED READING NOTES -->
+      <section id="pane-notes" data-pane="notes" class="pane-section hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-emerald-600">Format 02 · Structured Reading Notes</span>
+              <h2 class="text-xl font-bold text-slate-900 mt-0.5">结构化深度阅读笔记与案例矩阵</h2>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 font-medium">适合：深度复盘、管理学框架沉淀</span>
+          </div>
+
+          <!-- Matrix Table -->
+          <h3 class="text-base font-bold text-slate-900 mb-3">一、 三大经典案例横向拆解矩阵</h3>
+          <div class="overflow-x-auto rounded-xl border border-slate-200 mb-6">
+            <table class="w-full text-left border-collapse text-xs sm:text-sm">
+              <thead>
+                <tr class="bg-slate-900 text-white">
+                  <th class="p-3 font-semibold border-r border-slate-700 w-28">分析维度</th>
+                  <th class="p-3 font-semibold border-r border-slate-700">强秦帝国（耕战体制）</th>
+                  <th class="p-3 font-semibold border-r border-slate-700">马斯克政府效率部（DOGE）</th>
+                  <th class="p-3 font-semibold">现代日本传统企业（年功序列）</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200">
+                <tr class="bg-white">
+                  <td class="p-3 font-semibold text-slate-900 bg-slate-50 border-r border-slate-200">单一评估指标</td>
+                  <td class="p-3 text-slate-700 border-r border-slate-200">唯“耕战”论：上阵砍人立功，或缴纳军粮授爵</td>
+                  <td class="p-3 text-slate-700 border-r border-slate-200">唯“数字化短期盈亏 KPI”论：不挣钱/赔钱即砍掉</td>
+                  <td class="p-3 text-slate-700">唯“前人既有 SOP 规章”论：按资排辈、照章办事</td>
+                </tr>
+                <tr class="bg-slate-50/50">
+                  <td class="p-3 font-semibold text-slate-900 bg-slate-50 border-r border-slate-200">适用阶段与优势</td>
+                  <td class="p-3 text-slate-700 border-r border-slate-200">战国争霸期：动员力极强，一路打到安南县</td>
+                  <td class="p-3 text-slate-700 border-r border-slate-200">商业创业/局部止损期：账面裁撤快，短期省钱</td>
+                  <td class="p-3 text-slate-700">老一代强力高管在位期：执行力高、听话、零内耗</td>
+                </tr>
+                <tr class="bg-white">
+                  <td class="p-3 font-semibold text-slate-900 bg-slate-50 border-r border-slate-200">系统性盲区</td>
+                  <td class="p-3 text-slate-700 border-r border-slate-200">只会打天下不会治天下，和平期战争机器停不下来</td>
+                  <td class="p-3 text-slate-700 border-r border-slate-200">抹杀公共部门在社会、管理、文化上的隐性正价值</td>
+                  <td class="p-3 text-slate-700">继任者缺乏系统认知，环境变化后仍僵硬搞本本主义</td>
+                </tr>
+                <tr class="bg-slate-50/50">
+                  <td class="p-3 font-semibold text-slate-900 bg-slate-50 border-r border-slate-200">最终崩盘方式</td>
+                  <td class="p-3 text-rose-700 font-medium border-r border-slate-200">经济与民心双崩塌，二世而亡</td>
+                  <td class="p-3 text-rose-700 font-medium border-r border-slate-200">引发建制反扑逼宫，如晁错被汉景帝“腰斩”弃用</td>
+                  <td class="p-3 text-rose-700 font-medium">老高管谢幕后，公司在新周期中集体丧失竞争力完蛋</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 5-Step Mechanism -->
+          <h3 class="text-base font-bold text-slate-900 mb-3">二、 核心管理学推演：SOP 退化为“本本主义”的五步死亡螺旋</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-6">
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 relative">
+              <div class="text-xs font-bold text-indigo-600">STEP 01</div>
+              <div class="font-bold text-slate-900 text-sm mt-1">单次结果判断</div>
+              <p class="text-xs text-slate-600 mt-1.5 leading-relaxed">以单一事件的结果与是非做决策，仅在该特定情境下准确有效。</p>
+            </div>
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 relative">
+              <div class="text-xs font-bold text-indigo-600">STEP 02</div>
+              <div class="font-bold text-slate-900 text-sm mt-1">Ctrl+C/V 模板化</div>
+              <p class="text-xs text-slate-600 mt-1.5 leading-relaxed">管理者为节省精力避免重复调查，将单次经验提炼固化为 SOP 模板。</p>
+            </div>
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 relative">
+              <div class="text-xs font-bold text-amber-600">STEP 03</div>
+              <div class="font-bold text-slate-900 text-sm mt-1">下属本本主义</div>
+              <p class="text-xs text-slate-600 mt-1.5 leading-relaxed">下属水平与系统理解力不及领导，只能机械僵硬地照本宣科执行。</p>
+            </div>
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 relative">
+              <div class="text-xs font-bold text-orange-600">STEP 04</div>
+              <div class="font-bold text-slate-900 text-sm mt-1">时代与环境错配</div>
+              <p class="text-xs text-slate-600 mt-1.5 leading-relaxed">生产力发展、组织现状改变，老办法解决不了新问题，却在惯性狂奔。</p>
+            </div>
+            <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 relative">
+              <div class="text-xs font-bold text-rose-600">STEP 05</div>
+              <div class="font-bold text-rose-900 text-sm mt-1">双基崩塌覆灭</div>
+              <p class="text-xs text-rose-800 mt-1.5 leading-relaxed">摧毁组织的<strong>经济基础</strong>或民众的<strong>信任基础</strong>，有一条到头即灭亡。</p>
+            </div>
+          </div>
+
+          <!-- Golden Rules & Role Perspective -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 rounded-xl bg-indigo-50/60 border border-indigo-200">
+              <h4 class="font-bold text-indigo-950 text-sm flex items-center gap-2">
+                <span class="px-2 py-0.5 text-xs rounded bg-indigo-600 text-white">核心法则</span>
+                <span>好组织运作的两大生命线</span>
+              </h4>
+              <ul class="mt-3 space-y-2.5 text-xs sm:text-sm text-slate-700">
+                <li class="flex items-start gap-2">
+                  <span class="font-bold text-indigo-600 shrink-0">01.</span>
+                  <span><strong>物资流通与再生产循环（经济基础）</strong>：管理者必须保证物资在组织内合理分配及流通，且最好能投入到<strong>生产再循环</strong>，推动生产力进一步发展。</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="font-bold text-indigo-600 shrink-0">02.</span>
+                  <span><strong>信息有序流通与组织团结（信任基础）</strong>：管理者必须保证所有信息（情报）在内部有序流通，且这种流通能够<strong>团结所有人，而不是制造分裂</strong>。</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="p-4 rounded-xl bg-amber-50/60 border border-amber-200">
+              <h4 class="font-bold text-amber-950 text-sm flex items-center gap-2">
+                <span class="px-2 py-0.5 text-xs rounded bg-amber-600 text-white">认知思辨</span>
+                <span>“好部下”与“未来管理者”的分野</span>
+              </h4>
+              <ul class="mt-3 space-y-2.5 text-xs sm:text-sm text-slate-700">
+                <li class="flex items-start gap-2">
+                  <span class="font-bold text-amber-700 shrink-0">客观现实：</span>
+                  <span>在职场中能把“本本主义”执行到位的员工已经算好部下。只要搭配<strong>极其优秀且愿承担一切决策责任的领导</strong>，组织战斗力极强、效率极高且零内耗。</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="font-bold text-amber-700 shrink-0">向上跃迁：</span>
+                  <span>如果你将自己定位为“现在的或未来的管理者”，满足于照章执行就是一句没志气的丧气话。管理者绝对不能不动脑子，必须时刻警惕本本主义偏航。</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: INTERACTIVE MIND MAP -->
+      <section id="pane-mindmap" data-pane="mindmap" class="pane-section hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 mb-5 gap-3">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-purple-600">Format 03 · Interactive Visual Mind Map</span>
+              <h2 class="text-xl font-bold text-slate-900 mt-0.5">交互式全景思维导图（点击节点可展开/折叠详情）</h2>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="btnExpandAll" class="px-2.5 py-1 text-xs font-medium rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition">全部展开</button>
+              <button id="btnCollapseAll" class="px-2.5 py-1 text-xs font-medium rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition">全部折叠</button>
+            </div>
+          </div>
+
+          <!-- Interactive Mind Map Tree Container -->
+          <div id="mindmapContainer" class="space-y-4"></div>
+
+          <!-- ASCII Mind Map Block for Copy-Paste Comparison -->
+          <div class="mt-6 pt-5 border-t border-slate-100">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-slate-500 uppercase">纯文本树状导图（ASCII Tree · 适合直接粘贴至纯文本笔记）</span>
+              <button id="btnCopyAscii" class="text-xs font-medium text-indigo-600 hover:text-indigo-800">复制树状图</button>
+            </div>
+            <pre id="asciiTreeBlock" class="p-4 rounded-xl bg-slate-900 text-slate-100 text-xs overflow-x-auto leading-relaxed font-mono">强秦为何二世而亡？马斯克那套错在哪？好组织靠哪两条？
+├── 1. 历史与现实的镜像：单一KPI体制的溃败
+│   ├── 强秦二世而亡（贾谊《过秦论》逻辑有效 vs 三苏策论空泛）
+│   │   ├── 耕战制度：社会行为全转化为“上阵砍人”与“纳粮授爵”
+│   │   └── 致命缺陷：只会打天下不懂治天下，和平期战争机器停不下来（远征安南）
+│   └── 马斯克“政府效率部（DOGE）”失败
+│       ├── 数字化KPI模式：仅凭短期盈亏一刀切砍掉“赔钱部门”
+│       ├── 致命缺陷：无视公共部门在社会、管理、文化领域的正面价值
+│       └── 历史重演：引发反扑逼宫（哭爹塔），如汉景帝“朝服腰斩晁错于市”被懂王弃用
+├── 2. 管理模型的退化机制：SOP 如何变成催命符
+│   ├── 单点经验：基于单次事件结果判断是非 → Ctrl+C/V 复制为模板（SOP）以省精力
+│   ├── 认知断层：下属水平不及领导，缺乏系统理解 → 僵硬执行沦为“本本主义”
+│   ├── 现实案例：日本名企老高管退场后，按年序升职者照本宣科导致公司完蛋
+│   └── 毁灭终局：环境改变仍生搬硬套 → 摧毁【经济基础】或【信任基础】→ 统治到头
+├── 3. 好组织良好运作的两大黄金支柱
+│   ├── 第一条（物资线）：物资合理分配及流通 + 投入生产再循环促进生产力发展
+│   └── 第二条（信息线）：信息/情报内部有序流通 + 团结所有人而非制造分裂
+└── 4. 个人角色定位：打工者 vs 管理者
+    ├── 打工者视角：能执行好本本主义已是好部下（配强力担责领导则高效率、无内耗）
+    └── 管理者视角：以未来管理者自居绝不能说丧气话，必须反对本本主义、持续动脑</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4: TRANSCRIPT GLOSSARY & ANNOTATED QUOTES -->
+      <section id="pane-glossary" data-pane="glossary" class="pane-section hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 mb-5 gap-3">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-amber-600">Format 04 · Glossary & Transcript Correction</span>
+              <h2 class="text-xl font-bold text-slate-900 mt-0.5">语音识别（vCaptions）同音错字勘误与典故词典</h2>
+            </div>
+            <div class="relative w-full sm:w-64">
+              <input id="glossarySearch" type="text" placeholder="搜索黑话、错字或典故..." class="w-full px-3 py-1.5 text-xs sm:text-sm rounded-lg border border-slate-300 focus:outline-none focus:border-indigo-500">
+            </div>
+          </div>
+
+          <div id="glossaryGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
+      </section>
+
+      <!-- SECTION 5: RAW MARKDOWN -->
+      <section id="pane-markdown" data-pane="markdown" class="pane-section hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-600">Format 05 · Raw Markdown Source</span>
+              <h2 class="text-xl font-bold text-slate-900 mt-0.5">Markdown 原始源码（含 Mermaid 思维导图代码）</h2>
+            </div>
+            <button id="btnCopyMarkdown" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition">
+              一键复制完整 Markdown
+            </button>
+          </div>
+          <pre id="rawMarkdownBox" class="p-4 rounded-xl bg-slate-900 text-slate-100 text-xs overflow-x-auto leading-relaxed font-mono whitespace-pre-wrap"></pre>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    // Mind Map Data Structure
+    const mindMapData = [
+      {
+        id: 'node-1',
+        badge: '模块一',
+        title: '历史与现实镜像：单一指标体制为何崩盘？',
+        color: 'amber',
+        expanded: true,
+        summary: '将复杂的国家或组织治理简化为单一可量化指标，打天下极强，治天下必亡。',
+        children: [
+          {
+            subtitle: '1. 强秦二世而亡（贾谊《过秦论》 vs 三苏策论）',
+            points: [
+              '古文评价：贾谊《过秦论》技术细节可商榷但基本逻辑正确；宋代三苏（苏洵、苏轼、苏辙）策论偏扯淡。',
+              '耕战体制：把社会一切行为转化为“直接上阵砍人”或“缴纳粮食授爵”两种军功指标。',
+              '核心矛盾：只研究怎么打天下，缺乏治天下经验；和平时期庞大的战斗机器停不下来（甚至远征到安南县），最终内部失衡。'
+            ]
+          },
+          {
+            subtitle: '2. 马斯克“政府效率部（DOGE）”的失败',
+            points: [
+              '数字化 KPI 迷思：以短期财务计算评估一切，发现部门不盈利或单纯“赔钱”就一刀切砍掉。',
+              '价值盲区：无视公共部门在社会领域、管理领域、文化领域产生的隐性正面价值。',
+              '政治终局：严重摧毁美国现行治理体系并引发建制派反扑（搞政变/哭爹塔），最终如汉景帝“朝服腰斩晁错于市”般被特朗普踢出局。'
+            ]
+          }
+        ]
+      },
+      {
+        id: 'node-2',
+        badge: '模块二',
+        title: '管理退化机制：SOP 是如何演变成“本本主义”的？',
+        color: 'rose',
+        expanded: true,
+        summary: '从单次成功经验到教条主义失控的完整传导链条。',
+        children: [
+          {
+            subtitle: '1. 管理者的精力瓶颈与模板复制',
+            points: [
+              '单点局限：单凭一件事的结果和是非判断该不该做，理论上只能在这一件事上处理准确。',
+              '路径依赖：管理者不可能每次遇到类似问题都从头调查，为了省精力必然 Ctrl+C / Ctrl+V 总结成 SOP 模板交由下属照章执行。'
+            ]
+          },
+          {
+            subtitle: '2. 下属认知断层与日本企业案例',
+            points: [
+              '本本主义诞生：下属水平一般不如顶层领导，对系统性逻辑理解不深，只能僵硬执行。',
+              '日本企业通病：老一代优秀高管离世或退场后，按年序（年功序列）升职的继任者只会照本宣科搞本本主义，公司迅速完蛋。'
+            ]
+          },
+          {
+            subtitle: '3. 生产力演进后的两条覆灭红线',
+            points: [
+              '随着生产力发展与组织现状改变，老办法无法解决新问题；若管理者未察觉纠偏，任由本本主义狂奔，必触发两条死线之一：',
+              '死线 A：摧毁整个组织的【经济基础】；死线 B：因本本主义太离谱，摧毁民众对管理者的【信任基础】。两条有一条到头，统治即终结。'
+            ]
+          }
+        ]
+      },
+      {
+        id: 'node-3',
+        badge: '模块三',
+        title: '破局核心：一个好组织良好运作靠哪两条？',
+        color: 'emerald',
+        expanded: true,
+        summary: '物资再生产循环 + 信息有序团结流通，两条生命线缺一不可。',
+        children: [
+          {
+            subtitle: '第一条：物资线（守护经济基础）',
+            points: [
+              '合理分配与流通：管理者有能力保证物资在组织范围内以合理方式分配及流通。',
+              '生产再循环：物资不仅要分配，最好能投入到“生产再循环”中，促进生产力进一步发展。'
+            ]
+          },
+          {
+            subtitle: '第二条：信息线（守护信任基础）',
+            points: [
+              '有序情报流转：管理者需要保证所有信息（情报）在组织内部按照有序方式流通。',
+              '凝聚而非分裂：信息流通必须能够团结所有人，而不是制造猜忌与分裂。任何一条线崩塌，组织被颠覆或灭亡只是时间问题。'
+            ]
+          }
+        ]
+      },
+      {
+        id: 'node-4',
+        badge: '模块四',
+        title: '受众定位：做听话的“好部下”还是“未来的管理者”？',
+        color: 'indigo',
+        expanded: true,
+        summary: '客观职场事实与主观进阶志气的辩证看待。',
+        children: [
+          {
+            subtitle: '1. 客观事实：本本主义执行者已是合格部下',
+            points: [
+              '现实中能严格执行好本本主义的员工已算好部下。',
+              '前提条件：必须搭配非常优秀、且愿意承担所有决策责任的领导，此时组织战斗力极强、执行效率极高且几乎没有内耗。'
+            ]
+          },
+          {
+            subtitle: '2. 主播拷打：以管理者自居绝不能安于教条',
+            points: [
+              '直播间将观众视为“当前或未来的管理者”，若安于当不动脑子的本本主义部下，就是没志气的丧气话。',
+              '核心警句：“反对本本主义，你不能不动脑子，不要觉得一个模板好用就用到死。”'
+            ]
+          }
+        ]
+      }
+    ];
+
+    // Glossary Data Structure
+    const glossaryData = [
+      {
+        raw: '五倍那么强 / 二是而亡 / 根和战 / 决一级',
+        real: '武备那么强 / 二世而亡 / 耕和战 / 爵一级',
+        desc: '指秦朝军事武备极其强盛，却在秦二世时期迅速崩盘；秦制核心是“耕战”，斩首立功或缴纳军粮达到额度即可赐爵一级（商鞅军功爵制）。'
+      },
+      {
+        raw: '三叔有书策 / 苏洵三叔',
+        real: '三苏有苏策 / 三苏（苏洵、苏轼、苏辙）',
+        desc: '北宋眉山苏氏父子三人合称“三苏”，均写过探讨秦朝与六国兴亡的策论（如苏洵《六国论》、苏轼《贾谊论》《策略》等）。主播认为三苏策论偏空泛文人议论，不如贾谊《过秦论》逻辑扎实。'
+      },
+      {
+        raw: '马巨魔 / 董王 / 奶龙',
+        real: '马斯克（Elon Musk） / 特朗普（Donald Trump）',
+        desc: '中文互联网及直播间对马斯克（爱在社交平台整活嘲讽故称马巨魔）与特朗普（懂王/奶龙）的代称。'
+      },
+      {
+        raw: '政府效力布 / 政府效力负 / K准 / 庭前的部门',
+        real: '政府效率部（DOGE） / KPI标准 / 赔钱的部门',
+        desc: '指马斯克主导的美国政府效率改革机构，试图用企业数字化 KPI 和短期财务盈亏标准裁撤不直接产生商业收益的“赔钱”公共部门。'
+      },
+      {
+        raw: '按年续逐渐升值 / 本本主任意做执行',
+        real: '按年序（年功序列）逐渐升职 / 本本主义做执行',
+        desc: '指日本传统企业按资历工龄逐级晋升的年功序列制；老一代创业强人退场后，升上来的高管只会照本宣科执行旧规章。'
+      },
+      {
+        raw: '赛里斯 / 朱晁错 / 朝服腰斩于市 / 大汉其顺',
+        real: '中国（Seres） / 诛晁错 / 朝服腰斩于东市 / 大汉棋圣（汉景帝）',
+        desc: '汉景帝刘启年轻时曾用棋盘砸死吴王太子，被网友戏称“大汉棋圣”。七国之乱爆发后，景帝为平息诸侯借口，采纳袁盎建议，将主持削藩的晁错骗穿朝服腰斩于东市。主播以此比喻特朗普为平息内部反扑而抛弃马斯克。'
+      },
+      {
+        raw: '搞哭爹塔',
+        real: '搞政变 / 逼宫（Coup d\'état）',
+        desc: '法语“政变（Coup d\'état）”的中文谐音黑话，指美国建制派与利益受损集团以“马斯克乱政”为名联合向特朗普发难。'
+      },
+      {
+        raw: '安南县',
+        real: '安南（今越南北部 / 秦代象郡周边）',
+        desc: '秦始皇统一六国后继续派五十万大军南征百越（设桂林、象郡、南海三郡，延伸至今日越南北部安南一带），体现了秦朝战争机器停不下来的惯性。'
+      }
+    ];
+
+    const rawMarkdownString = `# 强秦为何二世而亡？马斯克那套错在哪？好组织靠哪两条？——深度阅读笔记
+
+**视频来源**：[强秦为何二世而亡？马斯克那套错在哪？好组织靠哪两条？——（5）2026.10.19直播节选](https://www.bilibili.com/video/BV1W5nw6PExs/)
+**UP主**：冰霜巨魔-巨魔茶会 | **时间**：2026-10-20
+
+## 一、 一句话核心概括
+无论是强秦的“二世而亡”、马斯克领导美国“政府效率部（DOGE）”的折戟，还是现代日本大企业的僵化衰落，其底层逻辑都在于**将单一维度的短期考核模板（战争军功或短期财务盈亏）固化为僵硬的“本本主义（SOP）”**；当组织环境变化而下属只会机械执行时，最终必然摧毁组织的**经济基础（物资分配）**或**信任基础（信息流通）**，而一个好组织的存续恰恰完全仰赖这两条核心生命线。
+
+## 二、 完整内容摘要
+1. **强秦与马斯克的镜像对比**：秦朝制度是为打仗设计的“耕战体系”（只认上阵砍人与缴纳军粮），擅长打天下却缺乏治天下经验，和平年代战争机器停不下来（甚至远征安南）。马斯克搞“政府效率部（DOGE）”同理，用数字化短期盈利 KPI 衡量一切，砍掉所谓“赔钱部门”，无视其在社会、管理、文化领域的隐性正面价值，最终引发体制反扑，如汉代“诛晁错”般被特朗普弃用。
+2. **管理退化机制（从经验模板到本本主义）**：管理者若单凭一件事的结果是非做判断，仅单次有效；但为节省精力，往往将其 Ctrl+C/Ctrl+V 复制为标准模板（SOP）交由下属执行。下属因系统理解不足而陷入僵硬的“本本主义”（如日本企业老高管死后按年序升职者只会照本宣科）。当生产力发展与现状改变后，生搬硬套必然摧毁**经济基础**或**信任基础**。
+3. **好组织运作的两大支柱**：① **物资线**：保证物资在组织内合理分配及流通，并投入生产再循环以促进生产力发展；② **信息线**：保证信息（情报）在内部有序流通，且能团结所有人而非制造分裂。
+4. **个人角色定位**：客观上能执行好本本主义已算好部下（配强力担责领导则高效率、无内耗）；但若以“未来管理者”自居，安于本本主义则是没志气的丧气话。
+
+## 三、 Mermaid 思维导图
+\`\`\`mermaid
+mindmap
+  root((组织管理与兴亡之道))
+    案例镜像：单一指标陷阱
+      强秦帝国：唯耕战军功论，懂打天下不懂治天下
+      马斯克DOGE：唯短期盈亏KPI，无视社会文化隐性价值
+      日本传统企业：老高管退场后按年序升职，照本宣科完蛋
+    管理退化：本本主义生成机制
+      单次结果有效 → 为省精力Ctrl+C/V固化为SOP
+      下属认知不足 → 僵硬照章执行沦为本本主义
+      环境变化仍生搬硬套 → 摧毁经济基础或信任基础
+    破局之道：好组织两大支柱
+      物资线：合理分配流通 + 投入生产再循环促进生产力
+      信息线：内部有序流通 + 团结所有人而非制造分裂
+    角色定位与进阶
+      打工者视角：执行好SOP已是好部下（需配强力担责领导）
+      管理者视角：拒绝丧气话，反对不动脑子的本本主义
+\`\`\``;
+
+    // Render Mind Map
+    function renderMindMap() {
+      const container = document.getElementById('mindmapContainer');
+      const colorMap = {
+        amber: { bg: 'bg-amber-50/80', border: 'border-amber-200', badge: 'bg-amber-600 text-white', text: 'text-amber-950' },
+        rose: { bg: 'bg-rose-50/80', border: 'border-rose-200', badge: 'bg-rose-600 text-white', text: 'text-rose-950' },
+        emerald: { bg: 'bg-emerald-50/80', border: 'border-emerald-200', badge: 'bg-emerald-600 text-white', text: 'text-emerald-950' },
+        indigo: { bg: 'bg-indigo-50/80', border: 'border-indigo-200', badge: 'bg-indigo-600 text-white', text: 'text-indigo-950' }
+      };
+
+      container.innerHTML = mindMapData.map((node, idx) => {
+        const theme = colorMap[node.color] || colorMap.indigo;
+        return `
+          <div class="mindmap-node rounded-xl border ${theme.border} ${theme.bg} overflow-hidden">
+            <button data-node-idx="${idx}" class="node-toggle w-full p-4 text-left flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2.5 flex-wrap">
+                <span class="px-2.5 py-0.5 text-xs font-bold rounded-md ${theme.badge}">${node.badge}</span>
+                <span class="font-bold text-sm sm:text-base ${theme.text}">${node.title}</span>
+              </div>
+              <span class="text-xs font-semibold text-slate-500 shrink-0">${node.expanded ? '收起 ▲' : '展开 ▼'}</span>
+            </button>
+            <div class="${node.expanded ? 'block' : 'hidden'} px-4 pb-4 pt-1 border-t border-black/5 space-y-3">
+              <p class="text-xs sm:text-sm text-slate-600 italic">${node.summary}</p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                ${node.children.map(child => `
+                  <div class="p-3.5 rounded-lg bg-white border border-slate-200/80 shadow-sm">
+                    <div class="font-bold text-slate-900 text-xs sm:text-sm mb-2">${child.subtitle}</div>
+                    <ul class="space-y-1.5 text-xs text-slate-700 leading-relaxed list-disc pl-4">
+                      ${child.points.map(pt => `<li>${pt}</li>`).join('')}
+                    </ul>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.querySelectorAll('.node-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const i = parseInt(btn.getAttribute('data-node-idx'), 10);
+          mindMapData[i].expanded = !mindMapData[i].expanded;
+          renderMindMap();
+        });
+      });
+    }
+
+    // Render Glossary
+    function renderGlossary(filterText = '') {
+      const grid = document.getElementById('glossaryGrid');
+      const q = filterText.trim().toLowerCase();
+      const filtered = glossaryData.filter(item =>
+        !q ||
+        item.raw.toLowerCase().includes(q) ||
+        item.real.toLowerCase().includes(q) ||
+        item.desc.toLowerCase().includes(q)
+      );
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-2 text-center py-8 text-sm text-slate-500">未找到匹配的词条，请尝试其他关键词。</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(item => `
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col justify-between gap-2">
+          <div>
+            <div class="flex items-center gap-2 flex-wrap text-xs">
+              <span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 font-medium line-through">${item.raw}</span>
+              <span class="text-slate-400">→</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 font-bold">${item.real}</span>
+            </div>
+            <p class="mt-2.5 text-xs sm:text-sm text-slate-700 leading-relaxed">${item.desc}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // State Management for Tabs & Split View
+    let activeTab = 'summary';
+    let compareMode = false;
+
+    function updateView() {
+      const grid = document.getElementById('workspaceGrid');
+      const compareControls = document.getElementById('compareControls');
+      const compareBtnText = document.getElementById('compareBtnText');
+      const leftVal = document.getElementById('leftPaneSelect').value;
+      const rightVal = document.getElementById('rightPaneSelect').value;
+
+      // Update Tab Buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const t = btn.getAttribute('data-tab');
+        if (!compareMode && t === activeTab) {
+          btn.className = 'tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-slate-900 text-white whitespace-nowrap transition';
+        } else {
+          btn.className = 'tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-slate-600 hover:bg-slate-100 whitespace-nowrap transition';
+        }
+      });
+
+      if (compareMode) {
+        compareControls.classList.remove('hidden');
+        compareBtnText.textContent = '退出分栏对比';
+        grid.className = 'grid grid-cols-1 lg:grid-cols-2 gap-6 items-start';
+
+        document.querySelectorAll('.pane-section').forEach(sec => {
+          const p = sec.getAttribute('data-pane');
+          if (p === leftVal || p === rightVal) {
+            sec.classList.remove('hidden');
+          } else {
+            sec.classList.add('hidden');
+          }
+        });
+      } else {
+        compareControls.classList.add('hidden');
+        compareBtnText.textContent = '开启分栏对比视图';
+        grid.className = 'grid grid-cols-1 gap-6';
+
+        document.querySelectorAll('.pane-section').forEach(sec => {
+          const p = sec.getAttribute('data-pane');
+          if (p === activeTab) {
+            sec.classList.remove('hidden');
+          } else {
+            sec.classList.add('hidden');
+          }
+        });
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toastMsg');
+      const text = document.getElementById('toastText');
+      text.textContent = message;
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2200);
+    }
+
+    function copyTextToClipboard(text, successMsg) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast(successMsg);
+        }).catch(() => {
+          fallbackCopy(text, successMsg);
+        });
+      } else {
+        fallbackCopy(text, successMsg);
+      }
+    }
+
+    function fallbackCopy(text, successMsg) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast(successMsg);
+      } catch (err) {
+        showToast('复制失败，请手动选择复制');
+      }
+      document.body.removeChild(ta);
+    }
+
+    // Initialize Event Listeners
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('rawMarkdownBox').textContent = rawMarkdownString;
+      renderMindMap();
+      renderGlossary();
+      updateView();
+
+      // Tab navigation
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          activeTab = btn.getAttribute('data-tab');
+          compareMode = false;
+          updateView();
+        });
+      });
+
+      // Compare mode toggle
+      document.getElementById('btnCompareToggle').addEventListener('click', () => {
+        compareMode = !compareMode;
+        if (compareMode) {
+          document.getElementById('leftPaneSelect').value = activeTab;
+          document.getElementById('rightPaneSelect').value = activeTab === 'mindmap' ? 'notes' : 'mindmap';
+        }
+        updateView();
+      });
+
+      document.getElementById('leftPaneSelect').addEventListener('change', updateView);
+      document.getElementById('rightPaneSelect').addEventListener('change', updateView);
+
+      // Expand / Collapse all mindmap nodes
+      document.getElementById('btnExpandAll').addEventListener('click', () => {
+        mindMapData.forEach(n => n.expanded = true);
+        renderMindMap();
+      });
+      document.getElementById('btnCollapseAll').addEventListener('click', () => {
+        mindMapData.forEach(n => n.expanded = false);
+        renderMindMap();
+      });
+
+      // Search Glossary
+      document.getElementById('glossarySearch').addEventListener('input', (e) => {
+        renderGlossary(e.target.value);
+      });
+
+      // Copy Buttons
+      document.getElementById('btnCopyMarkdown').addEventListener('click', () => {
+        copyTextToClipboard(rawMarkdownString, '已复制完整 Markdown 源码');
+      });
+
+      document.getElementById('btnCopyAscii').addEventListener('click', () => {
+        const ascii = document.getElementById('asciiTreeBlock').textContent;
+        copyTextToClipboard(ascii, '已复制树状思维导图');
+      });
+
+      document.getElementById('btnCopyCurrent').addEventListener('click', () => {
+        copyTextToClipboard(rawMarkdownString, '已复制全部整理笔记内容');
+      });
+    });
+  </script>
+</body>
+</html>

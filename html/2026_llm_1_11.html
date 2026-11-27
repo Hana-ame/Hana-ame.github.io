@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 年全年 LLM 智能本质研究全景（1 月—11 月）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Utilitarian Deep Research · Answer-first hero + full-year 2026 SVG timeline · 4 thematic sections + chronological matrix · IBM Plex Sans + Noto Sans SC + IBM Plex Mono · Cool Technical Grey (#F4F6F8) + Emerald (#059669/#064E3B) + Indigo (#4F46E5/#3730A3) · 0px radius · Emphasis callout (3x / 70%) · 2 inline SVG charts + 1 open chronological table */
+
+:root {
+  --paper: #F4F6F8;
+  --ink: #0B1220;
+  --ink2: #2B3648;
+  --mute: #475467;
+  --hair: #CFD8E3;
+  --accent: #059669;
+  --accent-text: #064E3B;
+  --accent-2: #4F46E5;
+  --accent-2-text: #3730A3;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  padding: 64px clamp(24px, 10.4vw, 112px) 92px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Noto Sans SC", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px;
+  line-height: 1.76;
+  letter-spacing: 0;
+}
+
+a {
+  color: var(--accent-text);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--ink);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.col-full { grid-column: 1 / -1; }
+.col-left { grid-column: 1 / span 4; }
+.col-right { grid-column: 5 / -1; }
+.measure { max-width: 68ch; }
+
+h1 {
+  margin: 0 0 18px;
+  font-family: "IBM Plex Sans", "Noto Sans SC", sans-serif;
+  font-size: clamp(34px, 4vw, 48px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.deck {
+  margin: 0 0 28px;
+  font-size: clamp(17.5px, 1.7vw, 20px);
+  line-height: 1.62;
+  color: var(--ink2);
+  max-width: 68ch;
+}
+
+h2 {
+  margin: 0 0 18px;
+  font-family: "IBM Plex Sans", "Noto Sans SC", sans-serif;
+  font-size: clamp(23px, 2.3vw, 29px);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+h3 {
+  margin: 0 0 10px;
+  font-family: "IBM Plex Sans", "Noto Sans SC", sans-serif;
+  font-size: 17.5px;
+  font-weight: 700;
+  line-height: 1.38;
+  color: var(--ink);
+}
+
+p {
+  margin: 0 0 16px;
+  color: var(--ink2);
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.hero-thesis {
+  padding-top: 22px;
+  border-top: 2px solid var(--ink);
+  margin-bottom: 36px;
+}
+
+.sec {
+  margin-top: 64px;
+  padding-top: 30px;
+  border-top: 1px solid var(--hair);
+}
+
+figure {
+  margin: 28px 0 0;
+  padding: 0;
+}
+
+.fig-title {
+  margin: 0 0 12px;
+  font-family: "IBM Plex Sans", "Noto Sans SC", sans-serif;
+  font-size: 17.5px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.chart-wrap {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.chart-wrap svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+figcaption {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--mute);
+  max-width: 78ch;
+}
+
+/* Open 3-column strip */
+.strip-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  margin-top: 22px;
+}
+
+.strip-item {
+  padding-top: 16px;
+  border-top: 1px solid var(--hair);
+}
+
+.strip-item p {
+  font-size: 15px;
+  line-height: 1.68;
+}
+
+.split-note {
+  font-size: 14.5px;
+  line-height: 1.68;
+  color: var(--mute);
+  padding-top: 4px;
+}
+
+/* Single Full-Bleed Emphasis Band */
+.emphasis-band {
+  margin: 64px calc(clamp(24px, 10.4vw, 112px) * -1) 0;
+  padding: 44px clamp(24px, 10.4vw, 112px);
+  border-top: 1px solid var(--hair);
+  border-bottom: 1px solid var(--hair);
+  background: #FFFFFF;
+}
+
+.emphasis-num {
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: clamp(52px, 5.8vw, 68px);
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  color: var(--accent-text);
+  white-space: nowrap;
+}
+
+/* Open Table */
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14.5px;
+  line-height: 1.58;
+}
+
+thead th {
+  padding: 12px 14px 12px 0;
+  border-bottom: 2px solid var(--ink);
+  font-family: "IBM Plex Mono", "Noto Sans SC", monospace;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+tbody td {
+  padding: 14px 14px 14px 0;
+  border-bottom: 1px solid var(--hair);
+  vertical-align: top;
+  color: var(--ink2);
+}
+
+td.month {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--accent-text);
+}
+
+td.paper {
+  min-width: 210px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+td.dim {
+  white-space: nowrap;
+  color: var(--accent-2-text);
+  font-weight: 500;
+}
+
+/* Pull Quote */
+.pullquote {
+  margin: 40px 0 0;
+  padding: 20px 0 20px 26px;
+  border-left: 3px solid var(--accent);
+}
+
+.pullquote p {
+  margin: 0 0 10px;
+  font-family: "IBM Plex Sans", "Noto Sans SC", sans-serif;
+  font-size: clamp(20px, 2.1vw, 25px);
+  font-weight: 500;
+  line-height: 1.48;
+  color: var(--ink);
+}
+
+.pullquote cite {
+  display: block;
+  font-style: normal;
+  font-size: 13.5px;
+  color: var(--mute);
+}
+
+/* Sources */
+.sources-list {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: src;
+}
+
+.sources-list li {
+  position: relative;
+  padding-left: 34px;
+  margin-bottom: 11px;
+  font-size: 13.5px;
+  line-height: 1.62;
+  color: var(--ink2);
+  counter-increment: src;
+}
+
+.sources-list li::before {
+  content: counter(src, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 2px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  color: var(--mute);
+}
+
+@media (max-width: 860px) {
+  .col-left, .col-right {
+    grid-column: 1 / -1;
+  }
+  .strip-3 {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>2026 年全年 LLM 智能本质研究全景：从“思维社会”到持续适应与 RLVR 边界裁决</h1>
+  <p class="deck">梳理 2026 年 1 月至 11 月发表于 arXiv、英国皇家学会及前沿实验室的代表性论文：学界已告别“LLM 是否在思考”的早期哲学争论，全面转向对推理期内部辩论结构、RLVR 锐化极限、快慢权重持续学习与机制世界模型的精确解剖。</p>
+
+  <div class="hero-thesis grid">
+    <div class="col-left">
+      <p class="split-note"><strong>2026 年度核心共识：</strong>预训练语料红利见顶后，2026 年的研究证明 LLM 智能并非静态权重的单向映射，而是<strong>内部多视角辩论、稀疏策略锐化、快慢权重解耦与可复用因果机制</strong>共同塑造的动态系统。</p>
+    </div>
+    <div class="col-right measure">
+      <p>纵观 2026 年四个季度，关于“LLM 智能从何而来”的前沿探索收敛出四条清晰主线。第一，年初的<strong>思维社会（Societies of Thought）</strong>研究揭示，推理模型的高准确率很大程度上源于内部模拟多角色辩论与观点调和；第二，贯穿 2 月至 11 月的 <strong>RLVR（可验证奖励强化学习）大辩论</strong>最终给出冷静裁决——强化学习主要通过极稀疏的词元分布偏移“削尖铅笔”，而非凭空创造基座模型之外的新心智；第三，年中至秋季爆发的<strong>快慢权重学习与长程上下文模型</strong>，开始实质性破解模型部署后“权重冻结、无法持续学习”的顽疾；第四，机制可解释性正向<strong>机制世界模型（MWM）</strong>与非可读高密度语义压缩演进，试图打通从“预测”到“解释与自主发现”的最后一公里。</p>
+    </div>
+  </div>
+
+  <figure>
+    <p class="fig-title">2026 年全年研究主线从“推理机制解构”演进至“持续适应与 RLVR 边界裁决”</p>
+    <div class="chart-wrap">
+      <svg viewBox="0 0 700 430" width="100%" role="img" aria-label="2026年1月至11月LLM智能本质研究关键论文时间轴">
+        <!-- Legend -->
+        <circle cx="28" cy="22" r="5.5" fill="#059669"/>
+        <text x="42" y="27" font-family="Noto Sans SC, sans-serif" font-size="13.5" fill="#0B1220">推理机制、RLVR 与测试时扩展</text>
+        <circle cx="268" cy="22" r="5.5" fill="#4F46E5"/>
+        <text x="282" y="27" font-family="Noto Sans SC, sans-serif" font-size="13.5" fill="#0B1220">世界模型、认知图式与持续学习</text>
+
+        <!-- Vertical Spine -->
+        <line x1="92" y1="54" x2="92" y2="404" stroke="#94A3B8" stroke-width="1.5"/>
+
+        <!-- Row 1: Jan 2026 -->
+        <text x="76" y="70" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500" fill="#064E3B">2026.01</text>
+        <circle cx="92" cy="65" r="5.5" fill="#059669"/>
+        <text x="114" y="70" font-family="Noto Sans SC, sans-serif" font-size="14" font-weight="700" fill="#0B1220">思维社会假说（arXiv:2601.10825）</text>
+        <text x="366" y="70" font-family="Noto Sans SC, sans-serif" font-size="13" fill="#475467">内部多角色辩论贡献超 60% 推理准确率优势</text>
+
+        <!-- Row 2: Feb 2026 -->
+        <text x="76" y="116" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500" fill="#064E3B">2026.02</text>
+        <circle cx="92" cy="111" r="5.5" fill="#059669"/>
+        <text x="114" y="116" font-family="Noto Sans SC, sans-serif" font-size="14" font-weight="700" fill="#0B1220">新技能 vs. 锐化原语（arXiv:2602.08281）</text>
+        <text x="392" y="116" font-family="Noto Sans SC, sans-serif" font-size="13" fill="#475467">开启全年 RLVR 本质辩论；同期 GP 解析 ICL</text>
+
+        <!-- Row 3: Apr 2026 -->
+        <text x="76" y="162" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500" fill="#064E3B">2026.04</text>
+        <circle cx="92" cy="157" r="5.5" fill="#059669"/>
+        <text x="114" y="162" font-family="Noto Sans SC, sans-serif" font-size="14" font-weight="700" fill="#0B1220">TEMPO 测试时训练（arXiv:2604.19295）</text>
+        <text x="384" y="162" font-family="Noto Sans SC, sans-serif" font-size="13" fill="#475467">扩展推理期微调，揭示自奖励易致分布坍塌</text>
+
+        <!-- Row 4: May 2026 -->
+        <text x="76" y="208" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500" fill="#3730A3">2026.05</text>
+        <circle cx="92" cy="203" r="5.5" fill="#4F46E5"/>
+        <text x="114" y="208" font-family="Noto Sans SC, sans-serif" font-size="14" font-weight="700" fill="#0B1220">快慢持续学习与认知图式（2605.12484）</text>
+        <text x="394" y="208" font-family="Noto Sans SC, sans-serif" font-size="13" fill="#475467">上下文作快权重 + 参数作慢权重，效率增 3×</text>
+
+        <!-- Row 5: Jun 2026 -->
+        <text x="76" y="254" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500" fill="#3730A3">2026.06</text>
+        <circle cx="92" cy="249" r="5.5" fill="#4F46E5"/>
+        <text x="114" y="254" font-family="Noto Sans SC, sans-serif" font-size="14" font-weight="700" fill="#0B1220">非可读高密度压缩（arXiv:2606.19857）</text>
+        <text x="390" y="254" font-family="Noto Sans SC, sans-serif" font-size="13" fill="#475467">放宽人类可读先验；同期 ICL 贝叶斯证明定稿</text>
+
+        <!-- Row 6: Jul 2026 -->
+        <text x="76" y="300" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500" fill="#3730A3">2026.07</text>
+        <circle cx="92" cy="295" r="5.5" fill="#4F46E5"/>
+        <text x="114" y="300" font-family="Noto Sans SC, sans-serif" font-size="14" font-weight="700" fill="#0B1220">机制世界模型 MWM（arXiv:2607.12474）</text>
+        <text x="390" y="300" font-family="Noto Sans SC, sans-serif" font-size="13" fill="#475467">以可复用因果机制替代纯预测映射，面向发现</text>
+
+        <!-- Row 7: Sep 2026 -->
+        <text x="76" y="346" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500" fill="#3730A3">2026.09</text>
+        <circle cx="92" cy="341" r="5.5" fill="#4F46E5"/>
+        <text x="114" y="346" font-family="Noto Sans SC, sans-serif" font-size="14" font-weight="700" fill="#0B1220">上下文语言模型 CLM（arXiv:2609.37725）</text>
+        <text x="396" y="346" font-family="Noto Sans SC, sans-serif" font-size="13" fill="#475467">支持 24 小时数千轮长程任务；束搜索理论化</text>
+
+        <!-- Row 8: Nov 2026 -->
+        <text x="76" y="392" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500" fill="#064E3B">2026.11</text>
+        <circle cx="92" cy="387" r="5.5" fill="#059669"/>
+        <text x="114" y="392" font-family="Noto Sans SC, sans-serif" font-size="14" font-weight="700" fill="#0B1220">RLVR 削尖铅笔而非心智（2611.02574）</text>
+        <text x="390" y="392" font-family="Noto Sans SC, sans-serif" font-size="13" fill="#475467">实证 RLVR 仅引发稀疏分布偏移与采样锐化</text>
+      </svg>
+    </div>
+    <figcaption>时间跨度：2026 年 1 月至 2026 年 11 月（截至当前日期）。按发表月份与核心议题双轴整理，涵盖推理机制、RLVR 边界、持续学习与世界模型四大方向。</figcaption>
+  </figure>
+</header>
+
+<main>
+
+  <section class="sec">
+    <div class="measure">
+      <h2>推理机制的重构：“思维社会”与 RLVR“削尖铅笔”的年度大辩论</h2>
+      <p>2026 年开年最具启发性的发现，来自 Google Research 与芝加哥大学团队发表的 <a href="https://arxiv.org/abs/2601.10825" target="_blank" rel="noopener noreferrer">《Reasoning Models Generate Societies of Thought》（2026 年 1 月）</a>。此前人们普遍将思维链（CoT）视为线性草稿纸，但该研究对 DeepSeek-R1 等推理模型进行解剖后发现：长思维链中涌现出类似人类群体集体智慧的<strong>“思维社会”</strong>——模型在内部自发分化出不同视角与社会情感角色，通过提问、质疑、视角切换与观点调和来探索解空间。定量归因显示，这种内部多主体对话行为直接或间接贡献了推理任务中<strong>超过 60% 的准确率优势</strong>；即使在受控实验中仅奖励最终准确率，基座模型也会自发增加内部对话行为。</p>
+      <p>然而，支撑这类推理模型的后训练引擎——可验证奖励强化学习（RLVR）——在 2026 年全年遭遇了最严密的理论审视。从 2 月的 <a href="https://arxiv.org/html/2602.08281v1" target="_blank" rel="noopener noreferrer">《New Skills or Sharper Primitives?》</a>，到 4 月 <a href="https://arxiv.org/html/2604.19295v1" target="_blank" rel="noopener noreferrer">TEMPO</a> 指出无外部校验的自奖励强化学习会迅速陷入输出分布坍塌与性能高原，再到 10 月 <a href="https://arxiv.org/html/2610.02015" target="_blank" rel="noopener noreferrer">《On Language Drift during RLVR Post-Training》</a> 引用“RL 奥卡姆剃刀（RL's Razor）”指出强化学习天然偏好与基座模型 KL 散度最小的路径——这场年度大辩论在 11 月迎来了阶段性总结：<a href="https://arxiv.org/html/2611.02574v1" target="_blank" rel="noopener noreferrer">《RLVR Sharpens the Pencil, Not the Mind》（2026 年 11 月 2 日）</a> 综合全年机制证据表明，RLVR 在权重和输出上仅引起近线性漂移，分布偏移高度稀疏（绝大多数词元位置变化近乎为零，仅集中在少数关键推理分叉点）。换言之，<strong>常规 RLVR 主要是“把铅笔削尖”</strong>——大幅提升基座模型已有潜在解法的采样命中率；唯有通过 6 月提出的 <a href="https://arxiv.org/abs/2606.22317" target="_blank" rel="noopener noreferrer">边界感知课程强化学习（Curriculum RL）</a> 或在真正脱离基座先验的新颖任务上持续施压，才能有限度地向外拓展推理边界。</p>
+    </div>
+
+    <figure>
+      <p class="fig-title">2026 年三大实证指标揭示：结构化思考、快慢解耦与长程上下文正主导智能增效</p>
+      <div class="chart-wrap">
+        <svg viewBox="0 0 680 330" width="100%" role="img" aria-label="2026年三项关键实证论文的定量增效幅度对比图">
+          <!-- Vertical Gridlines: 0% to 80%, x=215 to x=615 (5px per 1%) -->
+          <line x1="215" y1="30" x2="215" y2="262" stroke="#0B1220" stroke-width="1.2"/>
+          <line x1="315" y1="30" x2="315" y2="262" stroke="#CFD8E3" stroke-width="1"/>
+          <line x1="415" y1="30" x2="415" y2="262" stroke="#CFD8E3" stroke-width="1"/>
+          <line x1="515" y1="30" x2="515" y2="262" stroke="#CFD8E3" stroke-width="1"/>
+          <line x1="615" y1="30" x2="615" y2="262" stroke="#CFD8E3" stroke-width="1"/>
+
+          <!-- Bar 1: Fast-Slow Training KL Reduction 70% -->
+          <text x="200" y="66" text-anchor="end" font-family="Noto Sans SC, sans-serif" font-size="14" font-weight="700" fill="#0B1220">快慢学习降低遗忘偏移</text>
+          <text x="200" y="86" text-anchor="end" font-family="Noto Sans SC, sans-serif" font-size="12.5" fill="#475467">KL 散度降幅（2605.12484）</text>
+          <rect x="215" y="50" width="350" height="32" fill="#4F46E5"/>
+          <text x="575" y="71" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="500" fill="#3730A3">高达 70%</text>
+
+          <!-- Bar 2: Societies of Thought Accuracy Contribution >60% -->
+          <text x="200" y="144" text-anchor="end" font-family="Noto Sans SC, sans-serif" font-size="14" font-weight="700" fill="#0B1220">思维社会对话贡献度</text>
+          <text x="200" y="164" text-anchor="end" font-family="Noto Sans SC, sans-serif" font-size="12.5" fill="#475467">推理准确率优势占比（2601.10825）</text>
+          <rect x="215" y="128" width="300" height="32" fill="#059669"/>
+          <text x="525" y="149" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="500" fill="#064E3B">&gt; 60%</text>
+
+          <!-- Bar 3: CLM Prefix-Reuse FLOPs Savings 59% -->
+          <text x="200" y="222" text-anchor="end" font-family="Noto Sans SC, sans-serif" font-size="14" font-weight="700" fill="#0B1220">CLM 长程算力节省</text>
+          <text x="200" y="242" text-anchor="end" font-family="Noto Sans SC, sans-serif" font-size="12.5" fill="#475467">12h 优化前缀复用 FLOPs（2609.37725）</text>
+          <rect x="215" y="206" width="295" height="32" fill="#4F46E5"/>
+          <text x="520" y="227" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="500" fill="#3730A3">59%</text>
+
+          <!-- X-axis ticks -->
+          <text x="215" y="284" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" fill="#475467">0%</text>
+          <text x="315" y="284" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" fill="#475467">20%</text>
+          <text x="415" y="284" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" fill="#475467">40%</text>
+          <text x="515" y="284" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" fill="#475467">60%</text>
+          <text x="615" y="284" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" fill="#475467">80%</text>
+
+          <text x="415" y="314" text-anchor="middle" font-family="Noto Sans SC, sans-serif" font-size="13" fill="#475467">2026 年代表性论文报告的核心实证幅度（百分比）</text>
+        </svg>
+      </div>
+      <figcaption>数据来源：<a href="https://arxiv.org/abs/2605.12484" target="_blank" rel="noopener noreferrer">Sareen et al. (2026.05/10, arXiv:2605.12484)</a>、<a href="https://research.google/pubs/reasoning-models-generate-societies-of-thought/" target="_blank" rel="noopener noreferrer">Kim et al. (2026.01, arXiv:2601.10825)</a> 及 <a href="https://arxiv.org/html/2609.37725v1" target="_blank" rel="noopener noreferrer">Context Language Models (2026.09, arXiv:2609.37725)</a>。</figcaption>
+    </figure>
+  </section>
+
+  <section class="sec">
+    <div class="measure">
+      <h2>打破权重冻结：2026 年持续学习与长程上下文的范式突破</h2>
+      <p>长期以来，LLM 被称为“静态智能”的最大缺陷在于部署后参数即被冻结，无法像生物大脑一样在持续交互中学习新技能而不遗忘旧知识。2026 年 3 月至 10 月，持续学习（Continual Learning）与上下文演化架构成为全年最活跃的突破口。</p>
+    </div>
+
+    <div class="strip-3">
+      <div class="strip-item">
+        <h3>快慢权重解耦（Fast-Slow Learning）</h3>
+        <p><a href="https://arxiv.org/abs/2605.12484" target="_blank" rel="noopener noreferrer">《Learning, Fast and Slow》（2026 年 5 月发布、10 月修订）</a> 打破了“上下文学习”与“参数微调”的二元对立，将模型参数作为保持通用推理能力的“慢权重”，将经由文本反馈持续优化的上下文作为吸收任务特异性的“快权重”。在连续变动的任务流中，纯强化学习会陷入停滞，而快慢训练（FST）保持了持续习得新任务的可塑性。</p>
+      </div>
+      <div class="strip-item">
+        <h3>长程上下文语言模型（CLM）</h3>
+        <p><a href="https://arxiv.org/html/2609.37725v1" target="_blank" rel="noopener noreferrer">《Context Language Models》（2026 年 9 月）</a> 将长程任务管理本身内化为语言建模问题。在跨越数百至数千轮、长达 24 小时的复杂深度研究与多仓库代码优化任务中，CLM 在 BrowseComp-Plus 上零样本实现 <strong>+11.4% 准确率提升</strong>并减少 21.5% 前缀复用算力，证明智能体的长程记忆与规划正从外部硬编码框架回归模型内生机制。</p>
+      </div>
+      <div class="strip-item">
+        <h3>人机交互测试时适应</h3>
+        <p><a href="https://arxiv.org/html/2609.04141v1" target="_blank" rel="noopener noreferrer">《Efficient Test-Time Adaptation through Human-AI Interaction》（2026 年 9 月）</a> 证实，通过上下文与权重双轨适应，智能体仅需 20 轮交互即可将单任务成功率提升 4.5%—20.9%，且从个体专家处习得的隐性评判标准（Rubric）能跨用户泛化并多捕获 16.0%—22.3% 的隐蔽失败。</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="emphasis-band">
+    <div class="grid" style="align-items: center;">
+      <div class="col-left">
+        <div class="emphasis-num">3×</div>
+      </div>
+      <div class="col-right measure">
+        <p><strong>2026 年持续适应效率跃升：</strong>在 <a href="https://arxiv.org/abs/2605.12484" target="_blank" rel="noopener noreferrer">Sareen 等人（UC Berkeley / Google DeepMind）的快慢训练实验</a> 中，结合上下文“快权重”与参数“慢权重”的双时间尺度机制，在推理任务上的样本效率达到纯慢权重强化学习的 <strong>3 倍</strong>，同时将相对基座模型的 KL 散度降低高达 <strong>70%</strong>，为解决 LLM“学新忘旧”这一通用智能核心障碍提供了实证蓝图。</p>
+      </div>
+    </div>
+  </div>
+
+  <section class="sec">
+    <div class="grid">
+      <div class="col-left">
+        <h2>超越预测映射：机制世界模型、认知图式与非可读语义压缩</h2>
+        <p class="split-note">2026 年年中，理论界开始反思“预测即压缩”的天花板：仅有高精度预测映射，是否足以支撑真正的科学发现与跨领域抽象？</p>
+      </div>
+      <div class="col-right measure">
+        <p>在 2026 年 7 月发表的 <a href="https://arxiv.org/abs/2607.12474" target="_blank" rel="noopener noreferrer">《From Observation to Insight: Mechanistic World Models and the Quest for Autonomous Discovery》</a> 中，Ingmar Posner 尖锐地指出了当前大模型的局限：它们高度擅长拟合“输入到输出”的预测映射，但预测本身并不自动等价于可复用的科学解释。文章提出<strong>机制世界模型（MWM）</strong>范式，主张将“可复用的因果机制”而非“预测值”作为核心计算抽象，通过<strong>简约性（Parsimony）</strong>与<strong>组合性（Compositionality）</strong>双重归纳压力，使模型能像人类科学家一样重组既有原理以解释全新系统。</p>
+        <p>同期的机制与语言表征研究也从侧面印证了内部结构的高度抽象化。5 月的 <a href="https://arxiv.org/html/2605.09271v1" target="_blank" rel="noopener noreferrer">《Shaping Schema via Language Representation》</a> 论证了 LLM 内部存在类似人类认知心理学中的<strong>图式（Schema）</strong>——一种决定嵌入式知识如何被激活与组织的抽象图结构；而 6 月的 <a href="https://arxiv.org/html/2606.19857v1" target="_blank" rel="noopener noreferrer">BabelTele 研究（arXiv:2606.19857）</a> 则做了一个极具颠覆性的实验：当接收者是另一个 LLM 而非人类时，放松“人类可读自然语言”约束后，模型可以通过跨语种词元挑选与符号坍塌（Symbolic Collapse）生成人类完全看不懂、但不同家族 LLM 仍能部分跨模型解码的超高密度语义编码。这一现象强有力地表明，<strong>LLM 内部的语义表征已经部分脱离了表层人类自然语言的形态束缚</strong>。</p>
+        <p>此外，2026 年 5 月 <a href="https://royalsocietypublishing.org/rsta/article/384/2320/20250014/481676/Large-language-models-and-emergence-a-complex" target="_blank" rel="noopener noreferrer">英国皇家学会复杂系统专题</a> 将 LLM 涌现定性为“少即是多（Less is More）”——用低维有效变量高效替代高维机制的适应性压缩；而 8 月的 <a href="https://arxiv.org/abs/2608.06589" target="_blank" rel="noopener noreferrer">《Beyond "AI Language"》</a> 通过对比 2024 与 2026 队列模型，发现各模型已分化出显著的个体语言习语（Idiolect，如缩略词频在同一代模型间相差逾 25 倍），证明不同训练轨迹正在塑造各具特征的内部表征流形。</p>
+      </div>
+    </div>
+
+    <blockquote class="pullquote measure">
+      <p>“真正的科学理解不在于精准预报下一次观测，而在于将知识组织为简约且可组合的底层机制——这正是 2026 年世界模型试图跨越的鸿沟。”</p>
+      <cite>凝练自 Ingmar Posner（2026.07）, <em>From Observation to Insight: Mechanistic World Models</em> (arXiv:2607.12474)</cite>
+    </blockquote>
+  </section>
+
+  <section class="sec">
+    <div class="measure">
+      <h2>2026 年全年核心文献速览表（1 月—11 月）</h2>
+      <p>下表按发表时间汇总了 2026 年全年（截至 11 月下旬）最具代表性的 10 项理论与实证研究，便于按时间线回溯年度认知演进。</p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>月份</th>
+            <th>论文标题与链接</th>
+            <th>核心维度</th>
+            <th>对“LLM 智能本质”的关键结论</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="month">2026.01</td>
+            <td class="paper"><a href="https://arxiv.org/abs/2601.10825" target="_blank" rel="noopener noreferrer">Reasoning Models Generate Societies of Thought</a></td>
+            <td class="dim">推理机制</td>
+            <td>推理模型在思维链中自发模拟多视角内部辩论，社会化认知结构贡献了超 60% 的推理准确率优势。</td>
+          </tr>
+          <tr>
+            <td class="month">2026.02</td>
+            <td class="paper"><a href="https://arxiv.org/abs/2602.11863" target="_blank" rel="noopener noreferrer">In-Context Function Learning</a> / <a href="https://arxiv.org/html/2602.08281v1" target="_blank" rel="noopener noreferrer">New Skills or Sharper Primitives?</a></td>
+            <td class="dim">ICL 与 RLVR</td>
+            <td>用高斯过程（GP）刻画上下文函数学习；同时从概率视角开启全年关于 RLVR 是“新技能”还是“原语锐化”的核心争论。</td>
+          </tr>
+          <tr>
+            <td class="month">2026.03</td>
+            <td class="paper"><a href="https://arxiv.org/abs/2603.12658" target="_blank" rel="noopener noreferrer">Beyond Static Models: Continual Learning</a></td>
+            <td class="dim">持续学习</td>
+            <td>提出超越静态冻结权重的演化框架，系统界定大模型跨预训练、后训练与推理期的持续能力演进。</td>
+          </tr>
+          <tr>
+            <td class="month">2026.04</td>
+            <td class="paper"><a href="https://arxiv.org/html/2604.19295v1" target="_blank" rel="noopener noreferrer">TEMPO: Scaling Test-time Training</a></td>
+            <td class="dim">测试时训练</td>
+            <td>扩展推理期测试时训练，同时指出缺乏外部校准的自奖励强化学习会因自我强化而导致分布坍塌。</td>
+          </tr>
+          <tr>
+            <td class="month">2026.05</td>
+            <td class="paper"><a href="https://arxiv.org/abs/2605.12484" target="_blank" rel="noopener noreferrer">Learning, Fast and Slow</a> &amp; <a href="https://royalsocietypublishing.org/rsta/article/384/2320/20250014/481676/Large-language-models-and-emergence-a-complex" target="_blank" rel="noopener noreferrer">Royal Society 复杂系统综述</a></td>
+            <td class="dim">快慢适应 / 涌现</td>
+            <td>上下文“快权重”+ 参数“慢权重”实现 3× 样本效率与最高 70% KL 散度降幅；皇家学会以“低维有效变量压缩”重释涌现。</td>
+          </tr>
+          <tr>
+            <td class="month">2026.06</td>
+            <td class="paper"><a href="https://arxiv.org/html/2606.19857v1" target="_blank" rel="noopener noreferrer">BabelTele: Non-Readable Compression</a> &amp; <a href="https://arxiv.org/html/2510.10981v3" target="_blank" rel="noopener noreferrer">ICL Provably Bayesian (v3)</a></td>
+            <td class="dim">语义压缩 / 贝叶斯</td>
+            <td>证明 LLM 可在脱离人类可读性的符号坍塌空间中实现高密度语义编解码；完成 ICL 有限样本贝叶斯推断理论定稿。</td>
+          </tr>
+          <tr>
+            <td class="month">2026.07</td>
+            <td class="paper"><a href="https://arxiv.org/abs/2607.12474" target="_blank" rel="noopener noreferrer">Mechanistic World Models (MWM)</a></td>
+            <td class="dim">世界模型</td>
+            <td>区分“预测映射”与“机制解释”，主张通过简约性与组合性压力构建面向自主科学发现的机制世界模型。</td>
+          </tr>
+          <tr>
+            <td class="month">2026.08</td>
+            <td class="paper"><a href="https://arxiv.org/pdf/2608.06216" target="_blank" rel="noopener noreferrer">Continual Learning in Transition</a> &amp; <a href="https://arxiv.org/html/2503.05788v3" target="_blank" rel="noopener noreferrer">Emergent Abilities Survey (v3)</a></td>
+            <td class="dim">范式综述</td>
+            <td>系统总结大模型时代持续学习向无梯度在线适应（JIT-RL）的迁移，以及涌现能力理论的最新收敛。</td>
+          </tr>
+          <tr>
+            <td class="month">2026.09</td>
+            <td class="paper"><a href="https://arxiv.org/html/2609.37725v1" target="_blank" rel="noopener noreferrer">Context Language Models (CLM)</a> &amp; <a href="https://arxiv.org/abs/2609.38672" target="_blank" rel="noopener noreferrer">Provable Test-Time Scaling</a></td>
+            <td class="dim">长程计算</td>
+            <td>CLM 零样本胜任 24 小时级长程多轮任务并大幅降低算力；同期建立束搜索测试时扩展的可证明理论边界。</td>
+          </tr>
+          <tr>
+            <td class="month">2026.10–11</td>
+            <td class="paper"><a href="https://arxiv.org/html/2610.02015" target="_blank" rel="noopener noreferrer">On Language Drift in RLVR</a> &amp; <a href="https://arxiv.org/html/2611.02574v1" target="_blank" rel="noopener noreferrer">RLVR Sharpens the Pencil, Not the Mind</a></td>
+            <td class="dim">RLVR 裁决</td>
+            <td>揭示 RLVR 仅在关键分叉点产生稀疏分布偏移与近线性权重漂移——主要锐化基座已有能力而非无中生有创造心智。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>2026 年参考文献与信源</h2>
+    <ol class="sources-list">
+      <li>Kim, J., Scherrer, N., et al. (2026.01). <a href="https://arxiv.org/abs/2601.10825" target="_blank" rel="noopener noreferrer">Reasoning Models Generate Societies of Thought</a> (arXiv:2601.10825) 及 <a href="https://research.google/pubs/reasoning-models-generate-societies-of-thought/" target="_blank" rel="noopener noreferrer">Google Research 发布页</a>。</li>
+      <li><a href="https://arxiv.org/html/2507.08017v4" target="_blank" rel="noopener noreferrer">Mechanistic Indicators of Understanding in Large Language Models</a> (2026.01/02 修订版, arXiv:2507.08017)。</li>
+      <li><a href="https://arxiv.org/html/2602.08281v1" target="_blank" rel="noopener noreferrer">New Skills or Sharper Primitives? A Probabilistic Perspective on RLVR</a> (2026.02, arXiv:2602.08281) 及 <a href="https://arxiv.org/abs/2602.11863" target="_blank" rel="noopener noreferrer">In-Context Function Learning in Large Language Models</a> (2026.02, arXiv:2602.11863)。</li>
+      <li><a href="https://arxiv.org/abs/2603.12658" target="_blank" rel="noopener noreferrer">Beyond Static Models: An Evolving Framework for Continual Learning in Large Language Models</a> (2026.03, arXiv:2603.12658)。</li>
+      <li><a href="https://arxiv.org/html/2604.19295v1" target="_blank" rel="noopener noreferrer">TEMPO: Scaling Test-time Training for Large Reasoning Models</a> (2026.04, arXiv:2604.19295) 及 <a href="https://arxiv.org/html/2604.14853v1" target="_blank" rel="noopener noreferrer">Adaptive Test-Time Compute Allocation</a> (2026.04, arXiv:2604.14853)。</li>
+      <li>Sareen, K., Gonzalez, J. E., Zaharia, M., et al. (2026.05/10). <a href="https://arxiv.org/abs/2605.12484" target="_blank" rel="noopener noreferrer">Learning, Fast and Slow: Towards LLMs That Adapt Continually</a> (arXiv:2605.12484)。</li>
+      <li><a href="https://arxiv.org/html/2605.09271v1" target="_blank" rel="noopener noreferrer">Shaping Schema via Language Representation as the Next Frontier</a> (2026.05, arXiv:2605.09271) 及 <a href="https://royalsocietypublishing.org/rsta/article/384/2320/20250014/481676/Large-language-models-and-emergence-a-complex" target="_blank" rel="noopener noreferrer">Royal Society (2026.05): Large language models and emergence: a complex systems perspective</a>。</li>
+      <li><a href="https://arxiv.org/html/2606.19857v1" target="_blank" rel="noopener noreferrer">Large Language Models Do Not Always Need Readable... (BabelTele)</a> (2026.06, arXiv:2606.19857)、<a href="https://arxiv.org/abs/2606.22317" target="_blank" rel="noopener noreferrer">Curriculum Reinforcement Learning Can Incentivize Reasoning</a> (2026.06, arXiv:2606.22317) 及 <a href="https://arxiv.org/html/2510.10981v3" target="_blank" rel="noopener noreferrer">In-Context Learning Is Provably Bayesian Inference</a> (2026.06 v3, arXiv:2510.10981)。</li>
+      <li>Posner, I. (2026.07). <a href="https://arxiv.org/abs/2607.12474" target="_blank" rel="noopener noreferrer">From Observation to Insight: Mechanistic World Models and the Quest for Autonomous Discovery</a> (arXiv:2607.12474)。</li>
+      <li><a href="https://arxiv.org/pdf/2608.06216" target="_blank" rel="noopener noreferrer">Continual Learning in Transition</a> (2026.08, arXiv:2608.06216)、<a href="https://arxiv.org/abs/2608.06589" target="_blank" rel="noopener noreferrer">Beyond "AI Language": The case for the idiolectal nature of LLM output</a> (2026.08, arXiv:2608.06589) 及 <a href="https://arxiv.org/html/2503.05788v3" target="_blank" rel="noopener noreferrer">Emergent Abilities in Large Language Models: A Survey</a> (2026.08 v3, arXiv:2503.05788)。</li>
+      <li><a href="https://arxiv.org/html/2609.37725v1" target="_blank" rel="noopener noreferrer">Context Language Models</a> (2026.09, arXiv:2609.37725)、<a href="https://arxiv.org/html/2609.04141v1" target="_blank" rel="noopener noreferrer">Efficient Test-Time Adaptation through Human-AI Interaction</a> (2026.09, arXiv:2609.04141) 及 <a href="https://arxiv.org/abs/2609.38672" target="_blank" rel="noopener noreferrer">Provable Test-Time Scaling for Beam Search in LLM Reasoning</a> (2026.09, arXiv:2609.38672)。</li>
+      <li><a href="https://arxiv.org/html/2610.02015" target="_blank" rel="noopener noreferrer">On Language Drift during RLVR Post-Training</a> (2026.10, arXiv:2610.02015) 及 <a href="https://arxiv.org/html/2611.02574v1" target="_blank" rel="noopener noreferrer">RLVR Sharpens the Pencil, Not the Mind</a> (2026.11, arXiv:2611.02574)。</li>
+    </ol>
+  </section>
+
+</main>
+
+</body>
+</html>

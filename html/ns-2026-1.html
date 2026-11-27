@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>纳维-斯托克斯方程（NS 方程）推导与 2026 爆破证明全景可视化</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <style>
+    :root {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    }
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .svg-node {
+      cursor: pointer;
+      transition: filter 0.15s ease, opacity 0.15s ease;
+    }
+    .svg-node:hover,
+    .svg-node:focus-visible {
+      filter: drop-shadow(0 3px 8px rgba(37, 99, 235, 0.28));
+      outline: none;
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+    .anchor-card {
+      scroll-margin-top: 24px;
+      transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+    .anchor-card.is-flash {
+      border-color: #4f46e5 !important;
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.22);
+    }
+    .corner-panel {
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease;
+    }
+    .corner-panel.is-hidden {
+      transform: translateY(16px) scale(0.98);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .katex-display {
+      margin: 0.25rem 0 !important;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 0.25rem 0;
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-indigo-100 selection:text-indigo-900">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <!-- Header -->
+    <header class="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <div class="flex flex-wrap items-center gap-2 text-xs font-medium mb-2">
+            <span class="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">5 张完整矢量 SVG 架构图</span>
+            <span class="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-semibold">全页 LaTeX + 数学机制配图 · 点击图块右下角即时展开</span>
+            <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold">同步截至 2026 年 11 月 22 日最新进展</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+            纳维-斯托克斯方程（NS 方程）物理推导、千禧年难题与 2026 爆破证明全景图解
+          </h1>
+          <p class="mt-1.5 text-sm text-slate-600 max-w-4xl">
+            一页打通从<strong>连续介质第一性原理推导</strong>、<strong>克雷千禧年难题 A/B/C/D 四分支</strong>，到 <strong>2026 年 9 月 OpenAI 有外力爆破证明</strong>与 <strong>11 月 20 日 Alpöge &amp; Buckmaster 无外力爆破证明</strong>的核心脉络、形式化争议与验证现状。
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <button id="btn-show-all" type="button" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm transition">
+            回到顶部 ↑
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter / Jump Tabs -->
+      <nav id="fig-nav" class="mt-5 pt-4 border-t border-slate-100 flex flex-wrap gap-2" aria-label="架构图切换">
+        <button type="button" data-fig="all" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 text-white">顶部总览</button>
+        <button type="button" data-fig="fig1" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200">图 1 · 物理推导全景</button>
+        <button type="button" data-fig="fig2" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200">图 2 · 千禧年难题与 A/B/C/D</button>
+        <button type="button" data-fig="fig3" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200">图 3 · OpenAI 有外力爆破（9月）</button>
+        <button type="button" data-fig="fig4" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200">图 4 · 无外力爆破证明（11月）</button>
+        <button type="button" data-fig="fig5" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200">图 5 · 证明对比与科学定论</button>
+      </nav>
+    </header>
+
+    <main class="mt-6 space-y-6">
+      <!-- ==================== PART 1 HEADER ==================== -->
+      <div class="part-header flex items-center gap-3 px-1">
+        <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-bold">第一部分</span>
+        <h2 class="text-lg font-bold text-slate-900">方程第一性原理推导与千禧年难题本质（图 1 — 图 2）</h2>
+      </div>
+
+      <!-- ==================== FIG 1 ==================== -->
+      <section id="fig1" class="fig-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-bold text-indigo-600">图 1 · 物理推导全景</span>
+            <h3 class="text-lg font-bold text-slate-900 mt-0.5">从连续介质与牛顿第二定律到不可压缩 NS 方程</h3>
+          </div>
+          <span class="text-xs px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 self-start sm:self-center">点击任意方块右下角展开详情</span>
+        </div>
+
+        <div class="px-5 py-3 bg-indigo-50/50 border-b border-indigo-100 text-xs sm:text-sm text-slate-700">
+          <strong>看图要点：</strong>NS 方程本质上是流体微团的 <strong>$F = ma$</strong>——先用质量守恒得到不可压缩条件，再把柯西应力张量拆成“压力 + 粘性偏应力”，代入牛顿流体线性本构关系即可化简为经典形式。
+        </div>
+
+        <div class="p-4 sm:p-6 bg-slate-50/60 overflow-x-auto">
+          <svg viewBox="0 0 820 380" class="w-full min-w-[640px] h-auto block mx-auto" role="img" aria-label="图 1：NS 方程物理推导全景图">
+            <defs>
+              <marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+              <marker id="a1-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="#ea580c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+              <marker id="a1-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="#16a34a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+            </defs>
+
+            <!-- Top Row: Continuum & Mass Conservation -->
+            <g class="svg-node" data-tip="f1-cont" tabindex="0">
+              <rect x="20" y="18" width="360" height="72" rx="12" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+              <text x="200" y="42" text-anchor="middle" font-size="13" font-weight="700" fill="#0d47a1">① 连续介质假设 + 质量守恒（连续性方程）</text>
+              <text x="200" y="61" text-anchor="middle" font-size="11" fill="#1565c0">∂ρ/∂t + ∇·(ρu) = 0  ⟶  恒定密度得 ∇·u = 0</text>
+              <text x="200" y="79" text-anchor="middle" font-size="10" fill="#1e40af">忽略离散分子涨落 · 控制体流入流出体积守恒</text>
+            </g>
+
+            <!-- Right Top: Cauchy Momentum -->
+            <g class="svg-node" data-tip="f1-cauchy" tabindex="0">
+              <rect x="424" y="18" width="376" height="72" rx="12" fill="#fff7ed" stroke="#ea580c" stroke-width="1.5"/>
+              <text x="612" y="42" text-anchor="middle" font-size="13" font-weight="700" fill="#9a3412">② 牛顿第二定律 + 柯西动量方程</text>
+              <text x="612" y="61" text-anchor="middle" font-size="11" fill="#c2410c">ρ(∂u/∂t + (u·∇)u) = ∇·T + ρf，T = −pI + τ</text>
+              <text x="612" y="79" text-anchor="middle" font-size="10" fill="#ea580c">对一切连续介质通用（含非牛顿流体与弹性体）</text>
+            </g>
+
+            <line x1="380" y1="54" x2="420" y2="54" stroke="#475569" stroke-width="1.6" marker-end="url(#a1)"/>
+
+            <!-- Middle: Newtonian Constitutive Relation -->
+            <rect x="20" y="114" width="780" height="82" rx="14" fill="#f0fdf4" stroke="#86efac" stroke-width="1.4" stroke-dasharray="5 3"/>
+            <text x="36" y="134" font-size="11.5" font-weight="700" fill="#166534">③ 封闭方程的关键桥梁：本构假设（Navier 1822 / Stokes 1845）</text>
+
+            <g class="svg-node" data-tip="f1-newton" tabindex="0">
+              <rect x="38" y="144" width="468" height="42" rx="10" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+              <text x="272" y="162" text-anchor="middle" font-size="12" font-weight="700" fill="#14532d">牛顿流体线性本构关系 + 斯托克斯假设</text>
+              <text x="272" y="178" text-anchor="middle" font-size="10.5" fill="#15803d">τ = μ(∇u + (∇u)ᵀ) + λ(∇·u)I （各向同性线性粘性，λ ≈ −2μ/3）</text>
+            </g>
+
+            <line x1="506" y1="165" x2="544" y2="165" stroke="#16a34a" stroke-width="1.6" marker-end="url(#a1-green)"/>
+
+            <g class="svg-node" data-tip="f1-newton" tabindex="0">
+              <rect x="548" y="144" width="234" height="42" rx="10" fill="#dcfce7" stroke="#15803d" stroke-width="1.4"/>
+              <text x="665" y="162" text-anchor="middle" font-size="11.5" font-weight="700" fill="#14532d">代入 ∇·u = 0 化简散度</text>
+              <text x="665" y="178" text-anchor="middle" font-size="10.5" fill="#166534">∇·τ = μ∇²u + μ∇(∇·u) = μΔu</text>
+            </g>
+
+            <line x1="612" y1="90" x2="612" y2="114" stroke="#ea580c" stroke-width="1.6" marker-end="url(#a1-orange)"/>
+            <line x1="410" y1="196" x2="410" y2="220" stroke="#16a34a" stroke-width="1.8" marker-end="url(#a1-green)"/>
+
+            <!-- Bottom Main Box: Incompressible NS Equation -->
+            <g class="svg-node" data-tip="f1-ns" tabindex="0">
+              <rect x="20" y="224" width="530" height="136" rx="14" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.8"/>
+              <text x="285" y="248" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e1b4b">④ 标准三维不可压缩纳维-斯托克斯方程（四大力平衡）</text>
+              <text x="285" y="270" text-anchor="middle" font-size="12.5" font-weight="700" fill="#312e81">∂u/∂t + (u·∇)u = −(1/ρ)∇p + νΔu + f,    ∇·u = 0</text>
+
+              <rect x="36" y="286" width="118" height="58" rx="8" fill="#ffffff" stroke="#818cf8" stroke-width="1.2"/>
+              <text x="95" y="308" text-anchor="middle" font-size="11" font-weight="700" fill="#3730a3">(u·∇)u 对流项</text>
+              <text x="95" y="325" text-anchor="middle" font-size="9.5" fill="#4f46e5">非线性湍流之源</text>
+              <text x="95" y="338" text-anchor="middle" font-size="9.5" fill="#4f46e5">引发涡旋拉伸</text>
+
+              <rect x="164" y="286" width="118" height="58" rx="8" fill="#ffffff" stroke="#818cf8" stroke-width="1.2"/>
+              <text x="223" y="308" text-anchor="middle" font-size="11" font-weight="700" fill="#3730a3">−(1/ρ)∇p 压力项</text>
+              <text x="223" y="325" text-anchor="middle" font-size="9.5" fill="#4f46e5">非局部拉格朗日乘子</text>
+              <text x="223" y="338" text-anchor="middle" font-size="9.5" fill="#4f46e5">瞬时维持 ∇·u = 0</text>
+
+              <rect x="292" y="286" width="118" height="58" rx="8" fill="#ffffff" stroke="#818cf8" stroke-width="1.2"/>
+              <text x="351" y="308" text-anchor="middle" font-size="11" font-weight="700" fill="#3730a3">νΔu 粘性耗散</text>
+              <text x="351" y="325" text-anchor="middle" font-size="9.5" fill="#4f46e5">小尺度“刹车”机制</text>
+              <text x="351" y="338" text-anchor="middle" font-size="9.5" fill="#4f46e5">抹平剧烈速度梯度</text>
+
+              <rect x="420" y="286" width="114" height="58" rx="8" fill="#ffffff" stroke="#818cf8" stroke-width="1.2"/>
+              <text x="477" y="308" text-anchor="middle" font-size="11" font-weight="700" fill="#3730a3">f(x, t) 外力项</text>
+              <text x="477" y="325" text-anchor="middle" font-size="9.5" fill="#4f46e5">重力或人为驱动</text>
+              <text x="477" y="338" text-anchor="middle" font-size="9.5" fill="#4f46e5">2026 争议分水岭</text>
+            </g>
+
+            <line x1="550" y1="292" x2="584" y2="292" stroke="#6a1b9a" stroke-width="1.8" marker-end="url(#a1)"/>
+
+            <!-- Right Bottom: Reynolds Number -->
+            <g class="svg-node" data-tip="f1-re" tabindex="0">
+              <rect x="588" y="224" width="212" height="136" rx="14" fill="#faf5ff" stroke="#7e22ce" stroke-width="1.6"/>
+              <text x="694" y="249" text-anchor="middle" font-size="12.5" font-weight="700" fill="#4a148c">⑤ 无量纲化与雷诺数 Re</text>
+              <text x="694" y="273" text-anchor="middle" font-size="13" font-weight="700" fill="#6b21a8">Re = UL / ν</text>
+              <text x="694" y="294" text-anchor="middle" font-size="10.5" fill="#581c87">惯性对流 / 粘性摩擦</text>
+              <rect x="606" y="306" width="176" height="40" rx="8" fill="#f3e5f5" stroke="#c084fc" stroke-width="1"/>
+              <text x="694" y="322" text-anchor="middle" font-size="10" font-weight="600" fill="#581c87">Re 小 → 粘性主导（光滑层流）</text>
+              <text x="694" y="338" text-anchor="middle" font-size="10" font-weight="600" fill="#7e22ce">Re 大 → 惯性主导（湍流/奇点）</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 bg-white">
+          <div class="rounded-xl bg-indigo-50/50 border border-indigo-100 p-4">
+            <div class="text-xs font-bold text-indigo-800 mb-1">数学原理解析</div>
+            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              方程的“难”藏在两处：一是对流项 $(\mathbf{u}\cdot\nabla)\mathbf{u}$ 是二次非线性项；二是压力 $p$ 满足泊松方程 $-\Delta p = \nabla\cdot((\mathbf{u}\cdot\nabla)\mathbf{u})$，意味着流体任何一点的扰动都会通过压力场瞬时影响全空间。
+            </p>
+            <div class="summary-svg-slot mt-2.5 rounded-lg bg-white border border-indigo-100 p-2" data-summary-svg="f1-ns"></div>
+          </div>
+          <div class="rounded-xl bg-amber-50/80 border border-amber-200/80 p-4">
+            <div class="text-xs font-bold text-amber-900 mb-1">为什么物理推导 ≠ 数学证明？</div>
+            <p class="text-xs sm:text-sm text-amber-950/90 leading-relaxed">
+              19 世纪 Navier 与 Stokes 只是基于物理守恒律“写出了方程”，但方程写出来不代表它对任意光滑初值都永远有良好定义的光滑解。这正是 2000 年克雷数学研究所悬赏 100 万美元的起点。
+            </p>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-200 bg-slate-50/50 p-5 sm:p-6">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <h4 class="text-sm sm:text-base font-bold text-slate-900">图 1 · 各模块深度拆解（LaTeX 公式 + 专属机制配图 + 核心要点）</h4>
+            <a href="#fig1" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 shrink-0">↑ 回到图 1</a>
+          </div>
+          <div id="details-fig1" class="grid grid-cols-1 lg:grid-cols-2 gap-5"></div>
+        </div>
+      </section>
+
+      <!-- ==================== FIG 2 ==================== -->
+      <section id="fig2" class="fig-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-bold text-indigo-600">图 2 · 千禧年难题核心机制</span>
+            <h3 class="text-lg font-bold text-slate-900 mt-0.5">涡旋拉伸 vs 粘性耗散 &amp; 克雷官方 A/B/C/D 四分支</h3>
+          </div>
+          <span class="text-xs px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 self-start sm:self-center">Fefferman 2000 官方表述 · 证其一即达标</span>
+        </div>
+
+        <div class="px-5 py-3 bg-indigo-50/50 border-b border-indigo-100 text-xs sm:text-sm text-slate-700">
+          <strong>看图要点：</strong>二维 NS 方程早在 20 世纪就已证明全局光滑（因为二维没有涡旋拉伸）；三维真正可怕之处在于涡管拉长变细引发速度暴涨，而克雷题目在 C/D 分支中允许外力 $\mathbf{f}$，直接埋下了 2026 年 9 月的争议伏笔。
+        </div>
+
+        <div class="p-4 sm:p-6 bg-slate-50/60 overflow-x-auto">
+          <svg viewBox="0 0 820 356" class="w-full min-w-[640px] h-auto block mx-auto" role="img" aria-label="图 2：三维涡旋拉伸与克雷四分支结构图">
+            <defs>
+              <marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+            </defs>
+
+            <!-- Top Tug of War -->
+            <rect x="16" y="14" width="788" height="122" rx="14" fill="#fffbeb" stroke="#fcd34d" stroke-width="1.4"/>
+            <text x="32" y="36" font-size="12" font-weight="700" fill="#b45309">三维 NS 方程内部的终极拉锯战：∂ω/∂t + (u·∇)ω = (ω·∇)u + νΔω + ∇×f</text>
+
+            <g class="svg-node" data-tip="f2-stretch" tabindex="0">
+              <rect x="34" y="48" width="290" height="72" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+              <text x="179" y="70" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">破坏力量：三维涡旋拉伸 (ω·∇)u</text>
+              <text x="179" y="88" text-anchor="middle" font-size="10.5" fill="#b91c1c">涡管被拉长变细 → 角动量守恒致转速暴涨</text>
+              <text x="179" y="106" text-anchor="middle" font-size="10" fill="#dc2626">能量向更小尺度级联 · 试图在有限时间制造奇点</text>
+            </g>
+
+            <rect x="352" y="64" width="116" height="40" rx="20" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+            <text x="410" y="88" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">谁先赢？</text>
+            <line x1="324" y1="84" x2="348" y2="84" stroke="#dc2626" stroke-width="1.8" marker-end="url(#a2)"/>
+            <line x1="496" y1="84" x2="472" y2="84" stroke="#16a34a" stroke-width="1.8" marker-end="url(#a2)"/>
+
+            <g class="svg-node" data-tip="f2-visc" tabindex="0">
+              <rect x="498" y="48" width="290" height="72" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+              <text x="643" y="70" text-anchor="middle" font-size="12" font-weight="700" fill="#14532d">稳定力量：粘性耗散 νΔω</text>
+              <text x="643" y="88" text-anchor="middle" font-size="10.5" fill="#15803d">尺度越小二阶导数越猛 → 强力耗散动能</text>
+              <text x="643" y="106" text-anchor="middle" font-size="10" fill="#166534">能量不等式：½‖u‖² + ν∫‖∇u‖²dt ≤ ½‖u₀‖²</text>
+            </g>
+
+            <!-- Arrows down to Clay A/B and C/D -->
+            <line x1="210" y1="136" x2="210" y2="162" stroke="#1565c0" stroke-width="1.6" marker-end="url(#a2)"/>
+            <line x1="610" y1="136" x2="610" y2="162" stroke="#ea580c" stroke-width="1.6" marker-end="url(#a2)"/>
+
+            <!-- Clay A & B -->
+            <g class="svg-node" data-tip="f2-ab" tabindex="0">
+              <rect x="16" y="166" width="384" height="92" rx="12" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6"/>
+              <text x="208" y="189" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1e3a8a">克雷分支 (A) 与 (B)：全局光滑存在性（粘性完胜）</text>
+              <text x="208" y="209" text-anchor="middle" font-size="11" fill="#1d4ed8">条件：严格无外力 f ≡ 0，对全空间 ℝ³ 或周期盒 𝕋³</text>
+              <text x="208" y="227" text-anchor="middle" font-size="10.5" fill="#2563eb">目标：证明对“所有”光滑衰减初值 u₀，解永不爆破</text>
+              <text x="208" y="245" text-anchor="middle" font-size="10" font-weight="700" fill="#1e40af">（若无外力爆破成立，则 A/B 将被彻底否证）</text>
+            </g>
+
+            <!-- Clay C & D -->
+            <g class="svg-node" data-tip="f2-cd" tabindex="0">
+              <rect x="420" y="166" width="384" height="92" rx="12" fill="#fff7ed" stroke="#ea580c" stroke-width="1.6"/>
+              <text x="612" y="189" text-anchor="middle" font-size="12.5" font-weight="700" fill="#9a3412">克雷分支 (C) 与 (D)：有限时间爆破（奇点获胜）</text>
+              <text x="612" y="209" text-anchor="middle" font-size="11" fill="#c2410c">条件：全空间 ℝ³ 或周期盒 𝕋³，允许光滑衰减外力 f</text>
+              <text x="612" y="227" text-anchor="middle" font-size="10.5" fill="#ea580c">目标：只需构造“一个”反例 (u₀, f) 使光滑解失效</text>
+              <text x="612" y="245" text-anchor="middle" font-size="10" font-weight="700" fill="#9a3412">（2026年9月 OpenAI 走 C/D；11月 Alpöge–Buckmaster 攻 f≡0）</text>
+            </g>
+
+            <!-- Bottom Historical Milestones Bar -->
+            <g class="svg-node" data-tip="f2-bkm" tabindex="0">
+              <rect x="16" y="276" width="788" height="66" rx="12" fill="#f1f5f9" stroke="#64748b" stroke-width="1.4"/>
+              <text x="410" y="298" text-anchor="middle" font-size="12" font-weight="700" fill="#1e293b">百年经典基石（2026 之前的三大里程碑）</text>
+              <text x="410" y="318" text-anchor="middle" font-size="10.5" fill="#334155">1934 Leray：证明弱解全局存在 · 1982 CKN：奇点集一维抛物 Hausdorff 测度为 0 · 1984 BKM：爆破当且仅当 ∫₀ᵀ ‖ω(t)‖∞ dt = ∞</text>
+              <text x="410" y="334" text-anchor="middle" font-size="10" fill="#475569">点击查看三大经典定理的数学表述与意义</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 bg-white">
+          <div class="rounded-xl bg-indigo-50/50 border border-indigo-100 p-4">
+            <div class="text-xs font-bold text-indigo-800 mb-1">数学原理解析</div>
+            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              NS 方程在尺度变换 $u_\lambda(x,t) = \lambda u(\lambda x, \lambda^2 t)$ 下保持不变，但动能泛函 $\int |u|^2 dx$ 是<strong>超临界（supercritical）</strong>的：把流体压缩到小尺度时，非线性项的增长速度压过了能量守恒能控制的范围，导致所有经典能量估计全部失效。
+            </p>
+            <div class="summary-svg-slot mt-2.5 rounded-lg bg-white border border-indigo-100 p-2" data-summary-svg="f2-stretch"></div>
+          </div>
+          <div class="rounded-xl bg-amber-50/80 border border-amber-200/80 p-4">
+            <div class="text-xs font-bold text-amber-900 mb-1">为什么“有外力 vs 无外力”差别这么大？</div>
+            <p class="text-xs sm:text-sm text-amber-950/90 leading-relaxed">
+              克雷官方题面允许在 (C)(D) 中加入满足衰减条件的光滑外力 $\mathbf{f}$，因此有外力爆破在“规则字面意义”上已够格；但流体数学家普遍认为，只有不借助外力、靠流体自身动力学自发坍缩（$\mathbf{f}\equiv 0$）才是真正的核心科学问题。
+            </p>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-200 bg-slate-50/50 p-5 sm:p-6">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <h4 class="text-sm sm:text-base font-bold text-slate-900">图 2 · 各模块深度拆解（LaTeX 公式 + 专属机制配图 + 争议背景）</h4>
+            <a href="#fig2" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 shrink-0">↑ 回到图 2</a>
+          </div>
+          <div id="details-fig2" class="grid grid-cols-1 lg:grid-cols-2 gap-5"></div>
+        </div>
+      </section>
+
+      <!-- ==================== PART 2 HEADER ==================== -->
+      <div class="part-header flex items-center gap-3 px-1 pt-2">
+        <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-bold">第二部分</span>
+        <h2 class="text-lg font-bold text-slate-900">2026 年两大“爆破解”证明架构与验证闭环（图 3 — 图 5）</h2>
+      </div>
+
+      <!-- ==================== FIG 3 ==================== -->
+      <section id="fig3" class="fig-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-bold text-emerald-700">图 3 · 2026年9月8日 突破与风波</span>
+            <h3 class="text-lg font-bold text-slate-900 mt-0.5">OpenAI 有外力爆破证明架构（克雷分支 C / D）</h3>
+          </div>
+          <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 self-start sm:self-center">1 万 AI 智能体 · 88 小时 · 陀螺状涡旋奇点</span>
+        </div>
+
+        <div class="px-5 py-3 bg-emerald-50/50 border-b border-emerald-100 text-xs sm:text-sm text-slate-700">
+          <strong>看图要点：</strong>OpenAI 在 2026 年 9 月 8 日用超大规模 AI 智能体群产出 150+ 页有外力爆破证明与 Lean 代码，但随后接连遭遇“无法推广到无外力”以及“Lean 形式化翻译失真”两项重大审视。
+        </div>
+
+        <div class="p-4 sm:p-6 bg-slate-50/60 overflow-x-auto">
+          <svg viewBox="0 0 820 290" class="w-full min-w-[640px] h-auto block mx-auto" role="img" aria-label="图 3：OpenAI 有外力爆破证明架构与后续审视">
+            <defs>
+              <marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+            </defs>
+
+            <!-- Step 1: Swarm -->
+            <g class="svg-node" data-tip="f3-swarm" tabindex="0">
+              <rect x="16" y="20" width="224" height="84" rx="12" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.6"/>
+              <text x="128" y="44" text-anchor="middle" font-size="12" font-weight="700" fill="#4a148c">10,000 AI 智能体协同攻关</text>
+              <text x="128" y="63" text-anchor="middle" font-size="10.5" fill="#6a1b9a">NS 耗时 88h + 17h Lean 形式化</text>
+              <text x="128" y="80" text-anchor="middle" font-size="10" fill="#7e22ce">~270万消息 · ~1300亿 Token</text>
+              <text x="128" y="95" text-anchor="middle" font-size="9.5" fill="#581c87">成本数百万美元 · 声明不领奖</text>
+            </g>
+            <line x1="240" y1="62" x2="274" y2="62" stroke="#6a1b9a" stroke-width="1.7" marker-end="url(#a3)"/>
+
+            <!-- Step 2: Vortex Construction -->
+            <g class="svg-node" data-tip="f3-vortex" tabindex="0">
+              <rect x="278" y="20" width="246" height="84" rx="12" fill="#fff7ed" stroke="#ea580c" stroke-width="1.6"/>
+              <text x="401" y="44" text-anchor="middle" font-size="12" font-weight="700" fill="#9a3412">螺旋收缩“陀螺状”涡旋构造</text>
+              <text x="401" y="63" text-anchor="middle" font-size="10.5" fill="#c2410c">基于 Córdoba–Martínez-Zoroa (2023)</text>
+              <text x="401" y="80" text-anchor="middle" font-size="10" fill="#ea580c">从静止 u₀≡0 出发向原点螺旋坍缩</text>
+              <text x="401" y="95" text-anchor="middle" font-size="9.5" fill="#9a3412">有限时间 T 速度发散 · 超 150 页</text>
+            </g>
+            <line x1="524" y1="62" x2="558" y2="62" stroke="#ea580c" stroke-width="1.7" marker-end="url(#a3)"/>
+
+            <!-- Step 3: Smooth Force -->
+            <g class="svg-node" data-tip="f3-force" tabindex="0">
+              <rect x="562" y="20" width="242" height="84" rx="12" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.6"/>
+              <text x="683" y="44" text-anchor="middle" font-size="12" font-weight="700" fill="#0d47a1">精细设计的光滑衰减外力 f</text>
+              <text x="683" y="63" text-anchor="middle" font-size="10.5" fill="#1565c0">满足克雷衰减条件且总动能有界</text>
+              <text x="683" y="80" text-anchor="middle" font-size="10" fill="#1e40af">逐点精确平衡对流/压力/粘性发散</text>
+              <text x="683" y="95" text-anchor="middle" font-size="9.5" fill="#1d4ed8">对应克雷分支 C (ℝ³) 与 D (𝕋³)</text>
+            </g>
+
+            <!-- Down Arrows to Critiques -->
+            <path d="M 401 104 L 401 136 L 210 136 L 210 162" fill="none" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#a3)"/>
+            <path d="M 683 104 L 683 136 L 610 136 L 610 162" fill="none" stroke="#dc2626" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#a3)"/>
+            <text x="410" y="130" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">随后一个多月内的两大核心学术检验</text>
+
+            <!-- Critique 1: Sept 17 -->
+            <g class="svg-node" data-tip="f3-limit" tabindex="0">
+              <rect x="16" y="166" width="384" height="104" rx="12" fill="#fef2f2" stroke="#dc2626" stroke-width="1.5"/>
+              <text x="208" y="190" text-anchor="middle" font-size="12" font-weight="700" fill="#991b1b">检验 ①：无法推广至无外力（2026年9月17日）</text>
+              <text x="208" y="210" text-anchor="middle" font-size="10.5" fill="#b91c1c">Constantin、Ignatova &amp; Vicol 预印本</text>
+              <text x="208" y="229" text-anchor="middle" font-size="10" fill="#7f1d1d">证明 OpenAI 方法无法推广到“实解析外力”情形</text>
+              <text x="208" y="247" text-anchor="middle" font-size="10" fill="#991b1b">因零外力 f≡0 是实解析的 → 无法触及纯粹无外力版本</text>
+            </g>
+
+            <!-- Critique 2: Oct 6 -->
+            <g class="svg-node" data-tip="f3-lost" tabindex="0">
+              <rect x="420" y="166" width="384" height="104" rx="12" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+              <text x="612" y="190" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">检验 ②：Lean 翻译失真风波（2026年10月6日）</text>
+              <text x="612" y="210" text-anchor="middle" font-size="10.5" fill="#b45309">Bastounis、Circelli &amp; Hansen《lost in translation》</text>
+              <text x="612" y="229" text-anchor="middle" font-size="10" fill="#78350f">逐行比对发现 Lemma 8.6（导数阶数 4 vs 5）与 Eq. 10.19 不一致</text>
+              <text x="612" y="247" text-anchor="middle" font-size="10" fill="#92400e">警示：Lean 编译通过 ≠ 语义忠实对应自然语言证明</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 bg-white">
+          <div class="rounded-xl bg-indigo-50/50 border border-indigo-100 p-4">
+            <div class="text-xs font-bold text-indigo-800 mb-1">数学原理解析</div>
+            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              构造的精妙之处在于，虽然速度场在有限时刻 $T$ 处冲向无穷大，但通过让涡旋核半径快速收缩，整个空间积分得到的总动能 $\int_{\mathbb{R}^3} |u(x,t)|^2 dx$ 仍保持一致有界，同时外力 $\mathbf{f} \in C^\infty$ 满足克雷衰减要求。
+            </p>
+            <div class="summary-svg-slot mt-2.5 rounded-lg bg-white border border-indigo-100 p-2" data-summary-svg="f3-vortex"></div>
+          </div>
+          <div class="rounded-xl bg-amber-50/80 border border-amber-200/80 p-4">
+            <div class="text-xs font-bold text-amber-900 mb-1">为什么它没有终结争论？</div>
+            <p class="text-xs sm:text-sm text-amber-950/90 leading-relaxed">
+              除了与 Buckmaster/Alpöge 的优先权与 Codex 数据争议外，学界普遍认为借助非解析光滑外力“推着流体炸掉”更像抓住了克雷题面漏洞；加之 10 月曝光的 Lean 语义偏差，学界迫切等待真正的无外力突破。
+            </p>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-200 bg-slate-50/50 p-5 sm:p-6">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <h4 class="text-sm sm:text-base font-bold text-slate-900">图 3 · 各模块深度拆解（LaTeX 公式 + 专属机制配图 + 审视细节）</h4>
+            <a href="#fig3" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 shrink-0">↑ 回到图 3</a>
+          </div>
+          <div id="details-fig3" class="grid grid-cols-1 lg:grid-cols-2 gap-5"></div>
+        </div>
+      </section>
+
+      <!-- ==================== FIG 4 ==================== -->
+      <section id="fig4" class="fig-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-bold text-emerald-700">图 4 · 2026年11月20日 重磅进展</span>
+            <h3 class="text-lg font-bold text-slate-900 mt-0.5">Alpöge &amp; Buckmaster 无外力 NS 爆破证明架构（f ≡ 0）</h3>
+          </div>
+          <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 self-start sm:self-center">79 页论文 · 60 万行 Lean 4 · 待公开数值证书</span>
+        </div>
+
+        <div class="px-5 py-3 bg-emerald-50/50 border-b border-emerald-100 text-xs sm:text-sm text-slate-700">
+          <strong>看图要点：</strong>纽约大学 Tristan Buckmaster 与 Anthropic Levent Alpöge 直击纯粹无外力版本（$\mathbf{f}\equiv 0$），采用“离散自相似数值近似 + 严格微扰理论 + Arb 区间算术 + Lean 4”四段式路线，但最关键的数值证书目前尚未上传。
+        </div>
+
+        <div class="p-4 sm:p-6 bg-slate-50/60 overflow-x-auto">
+          <svg viewBox="0 0 820 296" class="w-full min-w-[640px] h-auto block mx-auto" role="img" aria-label="图 4：Alpöge 与 Buckmaster 无外力 NS 爆破证明架构">
+            <defs>
+              <marker id="a4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+            </defs>
+
+            <!-- Top Row Pipeline -->
+            <g class="svg-node" data-tip="f4-dss" tabindex="0">
+              <rect x="16" y="22" width="184" height="90" rx="12" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.6"/>
+              <text x="108" y="45" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0d47a1">① 离散自相似数值逼近</text>
+              <text x="108" y="64" text-anchor="middle" font-size="10" fill="#1565c0">严格无外力 f ≡ 0</text>
+              <text x="108" y="80" text-anchor="middle" font-size="10" fill="#1e40af">u(x,t) 按离散比例 λⁿ 缩放</text>
+              <text x="108" y="96" text-anchor="middle" font-size="9.5" fill="#1d4ed8">高精度构造近似爆破剖面 U_app</text>
+            </g>
+            <line x1="200" y1="67" x2="224" y2="67" stroke="#1565c0" stroke-width="1.7" marker-end="url(#a4)"/>
+
+            <g class="svg-node" data-tip="f4-pert" tabindex="0">
+              <rect x="228" y="22" width="184" height="90" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="320" y="45" text-anchor="middle" font-size="11.5" font-weight="700" fill="#14532d">② 严格泛函微扰理论</text>
+              <text x="320" y="64" text-anchor="middle" font-size="10" fill="#15803d">围绕 U_app 线性化算子 L</text>
+              <text x="320" y="80" text-anchor="middle" font-size="10" fill="#166534">Newton-Kantorovich 不动点</text>
+              <text x="320" y="96" text-anchor="middle" font-size="9.5" fill="#14532d">近似解邻域 → 存在精确解</text>
+            </g>
+            <line x1="412" y1="67" x2="436" y2="67" stroke="#16a34a" stroke-width="1.7" marker-end="url(#a4)"/>
+
+            <g class="svg-node" data-tip="f4-arb" tabindex="0">
+              <rect x="440" y="22" width="178" height="90" rx="12" fill="#fff7ed" stroke="#ea580c" stroke-width="1.8" stroke-dasharray="5 3"/>
+              <text x="529" y="45" text-anchor="middle" font-size="11.5" font-weight="700" fill="#9a3412">③ Arb 区间算术验证</text>
+              <text x="529" y="64" text-anchor="middle" font-size="10" fill="#c2410c">严格封死浮点舍入误差</text>
+              <text x="529" y="80" text-anchor="middle" font-size="10" font-weight="700" fill="#dc2626">⚠ 关键缺口：证书暂未上传</text>
+              <text x="529" y="96" text-anchor="middle" font-size="9.5" fill="#9a3412">目前仅公布加密哈希值</text>
+            </g>
+            <line x1="618" y1="67" x2="642" y2="67" stroke="#6a1b9a" stroke-width="1.7" marker-end="url(#a4)"/>
+
+            <g class="svg-node" data-tip="f4-lean" tabindex="0">
+              <rect x="646" y="22" width="158" height="90" rx="12" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.6"/>
+              <text x="725" y="45" text-anchor="middle" font-size="11.5" font-weight="700" fill="#4a148c">④ Lean 4 形式化</text>
+              <text x="725" y="64" text-anchor="middle" font-size="10" fill="#6a1b9a">约 60 万行 Lean 4 代码</text>
+              <text x="725" y="80" text-anchor="middle" font-size="10" fill="#7e22ce">基于 Mathlib + 79 页论文</text>
+              <text x="725" y="96" text-anchor="middle" font-size="9.5" fill="#581c87">Claude + Codex 重度辅助</text>
+            </g>
+
+            <!-- Bottom Row: Tao Evaluation & Companion Paper -->
+            <line x1="529" y1="112" x2="529" y2="152" stroke="#475569" stroke-width="1.6" marker-end="url(#a4)"/>
+            <line x1="320" y1="112" x2="320" y2="152" stroke="#475569" stroke-width="1.6" marker-end="url(#a4)"/>
+
+            <g class="svg-node" data-tip="f4-tao" tabindex="0">
+              <rect x="16" y="156" width="788" height="120" rx="14" fill="#f8fafc" stroke="#334155" stroke-width="1.5"/>
+              <text x="410" y="180" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a">⑤ 陶哲轩（Terence Tao）2026 年 11 月权威评述与当前验证状态</text>
+
+              <rect x="34" y="194" width="242" height="66" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.2"/>
+              <text x="155" y="214" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">积极信号：策略清晰可读</text>
+              <text x="155" y="232" text-anchor="middle" font-size="10" fill="#15803d">沿着学界预期的主流路线推进</text>
+              <text x="155" y="248" text-anchor="middle" font-size="10" fill="#166534">伴随论文（含 Coiculescu）攻克无外力 Euler</text>
+
+              <rect x="290" y="194" width="242" height="66" rx="9" fill="#fef3c7" stroke="#d97706" stroke-width="1.2"/>
+              <text x="411" y="214" text-anchor="middle" font-size="11" font-weight="700" fill="#92400e">论文现状：尚未打磨完成</text>
+              <text x="411" y="232" text-anchor="middle" font-size="10" fill="#b45309">Buckmaster 坦言手稿粗糙、重度 LLM 撰写</text>
+              <text x="411" y="248" text-anchor="middle" font-size="10" fill="#92400e">因担忧再次被抢发而提前公开</text>
+
+              <rect x="546" y="194" width="240" height="66" rx="9" fill="#fee2e2" stroke="#dc2626" stroke-width="1.2"/>
+              <text x="666" y="214" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">最终关卡：等待证书与独立核验</text>
+              <text x="666" y="232" text-anchor="middle" font-size="10" fill="#b91c1c">缺少 Arb 数值数据证书暂无法复核存在性</text>
+              <text x="666" y="248" text-anchor="middle" font-size="10" fill="#991b1b">截至 11 月 22 日尚未有独立专家确认</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 bg-white">
+          <div class="rounded-xl bg-indigo-50/50 border border-indigo-100 p-4">
+            <div class="text-xs font-bold text-indigo-800 mb-1">数学原理解析</div>
+            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              Nečas–Růžička–Šverák (1996) 早已排除了一类经典连续自相似爆破，因此转向<strong>离散自相似（DSS）</strong>解——流场不必每时每刻严格自相似，而是每隔固定对数时间周期 $\ln \lambda$ 缩小并重复自身结构，再借由区间算术证明残差严格小于收缩半径。
+            </p>
+            <div class="summary-svg-slot mt-2.5 rounded-lg bg-white border border-indigo-100 p-2" data-summary-svg="f4-dss"></div>
+          </div>
+          <div class="rounded-xl bg-amber-50/80 border border-amber-200/80 p-4">
+            <div class="text-xs font-bold text-amber-900 mb-1">为什么它是“计算机辅助 + 形式化”的典范？</div>
+            <p class="text-xs sm:text-sm text-amber-950/90 leading-relaxed">
+              单靠纯手算几乎不可能写出高维非对称三维流体的精确解析解；结合 Arb 区间算术（消除浮点误差）与 Lean 4（消除逻辑跳跃），正是现代硬核 PDE 证明的前沿范式——前提是数值证书必须完整公开并经受独立复算。
+            </p>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-200 bg-slate-50/50 p-5 sm:p-6">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <h4 class="text-sm sm:text-base font-bold text-slate-900">图 4 · 各模块深度拆解（LaTeX 公式 + 专属机制配图 + 核验焦点）</h4>
+            <a href="#fig4" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 shrink-0">↑ 回到图 4</a>
+          </div>
+          <div id="details-fig4" class="grid grid-cols-1 lg:grid-cols-2 gap-5"></div>
+        </div>
+      </section>
+
+      <!-- ==================== FIG 5 ==================== -->
+      <section id="fig5" class="fig-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-bold text-emerald-700">图 5 · 终局对比与科学意义</span>
+            <h3 class="text-lg font-bold text-slate-900 mt-0.5">两大证明路线全景对照、克雷评审流程与物理学边界</h3>
+          </div>
+          <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 self-start sm:self-center">规则检验 · 物理含义 · AI 数学范式</span>
+        </div>
+
+        <div class="px-5 py-3 bg-emerald-50/50 border-b border-emerald-100 text-xs sm:text-sm text-slate-700">
+          <strong>看图要点：</strong>即使两份证明在未来全部通过严格核验，它们也并不意味着现实中的水会超光速；它们揭示的是经典连续介质模型的数学边界，并把数学研究带入“人类洞察 + AI 生成 + 形式化核验”的新纪元。
+        </div>
+
+        <div class="p-4 sm:p-6 bg-slate-50/60 overflow-x-auto">
+          <svg viewBox="0 0 820 268" class="w-full min-w-[640px] h-auto block mx-auto" role="img" aria-label="图 5：两大证明对比、克雷评审与科学意义">
+            <defs>
+              <marker id="a5" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="#475569" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+            </defs>
+
+            <!-- Left: Comparison Matrix -->
+            <g class="svg-node" data-tip="f5-cmp" tabindex="0">
+              <rect x="16" y="18" width="246" height="232" rx="14" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.6"/>
+              <text x="139" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="#1e1b4b">两条路线核心对比</text>
+
+              <rect x="30" y="54" width="218" height="84" rx="9" fill="#ffffff" stroke="#818cf8" stroke-width="1.2"/>
+              <text x="139" y="73" text-anchor="middle" font-size="11" font-weight="700" fill="#3730a3">OpenAI（9 月 8 日）</text>
+              <text x="139" y="90" text-anchor="middle" font-size="9.5" fill="#4f46e5">有光滑外力（C/D）· 150+ 页</text>
+              <text x="139" y="106" text-anchor="middle" font-size="9.5" fill="#4f46e5">螺旋陀螺奇点 · 1 万智能体</text>
+              <text x="139" y="122" text-anchor="middle" font-size="9.5" fill="#dc2626">痛点：不可推无外力 + Lean 偏差</text>
+
+              <rect x="30" y="150" width="218" height="86" rx="9" fill="#ffffff" stroke="#16a34a" stroke-width="1.3"/>
+              <text x="139" y="169" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">Alpöge &amp; Buckmaster（11 月 20 日）</text>
+              <text x="139" y="186" text-anchor="middle" font-size="9.5" fill="#15803d">纯粹无外力（f≡0）· 79 页</text>
+              <text x="139" y="202" text-anchor="middle" font-size="9.5" fill="#15803d">离散自相似 + Arb + 60万行 Lean 4</text>
+              <text x="139" y="218" text-anchor="middle" font-size="9.5" fill="#d97706">痛点：数值数据证书尚未公开</text>
+            </g>
+
+            <line x1="262" y1="134" x2="296" y2="134" stroke="#475569" stroke-width="1.7" marker-end="url(#a5)"/>
+
+            <!-- Middle: Clay Institute Process -->
+            <g class="svg-node" data-tip="f5-clay" tabindex="0">
+              <rect x="300" y="18" width="230" height="232" rx="14" fill="#fffbeb" stroke="#d97706" stroke-width="1.6"/>
+              <text x="415" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">克雷研究所正式评审关口</text>
+              <text x="415" y="61" text-anchor="middle" font-size="10" fill="#b45309">2026年9月11日官方声明：</text>
+              <text x="415" y="77" text-anchor="middle" font-size="10" font-weight="700" fill="#92400e">“表面上似乎已被解决”</text>
+              <text x="415" y="93" text-anchor="middle" font-size="10" fill="#b45309">评审过程“刻意保持从容不迫”</text>
+
+              <rect x="316" y="108" width="198" height="36" rx="8" fill="#ffffff" stroke="#fbbf24" stroke-width="1.2"/>
+              <text x="415" y="130" text-anchor="middle" font-size="10.5" font-weight="600" fill="#78350f">① 在合格同行评审期刊发表</text>
+              <rect x="316" y="152" width="198" height="36" rx="8" fill="#ffffff" stroke="#fbbf24" stroke-width="1.2"/>
+              <text x="415" y="174" text-anchor="middle" font-size="10.5" font-weight="600" fill="#78350f">② 发表后至少经过两年检验</text>
+              <rect x="316" y="196" width="198" height="38" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.3"/>
+              <text x="415" y="219" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">③ 获全球数学界普遍认可</text>
+            </g>
+
+            <line x1="530" y1="84" x2="564" y2="84" stroke="#15803d" stroke-width="1.7" marker-end="url(#a5)"/>
+            <line x1="530" y1="184" x2="564" y2="184" stroke="#6a1b9a" stroke-width="1.7" marker-end="url(#a5)"/>
+
+            <!-- Right Top: Physics Meaning -->
+            <g class="svg-node" data-tip="f5-phys" tabindex="0">
+              <rect x="568" y="18" width="236" height="108" rx="14" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.6"/>
+              <text x="686" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="#14532d">物理学意义：连续介质的极限</text>
+              <text x="686" y="63" text-anchor="middle" font-size="10" fill="#15803d">并非现实流体真的加速到无穷大</text>
+              <text x="686" y="81" text-anchor="middle" font-size="10" fill="#166534">而是尺缩至分子平均自由程 ℓ_mfp</text>
+              <text x="686" y="99" text-anchor="middle" font-size="10" font-weight="700" fill="#14532d">Kn = ℓ_mfp / L 变大 → 玻尔兹曼方程接管</text>
+            </g>
+
+            <!-- Right Bottom: AI for Math Paradigm -->
+            <g class="svg-node" data-tip="f5-ai" tabindex="0">
+              <rect x="568" y="142" width="236" height="108" rx="14" fill="#faf5ff" stroke="#7e22ce" stroke-width="1.6"/>
+              <text x="686" y="166" text-anchor="middle" font-size="12" font-weight="700" fill="#4a148c">AI 数学范式与 28 位菲尔兹奖得主</text>
+              <text x="686" y="187" text-anchor="middle" font-size="10" fill="#6b21a8">9 月 11 日《AI 在数学中的严重错位》</text>
+              <text x="686" y="205" text-anchor="middle" font-size="10" fill="#581c87">反对把未解难题当成跑分刷榜</text>
+              <text x="686" y="223" text-anchor="middle" font-size="10" font-weight="700" fill="#4a148c">机器证明 ≠ 人类数学理解的终点</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 bg-white">
+          <div class="rounded-xl bg-indigo-50/50 border border-indigo-100 p-4">
+            <div class="text-xs font-bold text-indigo-800 mb-1">数学与物理定论</div>
+            <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              克努森数 $\mathrm{Kn} = \ell_{\text{mfp}} / L$ 刻画连续介质近似的有效性。当三维 NS 解在有限时间把涡旋尺度 $L(t)$ 压到趋近零时，$\mathrm{Kn} \to \infty$，连续介质假设率先崩溃，从而在数学上精确划定了经典流体力学的适用边界。
+            </p>
+            <div class="summary-svg-slot mt-2.5 rounded-lg bg-white border border-indigo-100 p-2" data-summary-svg="f5-phys"></div>
+          </div>
+          <div class="rounded-xl bg-amber-50/80 border border-amber-200/80 p-4">
+            <div class="text-xs font-bold text-amber-900 mb-1">为什么现在仍要保持审慎？</div>
+            <p class="text-xs sm:text-sm text-amber-950/90 leading-relaxed">
+              历史上有过多次千禧年难题的“疑似解决”。在 OpenAI 证明的 Lean 语义偏差尚未完全平息、Alpöge &amp; Buckmaster 的 Arb 数值证书尚未公开复算之前，最严谨的表述依然是：<strong>史无前例的重大突破进展，正等待独立验证闭环</strong>。
+            </p>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-200 bg-slate-50/50 p-5 sm:p-6">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <h4 class="text-sm sm:text-base font-bold text-slate-900">图 5 · 各模块深度拆解（LaTeX 公式 + 专属机制配图 + 权威出处）</h4>
+            <a href="#fig5" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 shrink-0">↑ 回到图 5</a>
+          </div>
+          <div id="details-fig5" class="grid grid-cols-1 lg:grid-cols-2 gap-5"></div>
+        </div>
+      </section>
+
+      <!-- ==================== SYNERGY SUMMARY & SOURCES ==================== -->
+      <section class="bg-slate-900 text-white rounded-2xl p-6 shadow-sm">
+        <h2 class="text-lg font-bold">一眼看懂这 5 张图的逻辑主线</h2>
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 text-sm">
+          <div class="rounded-xl bg-white/10 border border-white/15 p-4">
+            <div class="text-xs font-bold text-indigo-300">图 1 · 方程从哪来</div>
+            <div class="mt-1 font-semibold">质量守恒 + 牛顿第二定律</div>
+            <p class="mt-1 text-xs text-slate-300 leading-relaxed">把连续介质流体微团的受力平衡写成偏微分方程，雷诺数决定层流还是湍流。</p>
+          </div>
+          <div class="rounded-xl bg-white/10 border border-white/15 p-4">
+            <div class="text-xs font-bold text-amber-300">图 2 · 为什么难百年</div>
+            <div class="mt-1 font-semibold">涡旋拉伸 vs 粘性耗散</div>
+            <p class="mt-1 text-xs text-slate-300 leading-relaxed">三维超临界尺度下能量不等式控不住奇点；克雷题面分出 A/B（无外力）与 C/D（可加外力）。</p>
+          </div>
+          <div class="rounded-xl bg-white/10 border border-white/15 p-4">
+            <div class="text-xs font-bold text-emerald-300">图 3 + 图 4 · 2026 双突破</div>
+            <div class="mt-1 font-semibold">从有外力到无外力爆破</div>
+            <p class="mt-1 text-xs text-slate-300 leading-relaxed">9 月 OpenAI 给出有外力陀螺奇点；11 月 20 日 Alpöge 与 Buckmaster 发布无外力离散自相似证明。</p>
+          </div>
+          <div class="rounded-xl bg-white/10 border border-white/15 p-4">
+            <div class="text-xs font-bold text-sky-300">图 5 · 最终定论</div>
+            <div class="mt-1 font-semibold">连续介质边界与严谨核验</div>
+            <p class="mt-1 text-xs text-slate-300 leading-relaxed">爆破划定了连续介质模型的物理极限；克雷奖仍需等待数值证书公开与至少两年学界检验。</p>
+          </div>
+        </div>
+
+        <div class="mt-5 pt-4 border-t border-white/15">
+          <div class="text-xs font-bold text-slate-300 mb-2">权威参考来源（均已核实）</div>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <a href="https://www.claymath.org/news/navier-stokes-announcement/" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-sky-200 transition">Clay Mathematics Institute 2026-09-11 公告 ↗</a>
+            <a href="https://www.claymath.org/wp-content/uploads/2022/06/navierstokes.pdf" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-sky-200 transition">Fefferman 克雷官方题面 PDF ↗</a>
+            <a href="https://openai.com/index/navier-stokes-solution/" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-sky-200 transition">OpenAI 2026-09-08 公告 ↗</a>
+            <a href="https://terrytao.wordpress.com/2026/11/" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-sky-200 transition">Terence Tao 2026 年 11 月博客 ↗</a>
+            <a href="https://ai-tldr.dev/releases/buckmaster-alpoge-unforced-navier-stokes-blowup/" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-sky-200 transition">AI/TLDR 无外力证明汇总 ↗</a>
+            <a href="https://emergent.sh/news/ai-models-help-prove-navier-stokes-blows-up" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-sky-200 transition">Emergent.sh 60 万行 Lean 4 报道 ↗</a>
+            <a href="https://en.wikipedia.org/wiki/Navier%E2%80%93Stokes_existence_and_smoothness" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-sky-200 transition">Wikipedia：NS 存在性与光滑性 ↗</a>
+            <a href="https://medium.com/sofias-tech-cubicle/navier-stokes-equation-solution-by-openai-isnt-what-it-seems-2600db382858" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-sky-200 transition">Lean 翻译失真论文解析 ↗</a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Corner Floating Deep-Dive Card -->
+  <aside id="corner-panel" class="corner-panel is-hidden fixed bottom-4 right-4 left-4 sm:left-auto sm:w-[490px] max-h-[78vh] z-50 bg-white/95 backdrop-blur rounded-2xl border border-indigo-200 shadow-2xl flex flex-col overflow-hidden" role="dialog" aria-label="角落节点详解">
+    <div class="px-4 py-3 border-b border-slate-200 bg-slate-50/90 flex items-start justify-between gap-2 shrink-0">
+      <div class="min-w-0">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span id="cp-badge" class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100"></span>
+          <span id="cp-eqtag" class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-white border border-slate-200 text-slate-600"></span>
+        </div>
+        <h4 id="cp-title" class="mt-1 text-sm sm:text-base font-bold text-slate-900 truncate"></h4>
+      </div>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button id="cp-jump" type="button" class="px-2 py-1 rounded-lg text-[11px] font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100">定位正文 ↓</button>
+        <button id="cp-close" type="button" aria-label="关闭" class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 font-bold text-sm">×</button>
+      </div>
+    </div>
+
+    <div id="cp-body" class="p-4 overflow-y-auto flex-1 space-y-3">
+      <div class="rounded-xl bg-slate-50 border border-slate-200/80 p-3">
+        <div class="text-xs font-bold text-slate-500 mb-1">一、大白话深讲</div>
+        <p id="cp-plain" class="text-xs sm:text-sm text-slate-800 leading-relaxed"></p>
+      </div>
+
+      <div class="rounded-xl bg-indigo-50/50 border border-indigo-200/80 p-3 space-y-2">
+        <div class="text-xs font-bold text-indigo-800">二、LaTeX 核心公式 &amp; 数学机制推演图</div>
+        <div id="cp-latex" class="bg-white border border-indigo-100 rounded-lg px-2.5 py-2 text-center overflow-x-auto"></div>
+        <div id="cp-svg" class="rounded-xl bg-white border border-indigo-100 p-1.5 overflow-hidden"></div>
+        <div id="cp-symbols" class="text-xs text-slate-700 leading-relaxed bg-white/80 rounded-lg px-2.5 py-1.5 border border-indigo-100/80"></div>
+        <p id="cp-math" class="text-xs sm:text-sm text-slate-800 leading-relaxed"></p>
+      </div>
+
+      <div class="rounded-xl bg-emerald-50/60 border border-emerald-200/80 p-3">
+        <div class="text-xs font-bold text-emerald-800 mb-1">三、关键对比 / 物理含义</div>
+        <p id="cp-compare" class="text-xs sm:text-sm text-emerald-950/90 leading-relaxed"></p>
+      </div>
+
+      <div class="rounded-xl bg-amber-50/80 border border-amber-200/80 p-3">
+        <div class="text-xs font-bold text-amber-900 mb-1">四、前沿意义与验证焦点</div>
+        <p id="cp-paper" class="text-xs sm:text-sm text-amber-950/90 leading-relaxed"></p>
+      </div>
+    </div>
+  </aside>
+
+  <script>
+    const FORMULA_SVGS = {
+      'f1-cont': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="控制体质量守恒与不可压缩散度为零示意图"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">控制体质量守恒 → 恒密度不可压缩条件 ∇·u = 0</text><rect x="20" y="34" width="110" height="70" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/><text x="75" y="64" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">控制体 Ω</text><text x="75" y="81" text-anchor="middle" font-size="9.5" fill="#1d4ed8">流入通量 = 流出通量</text><text x="148" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">⇒</text><rect x="166" y="34" width="132" height="70" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/><text x="232" y="62" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">高斯散度定理</text><text x="232" y="80" text-anchor="middle" font-size="10" fill="#b45309">∂ρ/∂t + ∇·(ρu) = 0</text><text x="316" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">ρ=常数</text><rect x="342" y="34" width="106" height="70" rx="8" fill="#1d4ed8" stroke="#1d4ed8" stroke-width="1.4"/><text x="395" y="63" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">∇·u = 0</text><text x="395" y="81" text-anchor="middle" font-size="9.5" fill="#dbeafe">无散度向量场</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#1e40af">任意点微元体积保持不变，速度场无源无汇</text></svg>`,
+      'f1-cauchy': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="柯西应力张量分解为各向同性压力与粘性偏应力"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">柯西应力张量分解：T = −pI + τ</text><rect x="14" y="32" width="104" height="72" rx="8" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/><text x="66" y="62" text-anchor="middle" font-size="11" font-weight="700" fill="#9a3412">柯西张量 T</text><text x="66" y="80" text-anchor="middle" font-size="9.5" fill="#c2410c">[3×3 对称矩阵]</text><text x="132" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">=</text><rect x="146" y="32" width="124" height="72" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/><text x="208" y="62" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">−pI (法向压力)</text><text x="208" y="80" text-anchor="middle" font-size="9.5" fill="#1d4ed8">各向同性垂直挤压</text><text x="284" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">+</text><rect x="298" y="32" width="148" height="72" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/><text x="372" y="62" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">τ (粘性偏应力)</text><text x="372" y="80" text-anchor="middle" font-size="9.5" fill="#15803d">相邻流层剪切摩擦拖拽</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#9a3412">取散度 ∇·T = −∇p + ∇·τ，代入牛顿第二定律即得柯西动量方程</text></svg>`,
+      'f1-newton': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="牛顿流体线性本构与拉普拉斯粘性项化简"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">应变率张量 S → 牛顿本构 τ → 不可压缩化简为 μΔu</text><rect x="12" y="34" width="118" height="68" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.4"/><text x="71" y="62" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e293b">应变率张量 S</text><text x="71" y="79" text-anchor="middle" font-size="9.5" fill="#475569">½(∇u + (∇u)ᵀ)</text><text x="144" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">×2μ</text><rect x="164" y="34" width="118" height="68" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/><text x="223" y="62" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532d">偏应力 τ = 2μS</text><text x="223" y="79" text-anchor="middle" font-size="9.5" fill="#15803d">∇·u = 0 消去 λ 项</text><text x="298" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">∇·</text><rect x="316" y="34" width="132" height="68" rx="8" fill="#059669" stroke="#059669" stroke-width="1.4"/><text x="382" y="62" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">∇·τ = μΔu</text><text x="382" y="79" text-anchor="middle" font-size="9.5" fill="#d1fae5">交叉偏导合并为 ∇(∇·u)=0</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#065f46">牛顿流体假设粘性应力与速度梯度成正比，水与空气均高度符合</text></svg>`,
+      'f1-ns': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="NS 方程四大力平衡与非局部压力泊松耦合"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">NS 方程四项动力学平衡与 Leray 无散投影</text><rect x="10" y="34" width="96" height="68" rx="8" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/><text x="58" y="62" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e1b4b">∂u/∂t</text><text x="58" y="79" text-anchor="middle" font-size="9.5" fill="#4338ca">局部加速度</text><text x="116" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">+</text><rect x="126" y="34" width="96" height="68" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.4"/><text x="174" y="62" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">(u·∇)u</text><text x="174" y="79" text-anchor="middle" font-size="9.5" fill="#b91c1c">非线性对流</text><text x="232" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">=</text><rect x="242" y="34" width="96" height="68" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/><text x="290" y="62" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">−∇p/ρ + f</text><text x="290" y="79" text-anchor="middle" font-size="9.5" fill="#1d4ed8">压力梯度+外力</text><text x="348" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">+</text><rect x="358" y="34" width="92" height="68" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/><text x="404" y="62" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532d">νΔu</text><text x="404" y="79" text-anchor="middle" font-size="9.5" fill="#15803d">粘性耗散</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#312e81">对两边取散度得 −Δp/ρ = ∇·((u·∇)u)，压力是全局非局部算子</text></svg>`,
+      'f1-re': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="雷诺数尺度谱：从低 Re 层流到高 Re 湍流与奇点风险"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">雷诺数 Re = UL / ν：惯性力与粘性力的无量纲比值</text><rect x="16" y="42" width="126" height="52" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/><text x="79" y="64" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532d">Re ≪ 1（蠕动流）</text><text x="79" y="81" text-anchor="middle" font-size="9.5" fill="#15803d">粘性主导 · 蜂蜜/微流控</text><line x1="142" y1="68" x2="164" y2="68" stroke="#64748b" stroke-width="1.6"/><rect x="166" y="42" width="126" height="52" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/><text x="229" y="64" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">过渡区（失稳）</text><text x="229" y="81" text-anchor="middle" font-size="9.5" fill="#b45309">涡街脱落 · 非线性放大</text><line x1="292" y1="68" x2="314" y2="68" stroke="#64748b" stroke-width="1.6"/><rect x="316" y="42" width="128" height="52" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/><text x="380" y="64" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">Re ≫ 1（强湍流）</text><text x="380" y="81" text-anchor="middle" font-size="9.5" fill="#b91c1c">惯性主导 · 逼近欧拉极限</text><text x="230" y="120" text-anchor="middle" font-size="9.5" font-weight="600" fill="#581c87">无量纲化后粘性项系数变为 1/Re：Re 越大，非线性越占上风</text></svg>`,
+      'f2-stretch': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="二维无涡旋拉伸 vs 三维涡旋拉伸正反馈"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">为什么二维已证光滑，三维却极其凶险？</text><rect x="14" y="34" width="194" height="72" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/><text x="111" y="56" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">2D 流体：(ω·∇)u ≡ 0</text><text x="111" y="74" text-anchor="middle" font-size="9.5" fill="#15803d">涡量 ω 垂直于流场平面</text><text x="111" y="90" text-anchor="middle" font-size="9.5" fill="#166534">Ladyzhenskaya 等已证全局光滑</text><text x="230" y="74" text-anchor="middle" font-size="12" font-weight="700" fill="#64748b">VS</text><rect x="252" y="34" width="194" height="72" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/><text x="349" y="56" text-anchor="middle" font-size="11" font-weight="700" fill="#991b1b">3D 流体：(ω·∇)u ≠ 0</text><text x="349" y="74" text-anchor="middle" font-size="9.5" fill="#b91c1c">涡管拉长变细 → ω² 级正反馈</text><text x="349" y="90" text-anchor="middle" font-size="9.5" fill="#dc2626">类似 dy/dt = y² 有限时间爆破</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#991b1b">角动量守恒：涡管截面积缩半，角速度翻倍，形成潜在奇点引擎</text></svg>`,
+      'f2-visc': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="能量守恒不等式与超临界尺度缺口"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">三维能量不等式的“超临界”困局</text><rect x="14" y="34" width="150" height="70" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/><text x="89" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532d">已知唯一全局守恒</text><text x="89" y="79" text-anchor="middle" font-size="9.5" fill="#15803d">‖u(t)‖₂² + 2ν∫‖∇u‖₂² ≤ ‖u₀‖₂²</text><text x="180" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">缩尺 λ</text><rect x="200" y="34" width="246" height="70" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/><text x="323" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">E(u_λ) = λ⁻¹ E(u)（超临界！）</text><text x="323" y="79" text-anchor="middle" font-size="9.5" fill="#b45309">尺度缩小 λ→∞ 时，极小能量即可撑起无穷大速度</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#92400e">能量有界挡不住局部微小区域的能量集中与速度爆破</text></svg>`,
+      'f2-ab': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="克雷分支 A 与 B：全称量词全局光滑存在性"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">克雷分支 (A)/(B)：全称量词 ∀u₀（无外力 f ≡ 0）</text><rect x="14" y="34" width="136" height="68" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/><text x="82" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">任意光滑初值 u₀</text><text x="82" y="79" text-anchor="middle" font-size="9.5" fill="#1d4ed8">∇·u₀ = 0, 快速衰减</text><text x="166" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">f ≡ 0</text><rect x="186" y="34" width="118" height="68" rx="8" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/><text x="245" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e1b4b">ℝ³ (A) / 𝕋³ (B)</text><text x="245" y="79" text-anchor="middle" font-size="9.5" fill="#4338ca">全空间或周期盒</text><text x="320" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">⇒</text><rect x="334" y="34" width="114" height="68" rx="8" fill="#1d4ed8" stroke="#1d4ed8" stroke-width="1.4"/><text x="391" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">∀t ≥ 0 光滑</text><text x="391" y="79" text-anchor="middle" font-size="9.5" fill="#dbeafe">且全局动能有界</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#1e40af">证明 A/B 必须覆盖无穷多个初值，不能有任何例外</text></svg>`,
+      'f2-cd': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="克雷分支 C 与 D：存在量词反例爆破"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">克雷分支 (C)/(D)：存在量词 ∃(u₀, f) 构造反例</text><rect x="14" y="34" width="150" height="68" rx="8" fill="#ffedd5" stroke="#ea580c" stroke-width="1.4"/><text x="89" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#9a3412">构造一对 (u₀, f)</text><text x="89" y="79" text-anchor="middle" font-size="9.5" fill="#c2410c">光滑且满足克雷衰减</text><text x="180" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">演化</text><rect x="200" y="34" width="116" height="68" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.4"/><text x="258" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">有限时间 T*</text><text x="258" y="79" text-anchor="middle" font-size="9.5" fill="#b91c1c">‖u(·,t)‖∞ → ∞</text><text x="332" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#475569">⇒</text><rect x="346" y="34" width="102" height="68" rx="8" fill="#ea580c" stroke="#ea580c" stroke-width="1.4"/><text x="397" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">不存在全局</text><text x="397" y="79" text-anchor="middle" font-size="9.5" fill="#ffedd5">光滑有界解</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#9a3412">注意：证明带外力 C/D 并不能在逻辑上否证无外力 A/B</text></svg>`,
+      'f2-bkm': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="Leray 1934、CKN 1982 与 BKM 1984 经典定理演进"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">三大经典定理将奇点逼入极小角落</text><rect x="14" y="36" width="134" height="66" rx="8" fill="#e2e8f0" stroke="#475569" stroke-width="1.4"/><text x="81" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0f172a">Leray (1934)</text><text x="81" y="79" text-anchor="middle" font-size="9.5" fill="#334155">全局弱解存在（可不光滑）</text><line x1="148" y1="69" x2="162" y2="69" stroke="#475569" stroke-width="1.5"/><rect x="164" y="36" width="134" height="66" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/><text x="231" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">CKN (1982)</text><text x="231" y="79" text-anchor="middle" font-size="9.5" fill="#1d4ed8">奇点集 𝒫¹ 测度为 0</text><line x1="298" y1="69" x2="312" y2="69" stroke="#475569" stroke-width="1.5"/><rect x="314" y="36" width="134" height="66" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/><text x="381" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532d">BKM (1984)</text><text x="381" y="79" text-anchor="middle" font-size="9.5" fill="#15803d">爆破 ⇔ ∫‖ω‖∞ dt = ∞</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#334155">即使存在奇点，也只能是极其孤立的时空点集且伴随涡量发散</text></svg>`,
+      'f3-swarm': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="OpenAI 10000 智能体协同证明算力规模"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">OpenAI 2026年9月：超大规模 AI 智能体攻关流水线</text><rect x="12" y="34" width="128" height="68" rx="8" fill="#f3e5f5" stroke="#7e22ce" stroke-width="1.4"/><text x="76" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4a148c">~10,000 智能体</text><text x="76" y="78" text-anchor="middle" font-size="9.5" fill="#6b21a8">Codex 编排 · 9月1日起</text><text x="154" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">88h</text><rect x="170" y="34" width="134" height="68" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/><text x="237" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">NS 专属探索</text><text x="237" y="78" text-anchor="middle" font-size="9.5" fill="#b45309">270万消息 / 1300亿 Token</text><text x="318" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">+17h</text><rect x="336" y="34" width="112" height="68" rx="8" fill="#6b21a8" stroke="#6b21a8" stroke-width="1.4"/><text x="392" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">150+ 页 + Lean</text><text x="392" y="78" text-anchor="middle" font-size="9.5" fill="#f3e5f5">9月5日成稿 · 8日发布</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#581c87">总计评估 6 道千禧年难题（共 3000 亿 Token），随后集中火力主攻 NS</text></svg>`,
+      'f3-vortex': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="OpenAI 螺旋收缩陀螺状涡旋奇点示意图"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">螺旋收缩“陀螺状”涡旋奇点：尺度 r(t)→0、速度 |u|→∞</text><circle cx="95" cy="70" r="36" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="4 2"/><circle cx="95" cy="70" r="22" fill="#fed7aa" stroke="#ea580c" stroke-width="1.5"/><circle cx="95" cy="70" r="8" fill="#dc2626"/><text x="95" y="122" text-anchor="middle" font-size="9.5" font-weight="600" fill="#9a3412">涡核向原点螺旋收紧</text><text x="166" y="74" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">t → T*</text><rect x="196" y="36" width="118" height="66" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.4"/><text x="255" y="62" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">峰值速度发散</text><text x="255" y="79" text-anchor="middle" font-size="9.5" fill="#b91c1c">‖u(·,t)‖∞ → ∞</text><text x="328" y="74" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">但</text><rect x="342" y="36" width="106" height="66" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/><text x="395" y="62" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532d">总动能有界</text><text x="395" y="79" text-anchor="middle" font-size="9.5" fill="#15803d">∫|u|² dx &lt; E</text><text x="320" y="122" text-anchor="middle" font-size="9.5" font-weight="600" fill="#c2410c">涡核体积收缩速度压过速度平方增长，满足有限能量要求</text></svg>`,
+      'f3-force': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="光滑衰减外力 f 精确平衡方程各项"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">光滑衰减外力 f(x,t) 反向定制以精确满足 NS 方程</text><rect x="14" y="36" width="144" height="66" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/><text x="86" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">预先设计奇点流场 u</text><text x="86" y="79" text-anchor="middle" font-size="9.5" fill="#1d4ed8">u₀ ≡ 0，在 T* 处爆破</text><text x="174" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">代入</text><rect x="192" y="36" width="136" height="66" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/><text x="260" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">反解外力项 f</text><text x="260" y="79" text-anchor="middle" font-size="9.5" fill="#b45309">f = ∂ₜu + (u·∇)u + ∇p − νΔu</text><text x="342" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">核验</text><rect x="360" y="36" width="88" height="66" rx="8" fill="#1565c0" stroke="#1565c0" stroke-width="1.4"/><text x="404" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">f ∈ C∞</text><text x="404" y="79" text-anchor="middle" font-size="9.5" fill="#dbeafe">衰减达标</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#1e40af">难点在于让对流、压力与粘性的发散项相互抵消，使 f 保持光滑有界</text></svg>`,
+      'f3-limit': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="光滑外力与实解析外力的本质鸿沟"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">Constantin–Ignatova–Vicol (2026-09-17) 局限性边界</text><rect x="14" y="36" width="150" height="66" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/><text x="89" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532d">C∞ 光滑外力（允许）</text><text x="89" y="79" text-anchor="middle" font-size="9.5" fill="#15803d">允许局部紧支平滑截断</text><text x="190" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#dc2626">✕ 无法跨过</text><rect x="228" y="36" width="218" height="66" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/><text x="337" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">实解析外力 C^ω（含零外力 f ≡ 0）</text><text x="337" y="79" text-anchor="middle" font-size="9.5" fill="#b91c1c">解析刚性阻断 OpenAI 构造方案</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#991b1b">因此 OpenAI 的 9 月方法无法用来解决真正的无外力 NS 问题</text></svg>`,
+      'f3-lost': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="Lean 自动形式化翻译失真示意图"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">《Navier-Stokes lost in translation》(2026-10-06) 审计发现</text><rect x="14" y="34" width="156" height="68" rx="8" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/><text x="92" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e1b4b">自然语言论文声称</text><text x="92" y="78" text-anchor="middle" font-size="9.5" fill="#4338ca">Lemma 8.6：需多 4 阶导数</text><text x="200" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#dc2626">≠ 不等价</text><rect x="234" y="34" width="212" height="68" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/><text x="340" y="60" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">Lean 形式化实际证明</text><text x="340" y="78" text-anchor="middle" font-size="9.5" fill="#b45309">实需 5 阶导数（更弱）· Eq. 10.19 偏离</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#92400e">Lean 只核验代码内部自洽，不保证代码与论文表述语义一致</text></svg>`,
+      'f4-dss': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="离散自相似 DSS 爆破剖面按离散比例重复收缩"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">离散自相似（DSS）爆破：按离散比例 λⁿ 周期自相似缩放</text><rect x="14" y="34" width="110" height="68" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/><text x="69" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">尺度 L₀</text><text x="69" y="79" text-anchor="middle" font-size="9.5" fill="#1d4ed8">时刻 T* − Δt</text><text x="142" y="72" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">×λ⁻¹</text><rect x="162" y="42" width="110" height="52" rx="8" fill="#93c5fd" stroke="#1d4ed8" stroke-width="1.4"/><text x="217" y="64" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">尺度 L₀/λ</text><text x="217" y="80" text-anchor="middle" font-size="9.5" fill="#1e40af">速度放大 λ 倍</text><text x="290" y="72" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">×λ⁻ⁿ</text><rect x="310" y="48" width="136" height="40" rx="8" fill="#dc2626" stroke="#dc2626" stroke-width="1.4"/><text x="378" y="66" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">t → T* 奇点爆破</text><text x="378" y="81" text-anchor="middle" font-size="9.5" fill="#fee2e2">完全无外力 f ≡ 0</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#1e40af">绕开 1996 年连续自相似禁行定理，在离散周期对数时间中构造爆破</text></svg>`,
+      'f4-pert': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="微扰理论与不动点球内精确解存在性"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">严格微扰理论：从数值近似解 U_app 锁定精确解 U*</text><circle cx="110" cy="68" r="34" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6" stroke-dasharray="4 2"/><circle cx="102" cy="68" r="4.5" fill="#1d4ed8"/><text x="102" y="56" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">U_app</text><circle cx="122" cy="74" r="4.5" fill="#dc2626"/><text x="124" y="90" text-anchor="middle" font-size="9" font-weight="700" fill="#991b1b">精确解 U*</text><text x="172" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">若满足</text><rect x="200" y="34" width="246" height="68" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.4"/><text x="323" y="58" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532d">‖L⁻¹‖ · ‖残差 R(U_app)‖ ≪ 收缩半径 δ</text><text x="323" y="78" text-anchor="middle" font-size="9.5" fill="#15803d">Banach / Newton-Kantorovich 定理保证</text><text x="323" y="93" text-anchor="middle" font-size="9.5" fill="#166534">球 B(U_app, δ) 内必存在唯一精确爆破解 U*</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#166534">把无限维非线性 PDE 存在性归约为有限个可严格验证的不等式</text></svg>`,
+      'f4-arb': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="Arb 区间算术封死误差边界与当前缺失的数值证书"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">Arb 区间算术验证：用严格区间 [a, b] 取代普通浮点数</text><rect x="14" y="34" width="136" height="68" rx="8" fill="#ffedd5" stroke="#ea580c" stroke-width="1.4"/><text x="82" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#9a3412">高精度数值剖面</text><text x="82" y="79" text-anchor="middle" font-size="9.5" fill="#c2410c">普通浮点有舍入误差</text><text x="166" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">Arb</text><rect x="184" y="34" width="128" height="68" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/><text x="248" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532d">球算术 [m ± r]</text><text x="248" y="79" text-anchor="middle" font-size="9.5" fill="#15803d">每步严格追踪误差上界</text><text x="326" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#dc2626">待补</text><rect x="342" y="34" width="106" height="68" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4 2"/><text x="395" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">数值证书</text><text x="395" y="79" text-anchor="middle" font-size="9.5" fill="#b91c1c">暂仅公布哈希</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#b91c1c">未公开证书前，外界尚无法独立复算最核心的残差与逆算子界</text></svg>`,
+      'f4-lean': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="60 万行 Lean 4 与 Mathlib 形式化验证架构"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">79 页自然语言手稿 + 60 万行 Lean 4 / Mathlib 形式化</text><rect x="14" y="34" width="124" height="68" rx="8" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/><text x="76" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e1b4b">Claude + Codex</text><text x="76" y="79" text-anchor="middle" font-size="9.5" fill="#4338ca">辅助起草与自动形式化</text><text x="154" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">生成</text><rect x="172" y="34" width="134" height="68" rx="8" fill="#f3e5f5" stroke="#7e22ce" stroke-width="1.4"/><text x="239" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4a148c">~600,000 行 Lean 4</text><text x="239" y="79" text-anchor="middle" font-size="9.5" fill="#6b21a8">构建在 Mathlib 之上</text><text x="322" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">核验</text><rect x="340" y="34" width="108" height="68" rx="8" fill="#4a148c" stroke="#4a148c" stroke-width="1.4"/><text x="394" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">内核逻辑自洽</text><text x="394" y="79" text-anchor="middle" font-size="9.5" fill="#f3e5f5">仍需审定义忠实度</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#581c87">Lean 代码让机器可检查推理链条，避免盲信 AI 撰写的粗糙长文</text></svg>`,
+      'f4-tao': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="陶哲轩评价的三层评估漏斗"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">陶哲轩评估框架：战略清晰 → 文本待润色 → 证书待复核</text><rect x="14" y="36" width="132" height="64" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/><text x="80" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532d">① 战略路线 ✓</text><text x="80" y="79" text-anchor="middle" font-size="9.5" fill="#15803d">人类可读 · 符合预期</text><text x="158" y="70" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">→</text><rect x="170" y="36" width="132" height="64" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/><text x="236" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">② 论文专业化 ⏳</text><text x="236" y="79" text-anchor="middle" font-size="9.5" fill="#b45309">需重写为规范论文</text><text x="314" y="70" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">→</text><rect x="326" y="36" width="122" height="64" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.4"/><text x="387" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#991b1b">③ 独立复核 ⏳</text><text x="387" y="79" text-anchor="middle" font-size="9.5" fill="#b91c1c">等待 Arb 证书发布</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#334155">数学界正高度关注，但严格遵循“未复核不盖章”的黄金准则</text></svg>`,
+      'f5-cmp': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="两份 2026 爆破证明的目标覆盖对比"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">两份证明在克雷问题版图上的精确落点</text><rect x="16" y="34" width="204" height="70" rx="8" fill="#ffedd5" stroke="#ea580c" stroke-width="1.4"/><text x="118" y="57" text-anchor="middle" font-size="10.5" font-weight="700" fill="#9a3412">OpenAI（9月8日）</text><text x="118" y="74" text-anchor="middle" font-size="9.5" fill="#c2410c">落点：分支 C/D（光滑外力）</text><text x="118" y="90" text-anchor="middle" font-size="9.5" fill="#9a3412">不决定无外力分支 A/B</text><text x="230" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">VS</text><rect x="242" y="34" width="204" height="70" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/><text x="344" y="57" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532d">Alpöge &amp; Buckmaster（11月20日）</text><text x="344" y="74" text-anchor="middle" font-size="9.5" fill="#15803d">落点：无外力 f ≡ 0 爆破</text><text x="344" y="90" text-anchor="middle" font-size="9.5" fill="#14532d">若成立将同时否证 A/B</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#312e81">两者共同指向“三维 NS 存在有限时间爆破”，但无外力版本含金量更高</text></svg>`,
+      'f5-clay': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="克雷千禧年奖评审三步流程"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">克雷数学研究所 $1M 奖金官方认证三道门槛</text><rect x="14" y="36" width="128" height="64" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/><text x="78" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">门槛 ① 正式发表</text><text x="78" y="79" text-anchor="middle" font-size="9.5" fill="#b45309">不接受直接投稿</text><text x="154" y="70" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">→</text><rect x="166" y="36" width="128" height="64" rx="8" fill="#ffedd5" stroke="#ea580c" stroke-width="1.4"/><text x="230" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#9a3412">门槛 ② 两年检验</text><text x="230" y="79" text-anchor="middle" font-size="9.5" fill="#c2410c">发表满两年沉淀</text><text x="306" y="70" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">→</text><rect x="318" y="36" width="128" height="64" rx="8" fill="#15803d" stroke="#15803d" stroke-width="1.4"/><text x="382" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">门槛 ③ 学界共识</text><text x="382" y="79" text-anchor="middle" font-size="9.5" fill="#dcfce7">科学委员会裁定</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#92400e">参考庞加莱猜想：2002-2003 贴出预印本，直至 2010 年才正式授奖</text></svg>`,
+      'f5-phys': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="克努森数决定连续介质 NS 方程的物理适用边界"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">尺度收缩与克努森数 Kn = ℓ_mfp / L：物理模型接力</text><rect x="14" y="36" width="134" height="64" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/><text x="81" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532d">宏观尺度 L ≫ ℓ_mfp</text><text x="81" y="79" text-anchor="middle" font-size="9.5" fill="#15803d">Kn ≪ 0.01 · NS 极精准</text><text x="162" y="70" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">爆破</text><rect x="178" y="36" width="130" height="64" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/><text x="243" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400e">微纳尺度 L ~ ℓ_mfp</text><text x="243" y="79" text-anchor="middle" font-size="9.5" fill="#b45309">连续介质假设失效</text><text x="322" y="70" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">接管</text><rect x="336" y="36" width="112" height="64" rx="8" fill="#1e3a8a" stroke="#1e3a8a" stroke-width="1.4"/><text x="392" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">分子动力学</text><text x="392" y="79" text-anchor="middle" font-size="9.5" fill="#dbeafe">玻尔兹曼方程</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#166534">爆破解证明的是“数学模型的边界”，而非自然界出现真实无穷大</text></svg>`,
+      'f5-ai': `<svg viewBox="0 0 460 138" class="w-full h-auto block" role="img" aria-label="AI 辅助数学的三要素闭环"><text x="10" y="16" font-size="10.5" font-weight="700" fill="#334155">2026 后 AI 数学研究的新黄金三角</text><rect x="14" y="36" width="130" height="64" rx="8" fill="#f3e5f5" stroke="#7e22ce" stroke-width="1.4"/><text x="79" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4a148c">前沿 AI 搜索/起草</text><text x="79" y="79" text-anchor="middle" font-size="9.5" fill="#6b21a8">暴力探索复杂估计</text><text x="156" y="70" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">+</text><rect x="168" y="36" width="130" height="64" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.4"/><text x="233" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e3a8a">Lean 4 + Arb 核验</text><text x="233" y="79" text-anchor="middle" font-size="9.5" fill="#1d4ed8">机器检查逻辑与区间</text><text x="310" y="70" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">+</text><rect x="322" y="36" width="124" height="64" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/><text x="384" y="61" text-anchor="middle" font-size="10.5" font-weight="700" fill="#14532d">人类概念消化</text><text x="384" y="79" text-anchor="middle" font-size="9.5" fill="#15803d">审定义忠实 · 提炼洞察</text><text x="230" y="124" text-anchor="middle" font-size="9.5" font-weight="600" fill="#581c87">28 位菲尔兹奖得主呼吁：数学追求的是人类理解，而非跑分刷榜</text></svg>`
+    };
+
+    const TIPS = {
+      'f1-cont': {
+        badge: '图 1 · 第一性原理', eqTag: '质量守恒', title: '连续介质假设与不可压缩条件',
+        latex: '\\frac{\\partial \\rho}{\\partial t} + \\nabla \\cdot (\\rho \\mathbf{u}) = 0 \\;\\xrightarrow{\\rho = \\text{const}}\\; \\nabla \\cdot \\mathbf{u} = \\frac{\\partial u_x}{\\partial x} + \\frac{\\partial u_y}{\\partial y} + \\frac{\\partial u_z}{\\partial z} = 0',
+        plain: '虽然水和空气微观上由离散分子构成，但在宏观尺度下我们把它们看成连续光滑的“果冻”。对空间中任意一小块固定区域（控制体），里面质量的增加率必须等于流进减去流出的净质量；当流体像水一样几乎不可压缩（密度 $\\rho$ 恒定）时，流入体积就必须严格等于流出体积，即速度场散度为零。',
+        symbols: '• $\\rho$：流体密度；$\\mathbf{u}=(u_x,u_y,u_z)$：三维速度向量场；$\\nabla\\cdot\\mathbf{u}$：速度散度，衡量微元体积膨胀率。',
+        math: '由高斯散度定理把面积分 $\\oint_{\\partial\\Omega}\\rho\\mathbf{u}\\cdot\\mathbf{n}\\,dS$ 转化为体积分 $\\int_\\Omega \\nabla\\cdot(\\rho\\mathbf{u})\\,dV$，结合控制体 $\\Omega$ 的任意性即得微分形式连续性方程。',
+        compare: '区别于可压缩气体动力学（需额外联立状态方程与能量方程）。不可压缩近似对水以及低马赫数（$\\mathrm{Ma} < 0.3$）空气流动高度精准，也是克雷千禧年难题的标准设定。',
+        paper: '一旦出现有限时间爆破，尺度被压缩到分子平均自由程量级，恰恰是这条“连续介质假设”最先在物理上失效。'
+      },
+      'f1-cauchy': {
+        badge: '图 1 · 力学核心', eqTag: '牛顿第二定律', title: '柯西动量方程与应力张量分解',
+        latex: '\\rho\\left(\\frac{\\partial \\mathbf{u}}{\\partial t} + (\\mathbf{u}\\cdot\\nabla)\\mathbf{u}\\right) = \\nabla\\cdot\\mathbf{T} + \\rho\\mathbf{f}, \\qquad \\mathbf{T} = -p\\mathbf{I} + \\boldsymbol{\\tau}',
+        plain: '追踪一小团随波逐流的流体微团写牛顿第二定律 $ma = F$：左边是跟着流体跑的“物质加速度”（包含原地流速变快，以及流到下游更快区域带来的对流加速）；右边是体积力（如重力）加上周围流体贴着表面推拉它的接触力——用柯西应力张量 $\\mathbf{T}$ 统一打包。',
+        symbols: '• $\\frac{D\\mathbf{u}}{Dt} = \\partial_t\\mathbf{u} + (\\mathbf{u}\\cdot\\nabla)\\mathbf{u}$：物质导数；$\\mathbf{T}$：$3\\times 3$ 柯西应力张量；$p$：热力学压力；$\\boldsymbol{\\tau}$：粘性偏应力张量。',
+        math: '角动量守恒保证柯西应力张量对称（$\\mathbf{T}=\\mathbf{T}^\\top$）。将其拆分为各向同性的法向静压 $-p\\mathbf{I}$ 与描述内部摩擦的偏应力 $\\boldsymbol{\\tau}$ 后，对表面力取散度得 $-\\nabla p + \\nabla\\cdot\\boldsymbol{\\tau}$。',
+        compare: '柯西动量方程对所有连续介质（牛顿流体、非牛顿流体如血液/牙膏、甚至弹性固体）都成立，此时未知量多于方程数，尚未封闭。',
+        paper: '任何广义流体模型（如幂律非牛顿流体、粘弹性流体）的推导都从这里分叉，只需替换 $\\boldsymbol{\\tau}$ 的本构关系即可。'
+      },
+      'f1-newton': {
+        badge: '图 1 · 本构封闭', eqTag: '斯托克斯线性假设', title: '牛顿流体本构关系与拉普拉斯化简',
+        latex: '\\boldsymbol{\\tau} = \\mu\\big(\\nabla\\mathbf{u} + (\\nabla\\mathbf{u})^\\top\\big) + \\lambda(\\nabla\\cdot\\mathbf{u})\\mathbf{I} \\;\\xrightarrow{\\nabla\\cdot\\mathbf{u}=0}\\; \\nabla\\cdot\\boldsymbol{\\tau} = \\mu\\Delta\\mathbf{u}',
+        plain: '流体静止时没有粘性摩擦；只有当相邻两层流体跑得一快一慢（存在速度梯度）时才会互相拖拽。牛顿流体假设“摩擦力大小和速度梯度成正比”，比例系数就是粘度 $\\mu$。把它代回柯西方程，借助 $\\nabla\\cdot\\mathbf{u}=0$，一长串偏导数奇迹般地折叠成简洁的拉普拉斯算子 $\\mu\\Delta\\mathbf{u}$。',
+        symbols: '• $\\mu$：第一粘性系数（动力粘度）；$\\lambda$：第二粘性系数（与体积粘度相关，斯托克斯近似 $\\lambda \\approx -\\frac{2}{3}\\mu$）；$\\Delta = \\nabla^2$：拉普拉斯算子。',
+        math: '以 $x$ 方向为例：$\\nabla\\cdot\\boldsymbol{\\tau}_x = \\mu(\\partial_{xx}u + \\partial_{yy}u + \\partial_{zz}u) + \\mu\\partial_x(\\partial_x u + \\partial_y v + \\partial_z w) = \\mu\\Delta u + \\mu\\partial_x(0) = \\mu\\Delta u$。',
+        compare: '若去掉粘性项（$\\mu=0$），方程退化为无粘欧拉方程（Euler Equations）。粘性是流体内部的“阻尼器”，因此证明带粘性 NS 爆破比无粘 Euler 爆破难上几个量级。',
+        paper: '2026 年 11 月 Alpöge、Buckmaster 与 Matei Coiculescu 同期发布了无外力三维 Euler 爆破的伴随论文，正是这条技术脉络的印证。'
+      },
+      'f1-ns': {
+        badge: '图 1 · 最终方程', eqTag: '非线性非局部 PDE', title: '三维不可压缩纳维-斯托克斯方程',
+        latex: '\\frac{\\partial \\mathbf{u}}{\\partial t} + (\\mathbf{u}\\cdot\\nabla)\\mathbf{u} = -\\frac{1}{\\rho}\\nabla p + \\nu\\Delta\\mathbf{u} + \\mathbf{f}, \\qquad -\\frac{1}{\\rho}\\Delta p = \\nabla\\cdot\\big((\\mathbf{u}\\cdot\\nabla)\\mathbf{u}\\big)',
+        plain: '两侧同除以密度 $\\rho$，得到最经典的不可压缩 NS 方程。每一刻的流体运动，都是“惯性对流（制造混乱）”、“压力梯度（瞬时协调全空间不挤压）”、“粘性耗散（抚平剧烈突变）”和“外部体积力”四者精密博弈的结果。',
+        symbols: '• $\\nu = \\mu/\\rho > 0$：运动粘度；$p$：压力场（实为维持 $\\nabla\\cdot\\mathbf{u}=0$ 的拉格朗日乘子）；$\\mathbf{f}(x,t)$：外力场。',
+        math: '对动量方程两边取散度并利用 $\\nabla\\cdot\\mathbf{u}=0$，立刻得到压力泊松方程 $-\\Delta p/\\rho = \\nabla\\cdot((\\mathbf{u}\\cdot\\nabla)\\mathbf{u}) - \\nabla\\cdot\\mathbf{f}$。这意味着压力由全空间速度场的奇异积分决定，方程具有强烈的非局部性。',
+        compare: '与线性热传导方程 $\\partial_t u = \\nu\\Delta u$（永远瞬间变光滑）相比，正是二次非线性对流项 $(\\mathbf{u}\\cdot\\nabla)\\mathbf{u}$ 与非局部压力项，让 NS 方程成为数学界最硬的骨头之一。',
+        paper: '工程上每天都在用 CFD（计算流体力学）数值求解它来造飞机、预报天气，但在纯数学上，直到 2026 年人们仍在追问它是否总有光滑解。'
+      },
+      'f1-re': {
+        badge: '图 1 · 无量纲相变', eqTag: '惯性 / 粘性比', title: '无量纲化与雷诺数 Re',
+        latex: '\\mathrm{Re} = \\frac{U L}{\\nu}, \\qquad \\frac{\\partial \\tilde{\\mathbf{u}}}{\\partial \\tilde{t}} + (\\tilde{\\mathbf{u}}\\cdot\\tilde{\\nabla})\\tilde{\\mathbf{u}} = -\\tilde{\\nabla}\\tilde{p} + \\frac{1}{\\mathrm{Re}}\\tilde{\\Delta}\\tilde{\\mathbf{u}}',
+        plain: '把长度用特征尺度 $L$、速度用特征速度 $U$ 无量纲化后，方程里所有物理参数都浓缩成唯一一个数——雷诺数 $\\mathrm{Re}$。蜂蜜倒出来像丝绸（$\\mathrm{Re}$ 极小，粘性说了算），飞机翼尖拖出狂暴涡流（$\\mathrm{Re}$ 极大，惯性说了算）。',
+        symbols: '• $U, L$：流动的特征速度与特征长度；$\\nu$：运动粘度；$\\frac{1}{\\mathrm{Re}}$：无量纲粘性项前面的系数。',
+        math: '当 $\\mathrm{Re} \\to \\infty$（等价于 $\\nu \\to 0$ 零粘性极限），粘性刹车项系数趋于零，NS 方程形式上逼近无粘欧拉方程，极易产生边界层分离、湍流级联乃至奇点倾向。',
+        compare: '低雷诺数下可用线性斯托克斯方程精确求解；高雷诺数下小尺度结构层出不穷，直接数值模拟（DNS）网格数随 $\\mathrm{Re}^{9/4}$ 爆炸。',
+        paper: '雷诺数标度律是理解为什么爆破构造往往先把流体局部推向极高有效雷诺数状态的关键直觉。'
+      },
+      'f2-stretch': {
+        badge: '图 2 · 奇点引擎', eqTag: '涡量方程', title: '三维涡旋拉伸（Vortex Stretching）',
+        latex: '\\frac{\\partial \\boldsymbol{\\omega}}{\\partial t} + (\\mathbf{u}\\cdot\\nabla)\\boldsymbol{\\omega} = (\\boldsymbol{\\omega}\\cdot\\nabla)\\mathbf{u} + \\nu\\Delta\\boldsymbol{\\omega} + \\nabla\\times\\mathbf{f}, \\qquad \\boldsymbol{\\omega} = \\nabla\\times\\mathbf{u}',
+        plain: '想象花样滑冰运动员把张开的双臂收紧，转速瞬间飙升。三维流体里的涡旋管一旦沿着轴向被拉长、截面积变细，角动量守恒会迫使局部旋转速度（涡量 $\\boldsymbol{\\omega}$）疯狂放大；更可怕的是，变强的涡量又会进一步拉伸自己，形成类似 $y\' = y^2$ 的有限时间爆炸正反馈。',
+        symbols: '• $\\boldsymbol{\\omega} = \\nabla\\times\\mathbf{u}$：涡量（局部旋转角速度的两倍）；$(\\boldsymbol{\\omega}\\cdot\\nabla)\\mathbf{u}$：三维独有的涡旋拉伸项。',
+        math: '在二维平面流中，$\\boldsymbol{\\omega}$ 永远垂直于速度所在平面，故 $(\\boldsymbol{\\omega}\\cdot\\nabla)\\mathbf{u} \\equiv 0$，涡量沿流线只衰减不放大；三维空间释放了这一项，导致高阶导数估计全面失控。',
+        compare: '二维 NS 方程的全局光滑性已由 Leray、Ladyzhenskaya 等在 20 世纪彻底解决；三维的悬念完全系于涡旋拉伸能否战胜粘性耗散。',
+        paper: '无论是 2026 年 9 月的陀螺状奇点还是 11 月的离散自相似爆破，本质都是在三维空间中精心编排极限涡旋拉伸。'
+      },
+      'f2-visc': {
+        badge: '图 2 · 刹车与困局', eqTag: '超临界标度', title: '粘性耗散与能量不等式的超临界性',
+        latex: '\\frac{1}{2}\\|\\mathbf{u}(t)\\|_{L^2}^2 + \\nu \\int_0^t \\|\\nabla\\mathbf{u}(s)\\|_{L^2}^2\\,ds \\le \\frac{1}{2}\\|\\mathbf{u}_0\\|_{L^2}^2, \\qquad E(\\mathbf{u}_\\lambda) = \\lambda^{-1} E(\\mathbf{u})',
+        plain: '虽然我们知道流体总动能永远不会凭空变大（还会被粘性不断摩擦消耗掉），但在三维空间里，这条守恒律竟然管不住爆破！因为只要把能量集中到一个极微小、不断缩小的空间点里，哪怕总能量很小，局部速度也可以冲向无穷大。',
+        symbols: '• $\\mathbf{u}_\\lambda(x,t) = \\lambda\\mathbf{u}(\\lambda x, \\lambda^2 t)$：NS 方程的精确标度不变变换；$E(\\mathbf{u}) = \\frac{1}{2}\\int_{\\mathbb{R}^3}|\\mathbf{u}|^2 dx$：总动能。',
+        math: '在标度变换下，三维动能满足 $E(\\mathbf{u}_\\lambda) = \\lambda^{2-3}E(\\mathbf{u}) = \\lambda^{-1}E(\\mathbf{u})$。当 $\\lambda\\to\\infty$（聚焦到极小尺度）时，所需动能反而趋近于 0！PDE 理论称之为“能量超临界（Energy-Supercritical）”。',
+        compare: '在二维中 $E(\\mathbf{u}_\\lambda) = \\lambda^{2-2}E(\\mathbf{u}) = E(\\mathbf{u})$ 是临界守恒的，所以能量足以锁死奇点；三维多出一维空间，直接打破了能量屏障。',
+        paper: '陶哲轩曾用“超临界屏障”解释为什么所有基于传统能量泛函的方法在三维 NS 面前全部撞墙。'
+      },
+      'f2-ab': {
+        badge: '图 2 · 克雷正向分支', eqTag: '全称量词 ∀u₀', title: '克雷分支 (A) 与 (B)：无外力全局光滑存在性',
+        latex: '\\forall \\mathbf{u}_0 \\in C^\\infty\\;(\\nabla\\cdot\\mathbf{u}_0=0),\\; \\mathbf{f}\\equiv 0 \\;\\Longrightarrow\\; \\exists\\,(\\mathbf{u}, p)\\in C^\\infty(\\Omega\\times[0,\\infty)),\\; \\sup_{t\\ge 0}\\int_\\Omega |\\mathbf{u}|^2 dx < \\infty',
+        plain: '这是乐观派的目标：不加任何外力（$\\mathbf{f}\\equiv 0$），在全空间 $\\mathbb{R}^3$（分支 A）或周期立方体 $\\mathbb{T}^3$（分支 B）里，证明无论你给流体什么光滑、有限能量的初始状态，它永远都会安分守己地保持光滑，绝不会自己炸出奇点。',
+        symbols: '• $\\Omega = \\mathbb{R}^3$ 对应分支 (A)，$\\Omega = \\mathbb{T}^3 = \\mathbb{R}^3/\\mathbb{Z}^3$ 对应分支 (B)；$C^\\infty$：无限次连续可微（光滑）。',
+        math: '全称量词 $\\forall \\mathbf{u}_0$ 决定了要证明 (A) 或 (B) 必须建立适用于一切初值的普适先验估计；而要否证它们，只需要找到一个无外力爆破反例。',
+        compare: '与分支 (C)/(D) 最大的区别在于：A/B 严格要求 $\\mathbf{f} \\equiv 0$（零外力），而 C/D 允许附加满足衰减条件的光滑外力。',
+        paper: 'OpenAI 2026 年 9 月的结果并未决定 A/B；而 11 月 20 日 Alpöge 与 Buckmaster 的无外力爆破若最终通过验证，将直接否证 A/B。'
+      },
+      'f2-cd': {
+        badge: '图 2 · 克雷反例分支', eqTag: '存在量词 ∃(u₀,f)', title: '克雷分支 (C) 与 (D)：允许光滑外力的有限时间爆破',
+        latex: '\\exists\\, \\mathbf{u}_0 \\in C^\\infty,\\; \\mathbf{f} \\in C^\\infty\\;(\\text{满足衰减条件}) \\;\\Longrightarrow\\; \\nexists\\, \\text{全局光滑且能量有界解 } (\\mathbf{u}, p)',
+        plain: '这是反例派的目标：只要在全空间（分支 C）或周期盒（分支 D）里，构造出一组符合官方衰减要求的光滑初始速度 $\\mathbf{u}_0$ 和光滑外力 $\\mathbf{f}$，证明方程在有限时间内必然失去光滑性（或能量失控），就满足了克雷官方题面的获奖条件。',
+        symbols: '• 官方要求 $\\mathbf{f}(x,t)$ 及其任意阶时空偏导数满足快速衰减条件：$|\\partial_x^\\alpha \\partial_t^m \\mathbf{f}(x,t)| \\le C_{\\alpha m K}(1+|x|+t)^{-K}$。',
+        math: '克雷 2000 年官方 PDF 明确写明：解决 A、B、C、D 四个命题中的<strong>任意一个</strong>即视为解决该千禧年难题。',
+        compare: '有外力爆破虽然符合官方字面规则，但许多数学家（如《科学美国人》援引的专家评论）认为允许外力驱动属于题面“技术漏洞”，无法回答流体自身会不会自发爆破。',
+        paper: 'OpenAI 在 2026 年 9 月 8 日宣称证明的正是分支 C 与 D（从静止 $\\mathbf{u}_0\\equiv 0$ 出发，加光滑衰减外力）。'
+      },
+      'f2-bkm': {
+        badge: '图 2 · 历史基石', eqTag: '三大经典定理', title: 'Leray (1934)、CKN (1982) 与 BKM (1984)',
+        latex: '\\mathcal{P}^1(\\mathcal{S}) = 0 \\quad (\\text{CKN 1982}); \\qquad \\text{在 } T^* \\text{ 爆破} \\iff \\int_0^{T^*} \\|\\boldsymbol{\\omega}(t)\\|_{L^\\infty}\\,dt = \\infty \\quad (\\text{BKM 1984})',
+        plain: '在 2026 年之前，数学家虽没完全攻克难题，但已经把潜在奇点逼到了死角：Leray 证明了“允许不光滑的弱解”永远存在；CKN 证明奇点即使存在，在四维时空里小到连一条一维曲线都铺不满；BKM 证明只要涡量最大值的积分不发散，解就绝不会爆破。',
+        symbols: '• $\\mathcal{S}$：潜在的时空奇点集；$\\mathcal{P}^1$：一维抛物 Hausdorff 测度；$\\|\\boldsymbol{\\omega}(t)\\|_{L^\\infty}$：时刻 $t$ 全空间的最大涡量模长。',
+        math: 'BKM 准则把“检查所有阶导数是否发散”极大地简化为只需盯住涡量的 $L^\\infty$ 模时间积分，成为后来数值模拟与爆破构造的核心判据。',
+        compare: 'Leray 弱解不保证唯一性与光滑性（Buckmaster 与 Vicol 曾在 2019 年证明更弱意义下解的非唯一性，并因此享誉学界）。',
+        paper: '正是 Tristan Buckmaster 此前在流体 PDE 奇点与弱解领域的深厚积累，为 2026 年的攻关奠定了人机协同基础。'
+      },
+      'f3-swarm': {
+        badge: '图 3 · AI 算力攻关', eqTag: '1 万智能体集群', title: 'OpenAI 10,000 AI 智能体 88 小时协同攻关',
+        latex: 'N_{\\text{agents}} \\approx 10^4, \\quad T_{\\text{proof}} = 88\\text{ h} + 17\\text{ h (Lean)}, \\quad \\text{Tokens}_{\\text{NS}} \\approx 1.3 \\times 10^{11}',
+        plain: '2026 年 9 月 1 日，听闻竞争对手 Anthropic 可能解出千禧年难题的传言后，OpenAI 迅速调用 8 月 28 日刚起训的内部前沿模型，在 Codex 编排下派出约 1 万个智能体先扫描全部 6 道未解千禧年题，发现 NS 有戏后全力聚焦，88 小时跑出证明、再花 17 小时写成 Lean 代码。',
+        symbols: '• 全 6 题共产生 ~490 万条消息、~3000 亿输出 token；NS 单题消耗 ~270 万条消息、~1300 亿输出 token，算力与电费达数百万美元。',
+        math: '本质是将超大规模强化学习推理模型组织成分布式假设生成、引理拆解、反例排查与自动形式化流水线。',
+        compare: '相较传统人类数学家数年的手工推导，AI 集群把“暴力搜索可行估计与构造”压缩到了不到 4 天，但可读性与语义忠实度也付出了沉重代价。',
+        paper: 'OpenAI 同步声明不会申领克雷 100 万美元奖金，并否认使用了 Buckmaster 的 Codex 提示词数据（9 月 10 日发布内部调查结论）。'
+      },
+      'f3-vortex': {
+        badge: '图 3 · 奇点几何', eqTag: '陀螺状涡旋', title: '螺旋收缩“陀螺状”涡旋奇点构造',
+        latex: '\\mathbf{u}_0 \\equiv 0, \\quad \\lim_{t \\to T^{*-}} \\|\\mathbf{u}(\\cdot, t)\\|_{L^\\infty(\\mathbb{R}^3)} = \\infty, \\quad \\sup_{t \\in [0, T^*)} \\|\\mathbf{u}(\\cdot, t)\\|_{L^2(\\mathbb{R}^3)} < \\infty',
+        plain: 'OpenAI 的构造把一池原本完全静止的流体，用精心设计的外力搅动成一个越转越快、越缩越紧的“陀螺状”螺旋涡旋。在有限时刻 $T^*$，涡核半径缩到零、中心速度冲向无穷大，但因为收缩得足够快，整个流场的总动能始终有限。',
+        symbols: '• $\\mathbf{u}_0 \\equiv 0$：初始静止流场；$T^* < \\infty$：有限爆破时刻；$L^2$ 范数平方对应总动能。',
+        math: '该方法建立在 Diego Córdoba 与 Luis Martínez-Zoroa 2023 年针对相关流体方程发展的爆破构造框架之上，整篇自然语言论文超过 150 页。',
+        compare: 'OpenAI 同日还宣称其 AI 系统用约 100 个智能体耗时 50 小时给出了无外力三维 Euler 方程的爆破证明（而 Alpöge 与 Buckmaster 此前先发表的是有外力 Euler 结果）。',
+        paper: 'Wolfram Community（9 月 14 日）对该构造做了直观拆解，指出其核心在于让速度、压力、非线性对流和粘性项以极其精密的方式协同发散。'
+      },
+      'f3-force': {
+        badge: '图 3 · 核心机制', eqTag: '光滑衰减外力', title: '精细设计的光滑外力 f(x, t) 与 C/D 分支',
+        latex: '\\mathbf{f} = \\partial_t \\mathbf{u} + (\\mathbf{u}\\cdot\\nabla)\\mathbf{u} + \\nabla p - \\nu\\Delta\\mathbf{u} \\in C^\\infty\\big(\\mathbb{R}^3 \\times [0,\\infty)\\big)',
+        plain: '既然克雷分支 C 和 D 允许加外力，那就可以把目标奇点流场代入 NS 方程左边，反过来“量身定制”一个外力场 $\\mathbf{f}$。真正的数学难度在于：不能让 $\\mathbf{f}$ 跟着一起爆破！必须让流场自身的对流、压力与粘性发散项精确抵消，只留下光滑且快速衰减的外力。',
+        symbols: '• Corollary 10.6 进一步把全空间 $\\mathbb{R}^3$ 的构造（分支 C）推广到时间紧支的周期盒 $\\mathbb{T}^3$（分支 D）。',
+        math: '外力必须满足克雷官方衰减条件 (5)，即所有阶时空导数在空间无穷远和无穷长时间上都超多项式衰减，且不破坏总动能有界性。',
+        compare: '正因为依靠了非零外力来“托底”抵消高阶误差，它虽然瞄准了克雷官方的 C/D 分支，却未能触及物理与数学界最核心的自由演化（$\\mathbf{f}\\equiv 0$）问题。',
+        paper: '这也是为什么 9 月 8 日公告一出，数学界一边惊叹 AI 的工程突破，一边迅速追问“去掉外力行不行”。'
+      },
+      'f3-limit': {
+        badge: '图 3 · 理论边界', eqTag: '9 月 17 日预印本', title: 'Constantin–Ignatova–Vicol：无法推广至无外力',
+        latex: '\\mathbf{f} \\equiv 0 \\in C^\\omega(\\text{实解析}) \\;\\implies\\; \\text{OpenAI 9 月构造方法不适用于分支 (A)/(B)}',
+        plain: '仅仅 9 天后（2026 年 9 月 17 日），三位流体偏微分方程顶尖权威 Peter Constantin、Mihaela Ignatova 与 Vlad Vicol 发布预印本，从根本上指出：OpenAI 的构造高度依赖“光滑但非解析”的外力特性，一旦把外力限制为实解析函数，这套方法就会彻底失灵。',
+        symbols: '• $C^\\infty$：无限次可微（允许在某区域恒为零而另一区域非零的平滑截断函数）；$C^\\omega$：实解析函数（局部泰勒级数决定全局，零外力 $\\mathbf{f}\\equiv 0$ 显然是实解析的）。',
+        math: '由于零函数 $\\mathbf{f}\\equiv 0$ 属于实解析函数类，这项结果直接封死了“沿用 OpenAI 9 月方法稍加改造去解决无外力 NS 问题”的技术路径。',
+        compare: '清晰划清了 9 月成果的真实学术边界：它只能作为 C/D 分支的有外力反例，无法回答无外力光滑性悬念。',
+        paper: '这一界定直接激发了学界对真正无外力爆破构造的冲刺，也为两个月后 11 月 20 日的突破埋下伏笔。'
+      },
+      'f3-lost': {
+        badge: '图 3 · 形式化审计', eqTag: '10 月 6 日 arXiv', title: '《Navier-Stokes lost in translation》语义偏差风波',
+        latex: '\\text{Paper (Lemma 8.6): } +4 \\text{ 阶导数} \\quad \\neq \\quad \\text{Lean Code: } +5 \\text{ 阶导数（更弱命题）}',
+        plain: '很多人以为“代码通过 Lean 编译器检查就等于证明 100% 正确”。2026 年 10 月 6 日，伦敦国王学院的 Alexander Bastounis 与剑桥大学的 Fabian Circelli、Anders Hansen 逐行核对后泼了一盆冷水：OpenAI 的 Lean 代码在多个关键引理上悄悄改弱了条件，和论文里写的根本不是同一个证明！',
+        symbols: '• 审计明确列举了两处典型偏差：Lemma 8.6（论文要求多 4 阶导数，Lean 代码实际需要 5 阶导数，对应级数求和方法不同）以及 Eq. 10.19 附近的压力估计难以直接对照。',
+        math: '形式化验证器（如 Lean）只保证“形式化后的定理陈述能由形式化后的步骤推出”，但无法自动验证“形式化陈述是否语义忠实于人类数学家写在纸上的原定理”。',
+        compare: '作者特别强调：他们并非直接宣称 OpenAI 的最终顶层结论一定错误，而是证明“通过 Lean 编译不能自动为 AI 生成的自然语言长文背书”。',
+        paper: '这场风波成为 AI 形式化数学的分水岭——此后学界审校 AI 证明时，第一步必须先由人类专家逐字核查顶层定义与关键引理的“翻译忠实度”。'
+      },
+      'f4-dss': {
+        badge: '图 4 · 核心构造', eqTag: '无外力 f ≡ 0', title: '离散自相似（Discretely Self-Similar）近似爆破剖面',
+        latex: '\\mathbf{u}(x, t) = \\frac{1}{\\sqrt{T^* - t}}\\,\\mathbf{U}\\!\\left(\\frac{x}{\\sqrt{T^* - t}},\\; -\\ln(T^* - t)\\right), \\quad \\mathbf{U}(y, s + \\ln\\lambda) = \\mathbf{U}(y, s)',
+        plain: '不靠任何外力，怎么让三维流体自己把自己“拧爆”？早在 1996 年人们就证明了一类简单的连续自相似爆破不存在。Alpöge 与 Buckmaster 采用更灵活的“离散自相似（DSS）”策略：流场像分形动画一样，每隔一个固定对数时间周期 $\\ln\\lambda$ 就整体缩小 $\\lambda$ 倍、速度放大 $\\lambda$ 倍，无限循环直奔奇点！',
+        symbols: '• $y = x/\\sqrt{T^*-t}$：自相似空间坐标；$s = -\\ln(T^*-t) \\to +\\infty$：对数时间变量；$\\lambda > 1$：离散缩放因子。',
+        math: '转化到自相似坐标 $(y, s)$ 后，有限时间爆破问题等价于寻找满足时间周期边界条件 $\\mathbf{U}(y, s+\\ln\\lambda)=\\mathbf{U}(y, s)$ 的非平凡无外力解，先用高精度数值计算构造出近似剖面 $\\mathbf{U}_{\\text{app}}$。',
+        compare: '相比 OpenAI 9 月的外力螺旋构造，这里严格满足 $\\mathbf{f}\\equiv 0$，直击数学家心目中“真正的”纳维-斯托克斯难题。',
+        paper: '陶哲轩在 2026 年 11 月博客中明确指出，这正是流体 PDE 界长期看好的经典攻关路线之一。'
+      },
+      'f4-pert': {
+        badge: '图 4 · 分析桥梁', eqTag: '不动点微扰', title: '严格泛函分析微扰理论（近似 → 精确）',
+        latex: '\\mathbf{U}^* = \\mathbf{U}_{\\text{app}} + \\mathbf{w}, \\quad \\mathcal{L}\\mathbf{w} = -\\mathcal{R}(\\mathbf{U}_{\\text{app}}) - \\mathcal{N}(\\mathbf{w}) \\implies \\|\\mathbf{w}\\|_X \\le \\delta',
+        plain: '计算机算出来的流场永远只是“非常接近真解的近似值”，存在微小残差 $\\mathcal{R}$。怎么把近似值变成 100% 严格的数学存在性证明？他们围绕近似解做线性化，用严格泛函分析证明：只要线性算子的逆有界且残差足够小，在近似解旁边极小的球里，必然藏着一个货真价实的精确爆破解！',
+        symbols: '• $\\mathcal{R}(\\mathbf{U}_{\\text{app}})$：近似解代入无外力 NS 方程后的残差；$\\mathcal{L}$：在 $\\mathbf{U}_{\\text{app}}$ 处的线性化算子；$\\mathcal{N}(\\mathbf{w})$：二次非线性误差项。',
+        math: '通过 Banach 压缩映射定理（或 Newton–Kantorovich 框架），将无限维非线性 PDE 解的存在性转化为验证若干明确的范数不等式（残差界、逆算子界与非线性常数的乘积小于收缩阈值）。',
+        compare: '类似 Chen & Hou 等人在二维 Boussinesq / 三维轴对称 Euler 奇点研究中开创的“数值逼近 + 严格稳定性分析”现代范式，如今被推进到带粘性的三维无外力 NS。',
+        paper: '这让整个 79 页证明的顶层战略在人类数学家眼中“大体清晰可读”，不像完全黑盒的纯机器暴力搜索。'
+      },
+      'f4-arb': {
+        badge: '图 4 · 计算机辅助核心', eqTag: '⚠ 待公开证书', title: 'Arb 区间算术验证与缺失的数值数据证书',
+        latex: 'x \\in [m - r,\\; m + r], \\qquad \\|\\mathcal{L}^{-1}\\|_{X\\to X}\\cdot\\|\\mathcal{R}(\\mathbf{U}_{\\text{app}})\\|_X \\in [0,\\; c_{\\text{strict}}] < \\delta',
+        plain: '普通计算机用浮点数算乘法会有微小舍入误差，数学证明绝不能接受“大概小于”。Arb 库采用“球算术（区间算术）”：把每个数表示成一个带严格误差半径的区间 $[m\\pm r]$，每步加减乘除都把最坏舍入误差算进去，从而给出绝对可靠的数学不等式证明。',
+        symbols: '• Arb：著名的任意精度实/复数球算术开源 C 库；数值数据证书（numerical certificate）：包含高精度近似剖面系数与区间算术核验脚本的数据包。',
+        math: '整个无外力爆破解的“存在性”最终取决于这组由 Arb 核验的数值不等式是否严格成立。',
+        compare: '目前（截至 2026 年 11 月 22 日）GitHub 仓库虽已上传论文和 Lean 包，但<strong>最关键的数值数据证书与区间算术计算尚未上传</strong>，仅放出了一个加密哈希值，作者称将很快发布。',
+        paper: '在证书公开并由第三方在独立机器上重新跑通之前，任何严谨的数学家都不能宣布该证明已获证实。'
+      },
+      'f4-lean': {
+        badge: '图 4 · 形式化规模', eqTag: '60 万行 Lean 4', title: '60 万行 Lean 4 代码 + 79 页论文（Claude & Codex 辅助）',
+        latex: '\\text{Paper } (79\\text{ pp.}) \\;+\\; \\text{Lean 4 / Mathlib } (\\approx 6\\times 10^5\\text{ lines}) \\;\\xleftarrow{\\text{Claude + Codex}}\\; \\text{GitHub 仓库}',
+        plain: '为了不重蹈 9 月被抢发的覆辙，Buckmaster 与 Alpöge 重度借助 Anthropic 的 Claude 和 OpenAI 的 Codex 撰写了 79 页论文，并同步产出了惊人的约 60 万行 Lean 4 形式化验证代码（构建在 Mathlib 之上），试图用机器可检验代码弥补手稿本身的粗糙。',
+        symbols: '• 论文标题：《Finite-time blow-up for the Navier–Stokes equations》（2026 年 11 月 20 日）；代码仓库公开于 GitHub（`tristanbuckmaster/navier-stokes`）。',
+        math: 'Lean 4 包负责验证除外部 Arb 数值证书之外的所有分析引理、微扰框架与逻辑拼接。',
+        compare: 'Buckmaster 在发布数小时后的 Mastodon 帖文中坦承手稿“未打磨且重度由大模型辅助撰写（unpolished and heavily LLM-assisted）”，与传统精雕细琢的期刊论文风格截然不同。',
+        paper: '受 10 月《lost in translation》教训影响，接下来社区既要跑通 Arb 证书，也必须严格审视这 60 万行 Lean 4 的顶层陈述是否与无外力 NS 方程完全一致。'
+      },
+      'f4-tao': {
+        badge: '图 4 · 权威评述', eqTag: '2026 年 11 月', title: '陶哲轩（Terence Tao）点评与独立验证现状',
+        latex: '\\text{Status}_{\\text{2026-11-22}} = \\text{战略清晰可读} \\;\\cap\\; \\text{论文尚待重写} \\;\\cap\\; \\text{未获独立专家确认}',
+        plain: '菲尔兹奖得主陶哲轩第一时间在 2026 年 11 月博客中点评了这批 AI 辅助重磅论文（包括同日发布的无外力 Euler 与广义黎曼猜想 Lean 声明）。对无外力 NS 论文，他肯定了证明大方向清晰可读，但也明确指出：要成为一篇真正规范、专业的数学证明，仍需要大量后续打磨与核查工作。',
+        symbols: '• 伴随工作：Buckmaster、Alpöge 与 Matei Coiculescu 同期发布了无外力三维 Euler 方程有限时间爆破论文；同日 Alpöge 还单独发布了广义黎曼猜想的纯 Lean 声明。',
+        math: '区别于纯 Lean 难懂的“黑盒声明”，NS 论文至少具备人类可读的宏观策略与可沟通的人类作者，大大降低了社区消化与独立审计的门槛。',
+        compare: '与 OpenAI 9 月证明相比，学界对 11 月这篇无外力路线的数学含金量期待更高，但同样严格坚持“证书未齐、复核未过、绝不提前庆祝”。',
+        paper: '如果未来数月内数值证书顺利复现、Lean 顶层定义无误、论文重写完善，这将是 21 世纪数学史最具分量的里程碑之一。'
+      },
+      'f5-cmp': {
+        badge: '图 5 · 路线对照', eqTag: '有外力 vs 无外力', title: 'OpenAI（9 月）vs Alpöge & Buckmaster（11 月）',
+        latex: '\\underbrace{\\text{OpenAI (Sep 8)}}_{\\mathbf{f}\\neq 0,\\; \\text{C/D 分支}} \\quad \\subsetneq \\quad \\underbrace{\\text{Alpöge–Buckmaster (Nov 20)}}_{\\mathbf{f}\\equiv 0,\\; \\text{纯粹无外力爆破}}',
+        plain: '两份证明虽然都指向“三维 NS 方程会在有限时间爆破”，但力度完全不同：9 月的证明像“用一只极其灵巧的外部机械手（光滑外力）把水搅爆”，满足了克雷官方字面条款 C/D；11 月的证明则是“撒手不管（零外力），让流体靠自身惯性拧出奇点”，直接回应了流体力学界最纯粹的终极追问。',
+        symbols: '• OpenAI：150+ 页，1 万智能体，不领奖，遭质疑不可推无外力且存在 Lean 语义偏差；Alpöge & Buckmaster：79 页 + 60 万行 Lean 4，Arb 证书待发布。',
+        math: '在逻辑蕴含上，无外力爆破（$\\mathbf{f}\\equiv 0$）自动蕴含了全空间有外力爆破（取 $\\mathbf{f}=0$ 即可），同时彻底否证了分支 (A)/(B) 的全局光滑性猜想。',
+        compare: '两者之间还伴随着公开的优先权与数据争议（9 月 8 日前夜 Buckmaster 质疑 Codex 数据可能间接启发 OpenAI，OpenAI 经调查后否认并承认两人对有外力 Euler 的优先权）。',
+        paper: '从科学史角度看，这两次间隔仅 73 天的发布共同宣告了“AI 深度介入顶尖偏微分方程攻关”时代的正式到来。'
+      },
+      'f5-clay': {
+        badge: '图 5 · 官方规则', eqTag: '两年检验期', title: '克雷数学研究所公告与正式授奖机制',
+        latex: '\\text{授奖条件} = \\text{合格期刊正式发表} \\;\\land\\; (\\Delta t \\ge 2\\text{ 年}) \\;\\land\\; \\text{数学界普遍认可}',
+        plain: '克雷数学研究所（CMI）在 2026 年 9 月 11 日发布官方声明，表示与全球数学界共同关注“NS 问题表面上似乎已被解决”的激动进展，但同时也非常克制地重申：克雷奖不接受直接投稿，所有评审与归属认定都会“刻意保持从容不迫”。',
+        symbols: '• 100 万美元千禧年大奖自 2000 年设立以来，此前仅庞加莱猜想（佩雷尔曼，2010 年授奖但本人拒领）完成官方认证。',
+        math: '根据克雷奖官方章程，拟议证明必须先在具备全球声誉的同行评审数学期刊正式发表，经过至少两年公开检验且获得学界普遍共识，再由科学顾问委员会独立评估决定。',
+        compare: '即便 OpenAI 声明不领奖、即便 11 月的无外力证明很快补齐证书，克雷正式盖章授奖最早也要等到 2028 年以后。',
+        paper: '克雷的“慢评审”机制恰恰是数学界对抗浮躁、抵御 AI 时代海量预印本冲击的重要制度防线。'
+      },
+      'f5-phys': {
+        badge: '图 5 · 物理学意义', eqTag: '克努森数边界', title: '爆破意味着连续介质模型的物理极限',
+        latex: '\\mathrm{Kn} = \\frac{\\ell_{\\text{mfp}}}{L(t)} \\;\\xrightarrow{L(t)\\to 0}\\; \\infty \\quad \\Longrightarrow \\quad \\text{NS 方程失效，分子统计物理接管}',
+        plain: '很多非专业读者看到“NS 方程爆破”会误以为：难道现实中的水会突然加速到无穷大甚至超光速吗？绝对不会！爆破解证明的是“用连续介质近似写出来的数学方程本身会失控”。在流体真正缩到奇点之前，涡旋尺寸早就比水分子间距还小了，此时 NS 方程不再适用，微观分子碰撞与玻尔兹曼方程会接管真实世界。',
+        symbols: '• $\\ell_{\\text{mfp}}$：流体分子平均自由程；$L(t)$：涡旋核心特征尺度；$\\mathrm{Kn}$：克努森数（通常 $\\mathrm{Kn} < 0.01$ 时连续介质假设才成立）。',
+        math: '这与广义相对论预言黑洞中心存在时空奇点如出一辙：奇点不是自然界的“无穷大 Bug”，而是提示我们现有宏观有效理论已经触及适用天花板，需要更底层的微观理论修正。',
+        compare: '对日常工程（造飞机、修大坝、天气预报）几乎没有负面冲击——宏观工程流动的尺度远大于分子间距，但对理解极端湍流间歇性与耗散异常具有深远启发。',
+        paper: '如果无外力爆破最终确立，它将成为理论物理与偏微分方程历史上“由纯数学揭示宏观连续模型失效边界”的教科书级案例。'
+      },
+      'f5-ai': {
+        badge: '图 5 · 范式变革', eqTag: '28 位菲尔兹奖得主', title: 'AI 数学范式争议与《AI 在数学中的严重错位》',
+        latex: '\\text{真正数学进步} = \\text{严格可核验性 (Lean + Arb)} \\;\\times\\; \\text{人类可理解的概念洞察}',
+        plain: '就在克雷发声的同一天（2026 年 9 月 11 日），28 位菲尔兹奖得主联合签署《A Severe Misalignment of AI in Mathematics》（AI 在数学中的严重错位），犀利批评科技巨头把百年未解难题当成 AI 跑分刷榜工具，批量倾倒几百页连人类都难以读懂的机器证明，却没有真正增进人类对数学结构的理解。',
+        symbols: '• 2026 年 10 月 6 日 OpenAI 还一次性发布了 700 余份 AI 生成的数学手稿，进一步加剧了“证明产出速度远超人类审稿能力”的制度张力。',
+        math: '数学不仅需要“知道一个命题是对还是错”，更需要从证明中提炼出可以复用到其他领域的概念、方法与直觉。',
+        compare: 'OpenAI 9 月的纯集群黑盒模式引发了强烈反弹；而 Buckmaster & Alpöge 11 月“人类顶尖专家定战略 + AI 加速推导与 Lean 形式化”的协作模式，则展示了一种更具建设性的混合路径。',
+        paper: '未来数学界的核心课题已不再只是“AI 能不能证明大定理”，而是如何建立兼顾速度、形式化忠实度与人类理解力的全新同行评审基础设施。'
+      }
+    };
+
+    const FIG_GROUPS = {
+      fig1: ['f1-cont', 'f1-cauchy', 'f1-newton', 'f1-ns', 'f1-re'],
+      fig2: ['f2-stretch', 'f2-visc', 'f2-ab', 'f2-cd', 'f2-bkm'],
+      fig3: ['f3-swarm', 'f3-vortex', 'f3-force', 'f3-limit', 'f3-lost'],
+      fig4: ['f4-dss', 'f4-pert', 'f4-arb', 'f4-lean', 'f4-tao'],
+      fig5: ['f5-cmp', 'f5-clay', 'f5-phys', 'f5-ai']
+    };
+
+    function renderFullPageCards() {
+      document.querySelectorAll('.summary-svg-slot').forEach(slot => {
+        const k = slot.getAttribute('data-summary-svg');
+        if (FORMULA_SVGS[k]) slot.innerHTML = FORMULA_SVGS[k];
+      });
+      Object.entries(FIG_GROUPS).forEach(([figId, keys]) => {
+        const container = document.getElementById(`details-${figId}`);
+        if (!container) return;
+        container.innerHTML = keys.map(key => {
+          const t = TIPS[key];
+          if (!t) return '';
+          return `
+            <article id="detail-${key}" class="anchor-card bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 flex flex-col gap-3.5">
+              <div class="flex items-start justify-between gap-2 pb-3 border-b border-slate-100">
+                <div>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">${t.badge}</span>
+                    <span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600">${t.eqTag || '数学解析'}</span>
+                  </div>
+                  <h5 class="mt-1.5 text-base font-bold text-slate-900">${t.title}</h5>
+                </div>
+                <a href="#${figId}" class="text-[11px] font-semibold px-2 py-1 rounded-lg bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 shrink-0">↑ 回图</a>
+              </div>
+
+              <div class="rounded-xl bg-slate-50 border border-slate-200/80 p-3.5">
+                <div class="text-xs font-bold text-slate-500 mb-1">一、大白话深讲</div>
+                <p class="text-xs sm:text-sm text-slate-800 leading-relaxed">${t.plain}</p>
+              </div>
+
+              <div class="rounded-xl bg-indigo-50/50 border border-indigo-200/80 p-3.5 space-y-2.5">
+                <div class="text-xs font-bold text-indigo-800">二、LaTeX 核心公式 &amp; 数学机制推演图</div>
+                <div class="latex-slot bg-white border border-indigo-100 rounded-lg px-3 py-2 text-center overflow-x-auto" data-latex-key="${key}"></div>
+                <div class="rounded-xl bg-white border border-indigo-100 p-2 overflow-hidden">${FORMULA_SVGS[key] || ''}</div>
+                <div class="text-xs text-slate-700 leading-relaxed bg-white/80 rounded-lg px-3 py-2 border border-indigo-100/80">${t.symbols || ''}</div>
+                <p class="text-xs sm:text-sm text-slate-800 leading-relaxed">${t.math}</p>
+              </div>
+
+              <div class="rounded-xl bg-emerald-50/60 border border-emerald-200/80 p-3.5">
+                <div class="text-xs font-bold text-emerald-800 mb-1">三、关键对比 / 物理含义</div>
+                <p class="text-xs sm:text-sm text-emerald-950/90 leading-relaxed">${t.compare}</p>
+              </div>
+
+              <div class="rounded-xl bg-amber-50/80 border border-amber-200/80 p-3.5">
+                <div class="text-xs font-bold text-amber-900 mb-1">四、前沿意义与验证焦点</div>
+                <p class="text-xs sm:text-sm text-amber-950/90 leading-relaxed">${t.paper}</p>
+              </div>
+            </article>
+          `;
+        }).join('');
+      });
+    }
+
+    function renderAllLatex(attempt = 0) {
+      if (!window.katex || typeof window.katex.render !== 'function') {
+        if (attempt < 40) {
+          setTimeout(() => renderAllLatex(attempt + 1), 100);
+        }
+        return;
+      }
+      document.querySelectorAll('.latex-slot').forEach(el => {
+        const key = el.getAttribute('data-latex-key');
+        const t = TIPS[key];
+        if (!t) return;
+        const tex = t.latex || '';
+        try {
+          window.katex.render(tex, el, { displayMode: true, throwOnError: false });
+        } catch (e) {
+          el.textContent = tex;
+        }
+      });
+      if (typeof window.renderMathInElement === 'function') {
+        window.renderMathInElement(document.body, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false }
+          ],
+          ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'svg'],
+          throwOnError: false
+        });
+      }
+    }
+
+    function scrollToAnchor(targetId) {
+      const el = document.getElementById(targetId);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('is-flash');
+      setTimeout(() => el.classList.remove('is-flash'), 1800);
+    }
+
+    const navBtns = document.querySelectorAll('.nav-btn');
+    navBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.getAttribute('data-fig');
+        navBtns.forEach(b => {
+          const active = b === btn;
+          b.className = active
+            ? 'nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 text-white'
+            : 'nav-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200';
+        });
+        if (target === 'all') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          const sec = document.getElementById(target);
+          if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    document.getElementById('btn-show-all').addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    const cornerPanel = document.getElementById('corner-panel');
+    let activeCornerKey = null;
+
+    function openCornerCard(key) {
+      const t = TIPS[key];
+      if (!t) return;
+      activeCornerKey = key;
+      document.getElementById('cp-badge').textContent = t.badge;
+      document.getElementById('cp-eqtag').textContent = t.eqTag || '数学解析';
+      document.getElementById('cp-title').textContent = t.title;
+      document.getElementById('cp-plain').innerHTML = t.plain;
+      document.getElementById('cp-svg').innerHTML = FORMULA_SVGS[key] || '';
+      document.getElementById('cp-symbols').innerHTML = t.symbols || '';
+      document.getElementById('cp-math').innerHTML = t.math;
+      document.getElementById('cp-compare').innerHTML = t.compare;
+      document.getElementById('cp-paper').innerHTML = t.paper;
+
+      const latexEl = document.getElementById('cp-latex');
+      const tex = t.latex || '';
+      if (window.katex && typeof window.katex.render === 'function') {
+        try {
+          window.katex.render(tex, latexEl, { displayMode: true, throwOnError: false });
+        } catch (e) {
+          latexEl.textContent = tex;
+        }
+      } else {
+        latexEl.textContent = tex;
+      }
+
+      if (typeof window.renderMathInElement === 'function') {
+        window.renderMathInElement(document.getElementById('cp-body'), {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false }
+          ],
+          ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'svg'],
+          throwOnError: false
+        });
+      }
+
+      document.getElementById('cp-body').scrollTop = 0;
+      cornerPanel.classList.remove('is-hidden');
+    }
+
+    function closeCornerCard() {
+      cornerPanel.classList.add('is-hidden');
+    }
+
+    document.getElementById('cp-close').addEventListener('click', closeCornerCard);
+    document.getElementById('cp-jump').addEventListener('click', () => {
+      if (activeCornerKey) {
+        closeCornerCard();
+        scrollToAnchor(`detail-${activeCornerKey}`);
+      }
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeCornerCard();
+    });
+
+    document.addEventListener('click', e => {
+      const node = e.target.closest('[data-tip]');
+      if (!node) return;
+      const key = node.getAttribute('data-tip');
+      openCornerCard(key);
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const node = e.target.closest('[data-tip]');
+      if (!node) return;
+      e.preventDefault();
+      openCornerCard(node.getAttribute('data-tip'));
+    });
+
+    renderFullPageCards();
+    renderAllLatex();
+    window.addEventListener('load', renderAllLatex);
+  </script>
+</body>
+</html>

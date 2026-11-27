@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Synopsys EDA 全工具指令、参数范围、Flag 与排错手册（黑底夜间版）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* Utilitarian · Exhaustive Dark-Mode Command/Flag/Error Reference · compact answer-first hero · section order: hero -> §0 Env/SSH/License -> §1 VCS/simv/UCLI/URG -> §2 Verdi/DVE -> §3 DC/Design Vision -> §4 PrimeTime -> §5 Formality/SpyGlass -> full-bleed Debug Playbook Band -> §6 Complete Error Code & Debug Encyclopedia · Space Grotesk + Plus Jakarta Sans + JetBrains Mono · dark terminal slate (#0E1117) + sky (#38BDF8/#7DD3FC) + emerald (#34D399) + amber (#FBBF24) + rose (#FB7185) · 0px radius */
+:root {
+  --paper: #0E1117;
+  --band: #151B26;
+  --ink: #F8FAFC;
+  --ink2: #CBD5E1;
+  --mute: #94A3B8;
+  --hair: #263042;
+  --accent: #38BDF8;
+  --accent-text: #7DD3FC;
+  --accent-2: #34D399;
+  --accent-2-text: #6EE7B7;
+  --warn: #FBBF24;
+  --err: #FDA4AF;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+main {
+  padding: 60px clamp(22px, 8.5vw, 104px) 92px;
+}
+.sec { margin-top: 64px; }
+.rule-top { border-top: 1px solid var(--hair); padding-top: 28px; }
+.measure { max-width: 72ch; }
+
+h1 {
+  font-family: "Space Grotesk", "PingFang SC", sans-serif;
+  font-size: clamp(34px, 4vw, 48px);
+  font-weight: 700;
+  line-height: 1.14;
+  letter-spacing: -0.025em;
+  margin: 0 0 16px;
+  text-wrap: balance;
+  color: var(--ink);
+}
+.deck {
+  font-size: 17px;
+  line-height: 1.58;
+  color: var(--ink2);
+  max-width: 72ch;
+  margin: 0 0 26px;
+}
+h2 {
+  font-family: "Space Grotesk", "PingFang SC", sans-serif;
+  font-size: clamp(23px, 2.3vw, 30px);
+  font-weight: 700;
+  line-height: 1.24;
+  letter-spacing: -0.02em;
+  margin: 0 0 14px;
+  color: var(--ink);
+}
+h3 {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 24px 0 10px;
+  color: var(--accent-text);
+}
+p { margin: 0 0 14px; color: var(--ink2); }
+strong { color: var(--ink); font-weight: 600; }
+
+code {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  color: var(--accent-text);
+  background: #1B2333;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+.rng {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  color: var(--accent-2-text);
+  white-space: nowrap;
+}
+.err-code {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--err);
+  white-space: nowrap;
+}
+pre {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #E2E8F0;
+  background: #090C12;
+  border-left: 2px solid var(--accent);
+  padding: 14px 16px;
+  margin: 12px 0 18px;
+  overflow-x: auto;
+}
+pre code { background: transparent; color: inherit; padding: 0; font-size: 13px; }
+.cm { color: #94A3B8; font-style: italic; }
+
+/* Definition-style Flag/Command Grid (open canvas, 1px hairlines, 0 cards) */
+.spec-list {
+  margin: 10px 0 22px;
+  border-top: 1px solid var(--hair);
+}
+.spec-row {
+  display: grid;
+  grid-template-columns: minmax(210px, 26%) minmax(150px, 20%) 1fr;
+  gap: 18px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--hair);
+  align-items: start;
+}
+.spec-head {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mute);
+  border-bottom: 2px solid #3B4A63;
+  padding: 9px 0;
+}
+.spec-cmd {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  color: var(--accent-text);
+  word-break: break-word;
+}
+.spec-range {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12.5px;
+  color: var(--accent-2-text);
+}
+.spec-desc {
+  font-size: 14px;
+  color: var(--ink2);
+  line-height: 1.55;
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px;
+  margin-top: 14px;
+}
+.col-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 26px;
+  margin-top: 16px;
+}
+.col-item {
+  border-top: 1px solid var(--hair);
+  padding-top: 14px;
+}
+.band {
+  margin: 64px calc(-1 * clamp(22px, 8.5vw, 104px)) 0;
+  padding: 50px clamp(22px, 8.5vw, 104px);
+  background: var(--band);
+  border-top: 1px solid var(--hair);
+  border-bottom: 1px solid var(--hair);
+}
+.band .col-item { border-top-color: #334155; }
+
+/* Open Tables (max 3 across document) */
+.tbl-wrap { overflow-x: auto; margin-top: 14px; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+th, td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--hair);
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-text);
+  border-bottom: 2px solid #3B4A63;
+  white-space: nowrap;
+}
+.note-ok {
+  border-left: 3px solid var(--accent-2);
+  padding-left: 14px;
+  margin: 14px 0 18px;
+  font-size: 14.5px;
+  color: var(--ink2);
+}
+.note-warn {
+  border-left: 3px solid var(--warn);
+  padding-left: 14px;
+  margin: 14px 0 18px;
+  font-size: 14.5px;
+  color: var(--ink2);
+}
+@media (max-width: 860px) {
+  .spec-row { grid-template-columns: 1fr; gap: 6px; }
+  .spec-head { display: none; }
+  .two-col, .col-strip { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<main>
+
+  <header>
+    <h1>Synopsys EDA 全指令、Flag、参数范围与错误排错完整参考</h1>
+    <p class="deck">
+      黑底夜间工程参考版（对应 <code>lzc@192.168.108.128</code> 实机工具链：VCS mx2017 · Verdi O-2018.09-SP2 · DC / PT / FM K-2015.06 · SpyGlass L-2016.06）。每一条命令均拆解<strong>具体含义</strong>、<strong>合法参数范围</strong>、<strong>Flag 作用</strong>、<strong>标准 Debug 方案</strong>与<strong>报错原理解读</strong>。
+    </p>
+  </header>
+
+  <!-- §0 Environment, SSH, Graphics & License -->
+  <section class="sec rule-top">
+    <h2>0. 环境初始化、远端 SSH 图形与 License 指令全解</h2>
+    <p class="measure">远端默认 shell 为 <code>csh</code>，任何含 <code>export</code>、管道或循环的命令必须先切 <code>bash</code> 或用 <code>ssh ... "bash -c '...'"</code> 包裹；综合与大波形必须落在 <code>/dev/shm</code>（16 GB tmpfs）。</p>
+
+    <div class="spec-list">
+      <div class="spec-row spec-head"><div>指令 / Flag / 环境变量</div><div>取值范围 / 示例</div><div>具体含义与工程注意事项</div></div>
+      <div class="spec-row">
+        <div class="spec-cmd">-oHostKeyAlgorithms=+ssh-rsa<br>-oPubkeyAcceptedKeyTypes=+ssh-rsa</div>
+        <div class="spec-range">SSH 客户端固定参数</div>
+        <div class="spec-desc">兼容老旧 SSH 服务端（OpenSSH 新版默认禁用 <code>ssh-rsa</code> 签名，不加会直接报 <code>no matching host key type</code>）。</div>
+      </div>
+      <div class="spec-row">
+        <div class="spec-cmd">ssh -X -C -c aes128-gcm</div>
+        <div class="spec-range">-X 转发 / -C 压缩</div>
+        <div class="spec-desc"><code>-X</code> 开启 X11 图形转发（Windows 需先起 MobaXterm/VcXsrv）；<code>-C</code> 开启传输压缩，<code>-c aes128-gcm</code> 选轻量硬件加速加密，大幅减轻远程 Verdi/DV 拖动卡顿。</div>
+      </div>
+      <div class="spec-row">
+        <div class="spec-cmd">DISPLAY</div>
+        <div class="spec-range">:0.0 | localhost:10.0</div>
+        <div class="spec-desc">指定 X11 显示目标。<code>:0.0</code> 直接把 GUI 开在远端本地屏/VNC（最流畅）；<code>ssh -X</code> 登录后自动分配为 <code>localhost:10.0</code> 等，可用 <code>xclock</code> 与 <code>xdpyinfo | head</code> 验证通路。</div>
+      </div>
+      <div class="spec-row">
+        <div class="spec-cmd">SNPSLMD_LICENSE_FILE</div>
+        <div class="spec-range">27007@lzc</div>
+        <div class="spec-desc">Synopsys 浮动许可证服务器地址（<code>端口@主机名</code>）。所有 Synopsys 工具（VCS/DC/PT/FM/Verdi）启动前必设。</div>
+      </div>
+      <div class="spec-row">
+        <div class="spec-cmd">lmstat -c 27007@lzc<br>lmstat -a -c 27007@lzc</div>
+        <div class="spec-range">-c 指定源 / -a 全量</div>
+        <div class="spec-desc"><code>-c</code> 查看 License 服务在线状态与各 feature 总数/已用数；加 <code>-a</code> 列出具体哪个用户、哪台机器占用了哪个 feature（DC 4 核编译、Design Vision、PT GUI、Verdi、DVE 各占独立 feature）。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §1 VCS, simv, UCLI, URG -->
+  <section class="sec rule-top">
+    <h2>1. VCS 编译、simv 仿真、UCLI 调试与 URG 覆盖率全解</h2>
+
+    <h3>1.1 VCS 编译 Flag 逐项拆解</h3>
+    <div class="spec-list">
+      <div class="spec-row spec-head"><div>VCS 编译 Flag</div><div>参数格式 / 范围</div><div>具体含义与踩坑说明</div></div>
+      <div class="spec-row"><div class="spec-cmd">-full64</div><div class="spec-range">布尔开关（必填）</div><div class="spec-desc">以 64 位模式编译与链接 <code>simv</code>；本机 64 位 Linux 下不加会与 64 位 PLI 库冲突，后续 DVE 也必须配 <code>-full64</code>。</div></div>
+      <div class="spec-row"><div class="spec-cmd">-sverilog / +v2k</div><div class="spec-range">语言标准开关</div><div class="spec-desc"><code>-sverilog</code> 启用 IEEE 1800 SystemVerilog（含 SVA 断言与 UVM 类语法）；<code>+v2k</code> 兼容 Verilog-2001 语法。</div></div>
+      <div class="spec-row"><div class="spec-cmd">-lca / -notice</div><div class="spec-range">扩展与提示开关</div><div class="spec-desc"><code>-lca</code> 启用 Limited Customer Availability 高级特性（部分 UVM/覆盖率/SV 特性必需）；<code>-notice</code> 打印详细编译诊断。</div></div>
+      <div class="spec-row"><div class="spec-cmd">-timescale=1ns/1ps</div><div class="spec-range">&lt;unit&gt;/&lt;precision&gt;</div><div class="spec-desc">为未声明 <code>`timescale</code> 的文件提供默认时间单位（1 ns）和精度（1 ps），确保 CDC 相位扫描（ps 级）精度不丢失。</div></div>
+      <div class="spec-row"><div class="spec-cmd">+lint=none</div><div class="spec-range">none | all | TFIPC-L</div><div class="spec-desc">屏蔽冗余 lint 刷屏（正式静态检查交由 SpyGlass 完成）。</div></div>
+      <div class="spec-row"><div class="spec-cmd">+incdir+&lt;dir&gt; / -f &lt;file&gt;</div><div class="spec-range">路径 / 文件列表</div><div class="spec-desc"><code>+incdir+./src</code> 添加 <code>`include</code> 搜索目录；<code>-f uvm/filelist.f</code> 批量读入 RTL/TB 源清单；<code>+define+KEY=VAL</code> 传编译期宏（如 <code>+define+CASE_LOOP_NUMBER=1</code>）。</div></div>
+      <div class="spec-row"><div class="spec-cmd">-P &lt;novas.tab&gt; &lt;pli.a&gt;</div><div class="spec-range">$NOVAS_HOME/share/PLI/VCS/LINUX64/*</div><div class="spec-desc">挂接 Verdi FSDB PLI 接口。<strong>漏加这组参数会导致 <code>$fsdbDumpfile</code> 未定义或完全不生成 <code>.fsdb</code></strong>。</div></div>
+      <div class="spec-row"><div class="spec-cmd">-debug_all</div><div class="spec-range">debug_all | debug_access+all</div><div class="spec-desc">打开全信号读写权限、生成 <code>simv.daidir</code> 层次库，并允许 UCLI 断点、DVE GUI 和 VPD 转储（注意：大扫掠不看波时可去掉以提速）。</div></div>
+      <div class="spec-row"><div class="spec-cmd">-ntb_opts uvm-1.2<br>-CFLAGS -DVCS</div><div class="spec-range">uvm-1.1 | uvm-1.2</div><div class="spec-desc">自动编入内置 UVM-1.2 源码与 DPI；<code>-CFLAGS -DVCS</code> 向底层 C/C++ DPI 编译器传 <code>-DVCS</code> 宏。</div></div>
+      <div class="spec-row"><div class="spec-cmd">-top &lt;mod&gt; / -l &lt;log&gt;</div><div class="spec-range">top_tb / vcompile.log</div><div class="spec-desc">显式指定仿真顶层模块名并将完整编译日志落盘。</div></div>
+      <div class="spec-row"><div class="spec-cmd">-cm &lt;metrics&gt; -cm_dir &lt;vdb&gt;</div><div class="spec-range">line+cond+fsm+tgl+branch</div><div class="spec-desc">开启五大代码覆盖率（行、条件、状态机、翻转、分支）并写入 <code>simv.vdb</code>；编译与运行 <code>./simv</code> 两端都需传入相同 <code>-cm</code> 参数。</div></div>
+      <div class="spec-row"><div class="spec-cmd">-assert enable_diag|summary</div><div class="spec-range">断言统计开关</div><div class="spec-desc">开启 SVA 失败诊断与结束时的断言通过/失败汇总表。</div></div>
+    </div>
+
+    <h3>1.2 simv 运行时 Plusargs 参数范围与含义</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Plusarg</th><th>合法范围 / 常用取值</th><th>具体含义与使用边界</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>+UVM_TESTNAME=</code></td><td class="rng">my_case（字符串）</td><td>指定 UVM 测试类名，必须已在编译时用 <code>`uvm_component_utils</code> 注册。</td></tr>
+          <tr><td><code>+UVM_VERBOSITY=</code></td><td class="rng">UVM_NONE | LOW | MEDIUM | HIGH | FULL | DEBUG</td><td>控制 <code>`uvm_info</code> 打印级别。大批量扫掠用 <code>UVM_LOW</code> 控日志体积，定位单个 bug 时切 <code>UVM_HIGH</code>。</td></tr>
+          <tr><td><code>+UVM_MAX_QUIT_COUNT=</code></td><td class="rng">正整数（默认 1）</td><td>允许累计多少条 <code>UVM_ERROR</code> 后中止仿真；想一次看全所有错误时可设为 <code>20</code>。</td></tr>
+          <tr><td><code>+ntb_random_seed=</code></td><td class="rng">正整数（如 1..20）</td><td>VCS SV 随机化全局种子（影响 constraint 激励）；与误码注入种子 <code>+pcs_ber_seed</code> 独立。</td></tr>
+          <tr><td><code>+pcs_ber_p=</code></td><td class="rng">0, 0.001, 0.005, 0.01, 0.0167, 0.025, 0.05, 0.1</td><td>字级伯努利注入名义强度（0 为清洁信道；注意它是名义强度，如 p=0.001 实测等效 9.8e-5）。</td></tr>
+          <tr><td><code>+pcs_ber_kbits=</code></td><td class="rng">0（整字）| 1..8（每帧 k bit）</td><td><code>0</code> 表示命中时整字 64 bit 翻转（主扫掠用）；<code>1..8</code> 表示每帧随机翻 k bit（E5 压力用）。</td></tr>
+          <tr><td><code>+buf_depth=</code></td><td class="rng">8, 16, 32, 64, 128, 255</td><td>运行时重传缓冲深度阈值 B（指针字数）；B≤128 全交付，255 用于满窗压力。</td></tr>
+          <tr><td><code>+case_frames=</code></td><td class="rng">1000（快速）| 10000（正式）</td><td>单次仿真发送帧数；决定看门狗阈值和单 run 耗时（约 3 分钟）。</td></tr>
+          <tr><td><code>+case_watchdog_ns=</code></td><td class="rng">1.2e7（1k帧）| 8e7（10k帧）| 2e9</td><td>仿真时间看门狗（单位 ns），防止死锁/丢包导致 <code>simv</code> 永久挂死。</td></tr>
+          <tr><td><code>+nack_log=1</code></td><td class="rng">0 | 1</td><td>开启 NACK 与窗口跨度 <code>win_span</code> 打印，供回退窗口实验统计最大值。</td></tr>
+          <tr><td><code>+cfg_delay_ps=</code> / <code>+cfg_half_ps=</code></td><td class="rng">0..348750 ps / 3125 | 3750 ps</td><td>CDC 跨时钟域相位偏移（45° 步进）与半周期（3125 ps=160 MHz / 3750 ps=7.5 ns 错位）。</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>1.3 UCLI 交互调试指令与 URG 覆盖率命令</h3>
+    <div class="two-col">
+      <div>
+        <pre><code><span class="cm"># 启动交互调试：./simv -ucli</span>
+run                  <span class="cm"># 一直跑到 $finish 或命中下一个断点</span>
+run 100ns            <span class="cm"># 向前推进指定仿真时间（支持 ps/ns/us）</span>
+stop -time 500ns     <span class="cm"># 在绝对时刻 500 ns 处下时间断点</span>
+stop -line top_tb.sv 120 <span class="cm"># 在源码指定行下断点</span>
+step / next / where  <span class="cm"># 单步进函数 / 跨过函数 / 打印当前调用栈</span>
+show -value top_tb.dut_tx...rq_rdaddr <span class="cm"># 查任意层次信号当前值</span>
+dump -file w.vpd -type vpd -add /*    <span class="cm"># 动态开 VPD 波形转储</span>
+finish               <span class="cm"># 结束并退出 UCLI</span></code></pre>
+      </div>
+      <div>
+        <pre><code><span class="cm"># URG 覆盖率报告生成与多库合并</span>
+urg -dir simv.vdb -format both -report cov
+<span class="cm"># -dir     : 输入覆盖率数据库路径（可重复多个实现合并）</span>
+<span class="cm"># -format  : text | html | both（同时出文本与网页）</span>
+<span class="cm"># -dbname  : 合并后新数据库名（如 merged.vdb）</span>
+<span class="cm"># -report  : 输出报告目录名</span>
+urg -dir run1.vdb -dir run2.vdb -dbname merged.vdb -report cov_all</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- §2 Verdi & DVE -->
+  <section class="sec rule-top">
+    <h2>2. Verdi 与 DVE 波形调试指令、系统任务与快捷键全解</h2>
+    <div class="spec-list">
+      <div class="spec-row spec-head"><div>命令 / 系统任务 / 快捷键</div><div>参数范围</div><div>具体含义与工程经验</div></div>
+      <div class="spec-row"><div class="spec-cmd">verdi -ssf tb.fsdb &amp;</div><div class="spec-range">.fsdb | .vcd</div><div class="spec-desc">直接打开波形文件（<code>-ssf</code> 同时支持 FSDB 与 VCD）；加 <code>-nologo</code> 跳过启动画面。</div></div>
+      <div class="spec-row"><div class="spec-cmd">verdi -dbdir simv.daidir -ssf tb.fsdb &amp;</div><div class="spec-range">daidir + fsdb</div><div class="spec-desc">同时加载编译好的设计层次库与波形，才能在 nWave 里右键 <code>Trace Driver / Load</code> 追踪源码驱动逻辑。</div></div>
+      <div class="spec-row"><div class="spec-cmd">verdi -f filelist.f -top top_tb -sv &amp;</div><div class="spec-range">纯静态浏览</div><div class="spec-desc">不依赖波形，直接静态阅读 RTL 层次、看信号扇入扇出与原理图。</div></div>
+      <div class="spec-row"><div class="spec-cmd">verdi -rc my.rc &amp;</div><div class="spec-range">.rc 信号布局文件</div><div class="spec-desc">恢复上次在 nWave 通过 <code>File → Save Signal</code> 保存的信号分组、颜色和进制配置。</div></div>
+      <div class="spec-row"><div class="spec-cmd">$fsdbDumpfile("tb.fsdb");<br>$fsdbDumpvars(depth, scope);</div><div class="spec-range">depth: 0=全层, 1..N=层数</div><div class="spec-desc">写入 TB <code>initial</code> 块。<strong>严禁在千帧测试里盲目写 <code>depth=0</code></strong>（几十 GB 瞬间写满磁盘）；先写 <code>depth=1</code> 或配合 <code>$fsdbDumpon/$fsdbDumpoff</code> 仅在出错区间转储；需看数组/队列时加 <code>$fsdbDumpMDA()</code>。</div></div>
+      <div class="spec-row"><div class="spec-cmd">dve -full64 -vpd vcdplus.vpd &amp;</div><div class="spec-range">-vpd | -dbdir | -cov -dir | -session</div><div class="spec-desc">DVE 图形工具。<strong>必须带 <code>-full64</code></strong>，否则读取 64 位 VCS 产物会报 <code>is not valid directory</code>。VPD 需编译加 <code>-debug_all</code> 且 TB 调用 <code>$vcdpluson;</code>。</div></div>
+      <div class="spec-row"><div class="spec-cmd">nWave 高频键：g / Ctrl+F / f / z / Z / m</div><div class="spec-range">交互操作</div><div class="spec-desc"><code>g</code> 打开 Get Signals；<code>Ctrl+F</code> 搜信号；<code>f</code> 全局适应；<code>z</code> 缩小 / <code>Z</code> 放大；<code>m</code> 跳到下一个边沿/打标记；左右键双游标测精确时间差。</div></div>
+    </div>
+  </section>
+
+  <!-- §3 DC & Design Vision -->
+  <section class="sec rule-top">
+    <h2>3. DC (`dc_shell`) 与 Design Vision 综合指令、约束参数全解</h2>
+    <div class="spec-list">
+      <div class="spec-row spec-head"><div>DC 指令 / 变量</div><div>参数格式与推荐范围</div><div>具体含义与 K-2015.06 实测行为</div></div>
+      <div class="spec-row"><div class="spec-cmd">dc_shell -64bit -f run.tcl</div><div class="spec-range">-64bit / -f / start_gui</div><div class="spec-desc">64 位批处理启动并执行 Tcl 脚本（交互下输入 <code>start_gui</code> 或直接 <code>design_vision &amp;</code> 开图形）。</div></div>
+      <div class="spec-row"><div class="spec-cmd">read_file -format sverilog &lt;sv&gt;<br>current_design &lt;top&gt;; link</div><div class="spec-range">verilog | sverilog | ddc</div><div class="spec-desc">读入合并后的单编译单元 RTL（保证跨文件宏可见），设置顶层并链接工艺库；<code>link</code> 若报 <code>unresolved reference</code> 说明存在缺失或位宽不一致的参数化黑盒。</div></div>
+      <div class="spec-row"><div class="spec-cmd">set_clock_uncertainty &lt;val&gt; [get_clocks ...]</div><div class="spec-range">0.05 – 0.25 ns（本工程 0.1875）</div><div class="spec-desc">为布局前综合预留时钟抖动 + 预估偏斜裕量（单位同库，通常 ns）。</div></div>
+      <div class="spec-row"><div class="spec-cmd">set_timing_derate -early &lt;e&gt; -late &lt;l&gt;</div><div class="spec-range">early: 0.90–0.95 / late: 1.05–1.10</div><div class="spec-desc">模拟片上工艺偏差（OCV）：缩短捕获路径 5%、拉长发射路径 5%，验证 setup 收敛余量（本工程 0.95/1.05 下仍 0.00 ns）。</div></div>
+      <div class="spec-row"><div class="spec-cmd">set_app_var enable_recovery_removal_arcs true<br>set_app_var high_fanout_net_threshold 100000</div><div class="spec-range">true | false / 1000..100000</div><div class="spec-desc"><strong>K-2015.06 优化异步复位恢复的唯一正确组合</strong>：开启 recovery/removal 时序弧，并抬高高扇出阈值让综合器真正对复位网络插缓冲树（置于 <code>link</code> 后、<code>compile_ultra</code> 前）。</div></div>
+      <div class="spec-row"><div class="spec-cmd">set_max_transition &lt;ns&gt; [current_design]<br>set_host_options -max_cores &lt;N&gt;</div><div class="spec-range">0.2–0.5 ns / N=2..4</div><div class="spec-desc">限制最大转换时间（本工程 0.3 ns）防止信号过缓；<code>-max_cores 4</code> 控单 DC 吃 4 核 + 6–8 GB（12 核机最多同时跑 2 个 DC）。</div></div>
+      <div class="spec-row"><div class="spec-cmd">compile_ultra -gate_clock<br>-no_seq_output_inversion -no_autoungroup</div><div class="spec-range">首轮 + -incremental 增量轮</div><div class="spec-desc"><code>-gate_clock</code> 自动插时钟门控降动态功耗；<code>-no_seq_output_inversion</code> 禁止翻转寄存器极性（极大降低 Formality 匹配失败率）；<code>-no_autoungroup</code> 保留子模块层次便于按模块看面积与定位路径；第二轮加 <code>-incremental</code> 压榨余量。</div></div>
+      <div class="spec-row"><div class="spec-cmd">report_qor / report_timing / report_area<br>report_power / check_timing</div><div class="spec-range">-max_paths N / -slack_lesser_than X / -hierarchy / -verbose</div><div class="spec-desc"><code>report_qor</code> 看各时钟组 WNS/TNS/Leaf/面积；<code>report_timing -path full</code> 看逐级 cell 延迟；<code>report_area -hierarchy</code> 查面积大户；<code>check_timing -verbose</code> 查未约束时钟与组合环。</div></div>
+      <div class="spec-row"><div class="spec-cmd">write -format verilog -hierarchy -output &lt;v&gt;<br>write_sdc -version 1.4 / write_sdf</div><div class="spec-range">verilog | ddc（禁用 db）</div><div class="spec-desc">导出门级网表、标准约束与反标延迟文件供 PrimeTime/后仿使用。<strong>K-2015.06 不支持 <code>write -format db</code>（UID-530）</strong>，要给 Design Vision 存档可改用 <code>-format ddc</code>。</div></div>
+    </div>
+  </section>
+
+  <!-- §4 & §5 PrimeTime, Formality, SpyGlass -->
+  <section class="sec rule-top">
+    <h2>4. PrimeTime、Formality 与 SpyGlass 指令与参数全解</h2>
+    <div class="spec-list">
+      <div class="spec-row spec-head"><div>工具与指令</div><div>参数范围 / 选项</div><div>具体含义与边界条件</div></div>
+      <div class="spec-row"><div class="spec-cmd">pt_shell [-gui] [-display :0.0] [-f pt.tcl] [-x "cmd"] [-multi_scenario]</div><div class="spec-range">批处理 / 图形 / 多场景</div><div class="spec-desc"><code>-x</code> 启动后立刻执行单条 Tcl 命令；<code>-multi_scenario</code> 并发分析多 PVT 角（MMMC）。</div></div>
+      <div class="spec-row"><div class="spec-cmd">set link_path "* &lt;lib.db&gt;"<br>read_verilog &lt;v&gt;; current_design &lt;top&gt;; link_design</div><div class="spec-range">星号 * 不可省略</div><div class="spec-desc"><code>*</code> 表示先在当前内存查找已读入的网表子模块，再去后面的 <code>.db</code> 工艺库找标准单元；漏写 <code>*</code> 会导致所有子模块 link 失败。</div></div>
+      <div class="spec-row"><div class="spec-cmd">set_app_var report_default_significant_digits 4<br>update_timing -full</div><div class="spec-range">有效数字 2..6 / -full 全量</div><div class="spec-desc">保留 4 位有效数字（看 ps 级 recovery/removal 必需）；<code>update_timing -full</code> 强制重算全图时序。</div></div>
+      <div class="spec-row"><div class="spec-cmd">report_timing -delay_type max|min<br>-group {**async_default**} -path full<br>-max_paths N -slack_lesser_than X</div><div class="spec-range">max=recovery(setup)<br>min=removal(hold)</div><div class="spec-desc"><strong>PrimeTime 专用异步复位分组</strong>（注意花括号与双星号 <code>{**async_default**}</code>）。<code>max</code> 查 recovery，<code>min</code> 查 removal；配合 <code>report_clock_timing -type skew</code> 查时钟偏斜。</div></div>
+      <div class="spec-row"><div class="spec-cmd">fm_shell: read_verilog -container r|i<br>-libname WORK -01|-sverilog</div><div class="spec-range">r=参考(RTL) / i=实现(网表)</div><div class="spec-desc">把 RTL 读入 <code>r</code> 容器、把 DC 综合网表读入 <code>i</code> 容器，各自 <code>set_top</code> 后执行 <code>match</code>（匹配比较点）→ <code>verify</code>（形式等价求解）→ <code>report_status</code>。若含未解析黑盒需先 <code>set_black_box</code>。</div></div>
+      <div class="spec-row"><div class="spec-cmd">spyglass -project my.prj -batch<br>-goals &lt;goal&gt; -report &lt;dir&gt;</div><div class="spec-range">lint_rtl | adv_lint | cdc_setup | cdc_verify</div><div class="spec-desc"><code>lint_rtl</code> 查基本语法/不可综合/锁存器；<code>adv_lint</code> 查深层语义；<code>cdc_setup/cdc_verify</code> 配合 SGDC 约束做静态跨时钟域验证。</div></div>
+    </div>
+  </section>
+
+  <!-- Full-Bleed Dark Band: Step-by-Step Debug Playbooks -->
+  <section class="band">
+    <h2>四大高频场景的标准 Debug 排查方案（一步一步照做）</h2>
+    <div class="two-col">
+      <div class="col-item">
+        <h3>Debug 方案 1 · 仿真挂死、秒退或结果不对</h3>
+        <p><strong>步骤 1</strong>：看 <code>run.log</code> 行数与尾部是否有 <code>UVM_ERROR :</code>；若只有 1–2 行，立刻 <code>ls -l simv</code> 核对是不是拿了旧目录的 <code>simv</code>。</p>
+        <p><strong>步骤 2</strong>：确认命令带了 <code>+case_watchdog_ns</code>（1000 帧 ≥ <code>1.2e7</code>，10000 帧 ≥ <code>8e7</code>），避免无限等。</p>
+        <p><strong>步骤 3</strong>：把 <code>+UVM_VERBOSITY</code> 升到 <code>UVM_HIGH</code> 并用 <code>./simv -ucli</code> 在出错前 50 ns 下 <code>stop -time</code>，<code>show -value</code> 看状态机与指针；或开 <code>$fsdbDumpvars(1, top_tb)</code> 进 Verdi 右键 <code>Trace Driver</code> 逆推源头。</p>
+      </div>
+      <div class="col-item">
+        <h3>Debug 方案 2 · PrimeTime 报黑盒位宽冲突 link 失败</h3>
+        <p><strong>症状</strong>：<code>Width of port i_bus (32) is inconsistent with other instances (48)</code> → <code>Can't find design DLR_TOP</code>。</p>
+        <p><strong>步骤 1</strong>：确认冲突模块为 DC 未展平的参数化黑盒（本工程为 <code>RDBUS</code>、<code>CLKCROSSBUS</code>、<code>CLKCROSSDFF</code> 共 96 个实例）。</p>
+        <p><strong>步骤 2</strong>：按 <code>module...endmodule</code> 切分 <code>.v</code> 网表，删除这三类实例语句。</p>
+        <p><strong>步骤 3</strong>：把被删实例的输出端口（如 <code>.o_bus_sample({a,b})</code>）拆成单根标量，在对应模块 <code>endmodule</code> 前逐行加 <code>assign a = 0;</code>、<code>assign b = 0;</code>（<strong>严禁写 <code>assign {a,b}=0;</code></strong>，PT 解析器不认），重新 <code>link_design</code> 即可通过。</p>
+      </div>
+      <div class="col-item">
+        <h3>Debug 方案 3 · DC 综合“假成功”或跑 1 小时被杀</h3>
+        <p><strong>步骤 1</strong>：绝不只看日志里的 <code>wrote xxx.rep</code>，必须 <code>ls -lh</code> + <code>head</code> 检查报告正文（592 B 且含 <code>No paths.</code> 即为 DC 假成功）。</p>
+        <p><strong>步骤 2</strong>：如果进程中途退出，先 <code>grep "Signal" run.log</code> 并 <code>df -h / /dev/shm</code>：遇到 <code>Received Signal 15</code> 或根盘满，立刻迁至 <code>/dev/shm</code> 并确认并发 DC ≤ 2。</p>
+        <p><strong>步骤 3</strong>：若出现 <code>Net driven by more than one source</code>，检查 RTL 是否在多个 <code>always_ff</code> 块里写了同一个数组的不同索引，改回单块写入或拆成独立数组。</p>
+      </div>
+      <div class="col-item">
+        <h3>Debug 方案 4 · Formality 报 unmatched 或 failing points</h3>
+        <p><strong>步骤 1</strong>：先看 <code>report_unmatched_points</code>——90% 来自时钟/复位端口未对齐、黑盒未声明或 SV 语法漏加 <code>-sverilog</code>。</p>
+        <p><strong>步骤 2</strong>：对参数化黑盒执行 <code>set_black_box</code>，并确认 DC 综合时开启了 <code>-no_seq_output_inversion</code>（避免寄存器反相导致比较点极性不匹配）。</p>
+        <p><strong>步骤 3</strong>：若仍有 failing，在 GUI（<code>formality &amp;</code>）打开 <code>Diagnose</code> 对比反例向量，优先排查初始复位态与综合剪枝掉的冗余逻辑。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- §6 Complete Error Code & Symptom Encyclopedia (Table 2) -->
+  <section class="sec">
+    <h2>5. 全部常见错误码与报错信息含义速查表</h2>
+    <p class="measure">覆盖本机实测踩过的所有 Synopsys 错误码与系统级异常，按报错原文直接定位含义与根治手段。</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>错误码 / 报错原文</th><th>所属工具</th><th>底层含义</th><th>根治解法</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="err-code">UID-423<br>Invalid path group name</td>
+            <td>DC K-2015.06</td>
+            <td>DC K-2015 没有内置 <code>async_default</code> 路径组，且报错直接写入报告文件不抛异常，造成“假成功”（报告仅 592 B 含 <code>No paths.</code>）。</td>
+            <td>DC 只加 <code>enable_recovery_removal_arcs true</code>，异步复位测量全部移交 PrimeTime 的 <code>{**async_default**}</code>。</td>
+          </tr>
+          <tr>
+            <td class="err-code">UID-119<br>wrong type</td>
+            <td>DC K-2015.06</td>
+            <td><code>set_max_fanout</code> 传入了 <code>net</code> 对象，该命令只接受 <code>port / pin / design</code>（且打在模块输入 pin 上对内部高扇出网是 no-op）。</td>
+            <td>改用 <code>set_app_var high_fanout_net_threshold 100000</code>；不要打在 design 级（会触发全设计重排超 32 min 不收敛）。</td>
+          </tr>
+          <tr>
+            <td class="err-code">UID-530<br>write_db unsupported</td>
+            <td>DC K-2015.06</td>
+            <td>K-2015.06 已移除导出 <code>.db</code> 门级设计数据库的能力。</td>
+            <td>统一导出 <code>.v</code> + <code>.sdc</code> + <code>.sdf</code> 给 PrimeTime；如需 DC 内部存档用 <code>write -format ddc</code>。</td>
+          </tr>
+          <tr>
+            <td class="err-code">Received Signal 15</td>
+            <td>DC / VCS</td>
+            <td>进程收到 <code>SIGTERM</code> 被系统或用户终止，常由根盘空间耗尽、内存超限（单 DC 6–8 GB）或超时触发。</td>
+            <td>工作目录迁入 <code>/dev/shm</code>（16 GB tmpfs），限制并发 DC ≤ 2，完成后及时 <code>rm -rf /dev/shm/&lt;dir&gt;</code>。</td>
+          </tr>
+          <tr>
+            <td class="err-code">Width of port i_bus inconsistent</td>
+            <td>PrimeTime / FM</td>
+            <td>综合网表中同一个未解析参数化模块（如 <code>RDBUS</code>）被不同位宽（32 vs 48）实例化，导致 <code>link_design</code> 失败并连带报 <code>Can't find design</code>。</td>
+            <td>用脚本按模块剥离 <code>RDBUS/CLKCROSSBUS/CLKCROSSDFF</code> 实例，并将其输出拆成单根 <code>assign &lt;net&gt; = 0;</code>。</td>
+          </tr>
+          <tr>
+            <td class="err-code">Net driven by more than one source</td>
+            <td>DC</td>
+            <td>同一条连线或数组变量在多个 <code>always</code> 块/<code>assign</code> 中被驱动，综合无法推断单一驱动源。</td>
+            <td>把同一数组的所有写操作收拢到单个 <code>always_ff</code> 块内，或拆分为独立数组信号。</td>
+          </tr>
+          <tr>
+            <td class="err-code">unresolved reference</td>
+            <td>DC / PT</td>
+            <td>模块实例化名在当前读入的 RTL 与 <code>link_path</code> 工艺库中均找不到定义，DC 会将其置为黑盒。</td>
+            <td>检查 <code>filelist.f</code> 是否漏文件、<code>link_path</code> 是否漏写 <code>*</code> 或工艺库路径错误。</td>
+          </tr>
+          <tr>
+            <td class="err-code">is not valid directory</td>
+            <td>DVE</td>
+            <td>以 32 位默认模式启动 DVE 去读 64 位 VCS 生成的 <code>.vpd / .vdb / .daidir</code>。</td>
+            <td>启动命令必须加 <code>-full64</code>（如 <code>dve -full64 -cov -dir simv.vdb &amp;</code>）。</td>
+          </tr>
+          <tr>
+            <td class="err-code">cannot open display</td>
+            <td>全部 GUI</td>
+            <td><code>DISPLAY</code> 环境变量未设置、本地未启动 X Server 或 SSH 未开 <code>-X</code> 转发。</td>
+            <td>远端桌面设 <code>export DISPLAY=:0.0</code>；Windows 本地起 MobaXterm/VcXsrv 后 <code>ssh -X</code>，用 <code>xclock</code> 验证。</td>
+          </tr>
+          <tr>
+            <td class="err-code">Ambiguous output redirect / Unmatched "</td>
+            <td>远端 csh</td>
+            <td>在远端默认 <code>csh</code> 下直接跑了 bash 风格的 <code>2&gt;&amp;1</code>、<code>$()</code> 或多层引号。</td>
+            <td>所有复杂命令外层套 <code>ssh ... "bash -c '...'"</code>，或本地写 <code>.sh</code> 再 <code>scp</code> 上去 <code>bash</code> 执行。</td>
+          </tr>
+          <tr>
+            <td class="err-code">no matching host key type</td>
+            <td>SSH</td>
+            <td>现代 OpenSSH 客户端默认禁用旧版服务端仅支持的 <code>ssh-rsa</code> 主机密钥算法。</td>
+            <td>命令加 <code>-oHostKeyAlgorithms=+ssh-rsa -oPubkeyAcceptedKeyTypes=+ssh-rsa</code>。</td>
+          </tr>
+          <tr>
+            <td class="err-code">License checkout failed</td>
+            <td>全部 Synopsys</td>
+            <td><code>SNPSLMD_LICENSE_FILE</code> 未设、守护进程未起或对应 feature 席位已被占满。</td>
+            <td>确认 <code>export SNPSLMD_LICENSE_FILE=27007@lzc</code>，跑 <code>lmstat -a -c 27007@lzc</code> 查看并释放僵尸占用。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

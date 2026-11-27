@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大语言模型演进史：3b1b 风格交互式数学与架构全景</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <style>
+    :root {
+      --bg-canvas: #0b0f17;
+      --bg-card: #121826;
+      --bg-card-soft: #172033;
+      --b-blue: #58c4dd;
+      --b-yellow: #f7d046;
+      --b-green: #83c167;
+      --b-red: #fc6255;
+      --b-purple: #c084fc;
+      --ink-main: #eef2ff;
+      --ink-muted: #94a3b8;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    }
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg-canvas);
+      color: var(--ink-main);
+    }
+    body {
+      background: radial-gradient(circle at 18% 0%, #162238 0%, #0b0f17 48%, #080b12 100%);
+      color: var(--ink-main);
+    }
+    .manim-card {
+      background: rgba(18, 24, 38, 0.92);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    }
+    .manim-stage {
+      background: #090d14;
+      border: 1px solid rgba(88, 196, 221, 0.22);
+    }
+    .katex {
+      color: #f8fafc;
+      font-size: 1.04em;
+    }
+    .katex-display {
+      margin: 0.4rem 0 !important;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 0.3rem 0;
+    }
+    .chapter-sec {
+      scroll-margin-top: 84px;
+    }
+    input[type="range"] {
+      accent-color: #58c4dd;
+    }
+    .glow-blue { box-shadow: 0 0 24px rgba(88, 196, 221, 0.12); }
+    .glow-red { box-shadow: 0 0 20px rgba(252, 98, 85, 0.1); }
+    .glow-purple { box-shadow: 0 0 20px rgba(192, 132, 252, 0.1); }
+    .m-tex { font-family: 'Cambria Math', 'Times New Roman', Georgia, serif; font-style: italic; color: #f8fafc; }
+    .m-tex-block { display: block; text-align: center; font-size: 1.12rem; line-height: 1.9; margin: 0.25rem 0; }
+    .m-rm { font-style: normal; }
+    .m-frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 3px; font-size: 0.9em; line-height: 1.15; }
+    .m-frac-num { border-bottom: 1px solid #cbd5e1; padding: 0 3px 1px; }
+    .m-frac-den { padding: 1px 3px 0; }
+  </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-cyan-500/30 selection:text-cyan-100">
+  <!-- Sticky 3b1b Chapter Bar -->
+  <nav class="sticky top-0 z-40 backdrop-blur-md bg-[#0b0f17]/85 border-b border-slate-800/80">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5 shrink-0">
+        <span class="w-3 h-3 rounded-full bg-[#58c4dd] shadow-[0_0_10px_#58c4dd]"></span>
+        <span class="text-sm font-bold tracking-wide text-slate-100">LLM 演进史 · 3b1b 交互手记</span>
+      </div>
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-xs">
+        <a href="#ch0" class="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-cyan-500/20 text-cyan-300 font-medium whitespace-nowrap transition">0. 符号先修</a>
+        <a href="#ch1" class="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-200 whitespace-nowrap transition">1. 2017 原味</a>
+        <a href="#ch2" class="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-200 whitespace-nowrap transition">2. 显存突围</a>
+        <a href="#ch3" class="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-200 whitespace-nowrap transition">3. 算力解耦</a>
+        <a href="#ch4" class="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-200 whitespace-nowrap transition">4. 思考革命</a>
+        <a href="#ch5" class="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-cyan-500/20 text-amber-300 hover:text-amber-200 whitespace-nowrap transition">5. 终局合体</a>
+        <a href="#refs" class="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-purple-500/20 text-purple-300 hover:text-purple-200 whitespace-nowrap transition">📚 论文引用</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-14">
+    <!-- Hero Intro -->
+    <header class="text-center max-w-3xl mx-auto space-y-4">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 text-xs font-semibold">
+        <span>从零基础符号到 2026 终局架构</span>
+        <span class="text-cyan-500/50">|</span>
+        <span>单凭本页即可读懂全部</span>
+      </div>
+      <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-snug">
+        从一行矩阵乘法，到<span class="text-[#58c4dd]">下一代大语言模型</span>
+      </h1>
+      <p class="text-sm sm:text-base text-slate-300 leading-relaxed">
+        如果你觉得大模型论文里满屏的 $Q, K, V, S_t, \text{MoE}, \text{MLA}, \text{RLVR}$ 像天书，别慌。
+        这一页模仿 <strong class="text-[#f7d046]">3Blue1Brown</strong> 的讲法：<strong>在任何符号出现之前先讲清它的几何直觉</strong>，按真实历史时间线看清每一次主流变革、那些走过的弯路与失败尝试，以及每一项技术<strong>为什么好、为什么特别适合写论文</strong>。
+      </p>
+    </header>
+
+    <!-- ==================== CHAPTER 0: SYMBOLS FIRST ==================== -->
+    <section id="ch0" class="chapter-sec space-y-6">
+      <div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-800 pb-3">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-widest text-[#58c4dd]">Chapter 0 · Before the First Equation</span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-white mt-1">第 0 章：符号先修室 —— 在写下第一个公式之前</h2>
+        </div>
+        <span class="text-xs text-slate-400">先认全这 9 个基本零件，后面整页公式零障碍</span>
+      </div>
+
+      <p class="text-sm sm:text-base text-slate-300 leading-relaxed">
+        电脑看不懂汉字，它只认识数字排成的方阵（矩阵）。大语言模型干的唯一一件事，就是把一串文字变成一张数字表格，经过几次<strong>方形矩阵相乘</strong>，最后算出“下一个最可能出现的词”。在进入历史之前，我们先认识全篇最核心的 9 个符号：
+      </p>
+
+      <!-- 9 Symbol Primer Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 text-sm">
+        <div class="manim-card rounded-xl p-4 space-y-1.5">
+          <div class="text-lg font-bold text-[#58c4dd]">$N$（序列长度）</div>
+          <div class="text-xs text-slate-400">你输入的话被切成了多少个词块（Token）</div>
+          <p class="text-xs text-slate-300 leading-relaxed">1 个常见词 ≈ 1 个 Token。短对话 $N \approx 500$，读整本代码库 $N \approx 10^6$。它是引爆显存的罪魁祸首。</p>
+        </div>
+        <div class="manim-card rounded-xl p-4 space-y-1.5">
+          <div class="text-lg font-bold text-[#f7d046]">$d$（隐藏维度）</div>
+          <div class="text-xs text-slate-400">描述一个词用了多少个数字坐标</div>
+          <p class="text-xs text-slate-300 leading-relaxed">就像游戏角色有“攻击、防御、速度”属性表，大模型给每个词发一张含 $d$ 个小数的“语义体检表”（常见 $d = 4096$）。</p>
+        </div>
+        <div class="manim-card rounded-xl p-4 space-y-1.5">
+          <div class="text-lg font-bold text-[#83c167]">$X \in \mathbb{R}^{N \times d}$</div>
+          <div class="text-xs text-slate-400">整句话排成的输入大矩阵</div>
+          <p class="text-xs text-slate-300 leading-relaxed">记号 $[N, d]$ 叫 <strong>Shape（形状）</strong>：代表这张表有 $N$ 行（每个词占一行）、$d$ 列（每行是该词的向量）。</p>
+        </div>
+        <div class="manim-card rounded-xl p-4 space-y-1.5">
+          <div class="text-lg font-bold text-[#c084fc]">$Q, K, V$</div>
+          <div class="text-xs text-slate-400">提问 / 标签 / 内容三剑客</div>
+          <p class="text-xs text-slate-300 leading-relaxed">去图书馆查书：$Q$ 是你手里的搜索问题，$K$ 是书脊上的标签，$V$ 是书里的正文。用 $Q$ 匹配所有 $K$，再按比例借出 $V$。</p>
+        </div>
+        <div class="manim-card rounded-xl p-4 space-y-1.5">
+          <div class="text-lg font-bold text-[#58c4dd]">$A^\top$（转置）</div>
+          <div class="text-xs text-slate-400">把矩阵横竖翻个身</div>
+          <p class="text-xs text-slate-300 leading-relaxed">如果 $K$ 的形状是 $[N, d]$，那么 $K^\top$ 就是 $[d, N]$。翻身是为了让相邻两个矩阵的“内侧维度”对齐才能相乘！</p>
+        </div>
+        <div class="manim-card rounded-xl p-4 space-y-1.5">
+          <div class="text-lg font-bold text-[#f7d046]">$\operatorname{softmax}(z)$</div>
+          <div class="text-xs text-slate-400">把乱分变成 100% 百分比</div>
+          <p class="text-xs text-slate-300 leading-relaxed">公式 $\frac{e^{z_i}}{\sum_j e^{z_j}}$。因为指数 $e^z$ 放大效应极强，高分词会抢走 95%+ 权重，低分直接趋近 0。</p>
+        </div>
+        <div class="manim-card rounded-xl p-4 space-y-1.5">
+          <div class="text-lg font-bold text-[#83c167]">$\sigma(\cdot)$（激活函数）</div>
+          <div class="text-xs text-slate-400">神经元的“非线性开关”</div>
+          <p class="text-xs text-slate-300 leading-relaxed">如 ReLU 或 SwiGLU：把负数或弱信号直接关掉（归零），只放行强匹配信号——这也是 MoE 稀疏性的源头。</p>
+        </div>
+        <div class="manim-card rounded-xl p-4 space-y-1.5">
+          <div class="text-lg font-bold text-[#fc6255]">$\mathcal{O}(\cdot)$（复杂度）</div>
+          <div class="text-xs text-slate-400">长度翻倍时，耗时涨几倍？</div>
+          <p class="text-xs text-slate-300 leading-relaxed">$\mathcal{O}(1)$ 恒定不变；$\mathcal{O}(N)$ 长度翻 10 倍耗时翻 10 倍；$\mathcal{O}(N^2)$ 长度翻 10 倍耗时暴涨 <strong>100 倍</strong>！</p>
+        </div>
+        <div class="manim-card rounded-xl p-4 space-y-1.5 border-[#f7d046]/30">
+          <div class="text-lg font-bold text-[#f7d046]">$\odot$（哈达玛积 / 逐元素乘）</div>
+          <div class="text-xs text-slate-400">对应位置各自相乘（代码里的 <code>*</code>，Shape 不变）</div>
+          <p class="text-xs text-slate-300 leading-relaxed">例：$[2, 3, 4] \odot [10, 0, 5] = [20, 0, 20]$。要求两矩阵形状相同 $[A,B] \odot [A,B] = [A,B]$，在 LN 缩放和门控开关中专门用来逐维调节幅度。</p>
+        </div>
+      </div>
+
+      <!-- Interactive 3b1b Matrix Multiplication Shape Lab -->
+      <div class="manim-card rounded-2xl p-5 sm:p-6 glow-blue space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-bold text-[#f7d046]">3b1b 交互黑板 · 唯一必须掌握的矩阵相乘法则</span>
+            <h3 class="text-lg font-bold text-white mt-0.5">拖动滑块，亲眼看清 $[A, B] \times [B, C] = [A, C]$ 的形状变化与计算量</h3>
+          </div>
+          <span class="text-xs px-2.5 py-1 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-400/30">内侧 $B$ 必须相等并消去</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div class="bg-[#0b0f17] rounded-xl p-3 border border-slate-800">
+            <div class="flex justify-between mb-1"><span class="text-[#58c4dd] font-semibold">行数 $A$（如序列长度 $N$）</span><span id="lab0-a-v" class="font-bold text-white">8</span></div>
+            <input id="lab0-a" type="range" min="2" max="16" value="8" class="w-full">
+          </div>
+          <div class="bg-[#0b0f17] rounded-xl p-3 border border-slate-800">
+            <div class="flex justify-between mb-1"><span class="text-[#f7d046] font-semibold">内侧维度 $B$（相乘消去）</span><span id="lab0-b-v" class="font-bold text-white">4</span></div>
+            <input id="lab0-b" type="range" min="2" max="12" value="4" class="w-full">
+          </div>
+          <div class="bg-[#0b0f17] rounded-xl p-3 border border-slate-800">
+            <div class="flex justify-between mb-1"><span class="text-[#83c167] font-semibold">列数 $C$（输出宽度）</span><span id="lab0-c-v" class="font-bold text-white">6</span></div>
+            <input id="lab0-c" type="range" min="2" max="16" value="6" class="w-full">
+          </div>
+        </div>
+
+        <div id="lab0-svg" class="manim-stage rounded-xl p-3 overflow-x-auto"></div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs sm:text-sm">
+          <div class="rounded-xl bg-emerald-500/10 border border-emerald-400/25 p-3.5 text-slate-200">
+            <strong class="text-[#83c167]">为什么先讲透符号很好：</strong>后面所有看似吓人的大模型论文（MLA、Mamba、MoE、Titans），本质全是在玩“怎么改变矩阵相乘的 Shape，把巨大的 $N \times N$ 消掉”。
+          </div>
+          <div class="rounded-xl bg-purple-500/10 border border-purple-400/25 p-3.5 text-slate-200">
+            <strong class="text-[#c084fc]">为什么适合写论文：</strong>在论文 Method 开头写清 Notation Table 并给每个张量标明 Shape（如 $\mathbb{R}^{B \times N \times d}$），是顶会审稿人判断作者是否专业的第一印象分。
+          </div>
+        </div>
+      </div>
+    
+        <div class="rounded-xl bg-[#0e1422] border border-slate-800 p-4 space-y-2.5">
+          <div class="text-xs font-bold text-[#58c4dd]">📚 本章核心论文引用 &amp; 扩展阅读（真实可点链接）</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <a href="https://www.3blue1brown.com/lessons/attention/" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-2 rounded-lg bg-[#0b0f17] border border-slate-800 hover:border-[#58c4dd]/60 px-3 py-2 transition"><div><div class="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">3Blue1Brown: Attention in transformers, step-by-step <span class="text-[10px] text-slate-400 font-normal">(可视化教程 · 2024)</span></div><div class="text-[11px] text-slate-400 mt-0.5">直观拆解 Token、Embedding、Q/K/V 点积与因果掩码。</div></div><span class="text-xs text-slate-500 group-hover:text-cyan-300 shrink-0">↗</span></a>
+          <a href="https://www.3blue1brown.com/lessons/mlp/" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-2 rounded-lg bg-[#0b0f17] border border-slate-800 hover:border-[#58c4dd]/60 px-3 py-2 transition"><div><div class="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">3Blue1Brown: How might LLMs store facts (MLP) <span class="text-[10px] text-slate-400 font-normal">(可视化教程 · 2024)</span></div><div class="text-[11px] text-slate-400 mt-0.5">用几何方向直觉解释 FFN/MLP 如何存储世界事实。</div></div><span class="text-xs text-slate-500 group-hover:text-cyan-300 shrink-0">↗</span></a>
+          </div>
+        </div>
+    </section>
+
+    <!-- ==================== CHAPTER 1: 2017-2020 VANILLA ==================== -->
+    <section id="ch1" class="chapter-sec space-y-6">
+      <div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-800 pb-3">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-widest text-[#58c4dd]">Chapter 1 · 2017 — 2020 · Genesis</span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-white mt-1">第 1 章：创世纪 —— 最简单的原味 Vanilla Transformer</h2>
+        </div>
+        <span class="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-300">代表：Transformer / GPT-1, 2, 3</span>
+      </div>
+
+      <!-- New Symbols Strip -->
+      <div class="rounded-xl bg-cyan-500/10 border border-cyan-400/25 px-4 py-3.5 text-xs sm:text-sm text-cyan-100 space-y-1.5">
+        <div><strong class="text-[#58c4dd]">本章新符号预习（出现前先认全）：</strong></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5 text-xs text-slate-200">
+          <div>• <strong>$W^Q, W^K, W^V \in \mathbb{R}^{d \times d}$</strong>：把输入 $X$ 变成 $Q, K, V$ 的三块投影权重；$W_1, W_2$ 是 FFN 的升维/降维权重（$d_{\text{ff}} = 4d$）。</div>
+          <div>• <strong>$\operatorname{LN}$ / $\operatorname{RMSNorm}$（归一化稳压器）</strong>：把每行向量的数值缩放到稳定区间（防止层数一多数字爆成无穷大）。</div>
+          <div>• <strong>残差连接 $x + F(x)$</strong>：给信息修一条“直通高速公路”，新算出的增量直接加在原信号上，防止深层梯度消失。</div>
+          <div>• <strong>位置编码（PE / RoPE）</strong>：因为注意力同时看所有词、分不清前后顺序，必须给每个词贴上“座位号”。</div>
+          <div>• <strong>FLOPs &amp; Scaling Law</strong>：FLOPs 是浮点乘加次数（衡量算力）；Scaling Law 指参数与数据越大，误差呈规律下降。</div>
+          <div>• <strong>RNN / LSTM &amp; Warmup</strong>：RNN/LSTM 是 2017 年前的老式串行网络；Warmup 是训练初期把学习率从 0 慢慢拉高防震荡。</div>
+        </div>
+      </div>
+
+      <p class="text-sm sm:text-base text-slate-300 leading-relaxed">
+        2017 年之前，处理文字全靠 RNN 一个字接一个字地串行读，慢到没法并行训练。Transformer 提出了一个天才想法：<strong>让句子里所有词一步到位、两两互相打招呼（Self-Attention），再各自进小黑屋消化知识（FFN）</strong>。整个最简单的 LLM 核心只有两行公式：
+      </p>
+
+      <div class="manim-card rounded-2xl p-5 space-y-4">
+        <div class="bg-[#090d14] rounded-xl p-4 sm:p-5 border border-slate-800 space-y-3">
+          <div class="text-xs text-slate-400 text-center">完整 Transformer Block 公式（含 LN 与 RMSNorm 精确定义）：</div>
+          <div class="text-center">
+            $$x' = x + \operatorname{Attn}\!\big(\operatorname{Norm}(x)\big), \qquad y = x' + \operatorname{FFN}\!\big(\operatorname{Norm}(x')\big)$$
+            $$\operatorname{LN}(x) = \gamma \odot \frac{x - \mu}{\sqrt{\sigma_{\text{var}}^2 + \epsilon}} + \beta_{\text{ln}}, \qquad \operatorname{RMSNorm}(x) = \gamma \odot \frac{x}{\sqrt{\frac{1}{d}\sum_{i=1}^{d} x_i^2 + \epsilon}}$$
+            $$\operatorname{Attn}(Q, K, V) = \operatorname{softmax}\!\left(\frac{Q K^\top}{\sqrt{d}}\right) V, \qquad \operatorname{FFN}(x) = W_2\,\sigma(W_1 x)$$
+          </div>
+          <div class="rounded-lg bg-[#121826] border border-slate-800 p-3 text-xs text-slate-300 grid grid-cols-1 md:grid-cols-2 gap-1.5 leading-relaxed">
+            <div>• <strong>$\mu = \frac{1}{d}\sum_{i=1}^{d} x_i$</strong>：该词向量 $d$ 个坐标的平均值；<strong>$\sigma_{\text{var}}^2 = \frac{1}{d}\sum_{i=1}^{d}(x_i - \mu)^2$</strong>：方差（波动幅度）。</div>
+            <div>• <strong>$\epsilon \approx 10^{-5}$</strong>：防除零极小正数；<strong>$\gamma, \beta_{\text{ln}} \in \mathbb{R}^d$</strong>：可学习的逐维缩放与平移；<strong>$\odot$</strong>：逐元素相乘。</div>
+            <div>• <strong>为何现代改用 RMSNorm</strong>：去掉减均值 $\mu$ 和加平移 $\beta_{\text{ln}}$，只按均方根缩放，算得更快且深层一样稳。</div>
+            <div>• <strong>$1/\sqrt{d}$</strong>：防止点积 $QK^\top$ 随维度 $d$ 变大把 $\operatorname{softmax}$ 推向饱和导致梯度消失；$x', y$ 是中间与输出隐状态。</div>
+          </div>
+        </div>
+
+        <!-- Complete Transformer Block Anatomy: Post-LN (Failed) vs Pre-LN (Modern) -->
+        <div class="manim-stage rounded-xl p-4 overflow-x-auto">
+          <svg viewBox="0 0 760 134" class="w-full min-w-[600px] h-auto block" role="img" aria-label="完整 Transformer Block 结构：Post-LN 与 Pre-LN 对比">
+            <text x="12" y="18" font-size="11.5" font-weight="700" fill="#f7d046">为什么大家总提 LN（归一化）？看它在 Transformer Block 里的位置差异</text>
+
+            <!-- Left: Post-LN (2017) -->
+            <rect x="12" y="28" width="356" height="94" rx="10" fill="#2a1216" stroke="#fc6255" stroke-width="1.3" stroke-dasharray="4 3"/>
+            <text x="26" y="47" font-size="10.5" font-weight="700" fill="#fc6255">2017 原版 Post-LN：Norm(x + Attn(x))（深层易炸）</text>
+            <rect x="26" y="64" width="54" height="36" rx="6" fill="#132a3a" stroke="#58c4dd"/><text x="53" y="86" text-anchor="middle" font-size="10.5" font-weight="700" fill="#58c4dd">x [N,d]</text>
+            <line x1="80" y1="82" x2="104" y2="82" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="104" y="64" width="74" height="36" rx="6" fill="#121826" stroke="#f7d046"/><text x="141" y="86" text-anchor="middle" font-size="10" font-weight="700" fill="#f7d046">Attn / FFN</text>
+            <line x1="178" y1="82" x2="202" y2="82" stroke="#94a3b8" stroke-width="1.5"/>
+            <circle cx="214" cy="82" r="12" fill="#1e293b" stroke="#94a3b8"/><text x="214" y="86" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">+</text>
+            <path d="M 53 64 L 53 54 L 214 54 L 214 70" fill="none" stroke="#58c4dd" stroke-width="1.3"/>
+            <line x1="226" y1="82" x2="246" y2="82" stroke="#fc6255" stroke-width="1.6"/>
+            <rect x="246" y="64" width="108" height="36" rx="6" fill="#fc6255"/><text x="300" y="80" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">LN 卡在主干上</text><text x="300" y="94" text-anchor="middle" font-size="9" fill="#ffe4e6">深层梯度连乘爆炸</text>
+
+            <!-- Right: Pre-LN (Modern) -->
+            <rect x="386" y="28" width="362" height="94" rx="10" fill="#13261b" stroke="#83c167" stroke-width="1.4"/>
+            <text x="400" y="47" font-size="10.5" font-weight="700" fill="#83c167">现代主流 Pre-LN：x + Attn(RMSNorm(x))（百层稳训）</text>
+            <rect x="400" y="64" width="54" height="36" rx="6" fill="#132a3a" stroke="#58c4dd"/><text x="427" y="86" text-anchor="middle" font-size="10.5" font-weight="700" fill="#58c4dd">x [N,d]</text>
+            <line x1="454" y1="82" x2="472" y2="82" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="472" y="64" width="76" height="36" rx="6" fill="#1d3a27" stroke="#83c167"/><text x="510" y="86" text-anchor="middle" font-size="10" font-weight="700" fill="#83c167">RMSNorm</text>
+            <line x1="548" y1="82" x2="564" y2="82" stroke="#94a3b8" stroke-width="1.5"/>
+            <rect x="564" y="64" width="70" height="36" rx="6" fill="#121826" stroke="#f7d046"/><text x="599" y="86" text-anchor="middle" font-size="10" font-weight="700" fill="#f7d046">Attn/FFN</text>
+            <line x1="634" y1="82" x2="652" y2="82" stroke="#94a3b8" stroke-width="1.5"/>
+            <circle cx="664" cy="82" r="12" fill="#83c167"/><text x="664" y="86" text-anchor="middle" font-size="13" font-weight="700" fill="#0b0f17">+</text>
+            <path d="M 427 64 L 427 54 L 664 54 L 664 70" fill="none" stroke="#83c167" stroke-width="2"/>
+            <text x="545" y="51" text-anchor="middle" font-size="9" font-weight="700" fill="#83c167">残差高速公路畅通无阻</text>
+            <line x1="676" y1="82" x2="692" y2="82" stroke="#83c167" stroke-width="1.6"/>
+            <rect x="692" y="64" width="46" height="36" rx="6" fill="#1d3a27" stroke="#83c167"/><text x="715" y="86" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">x′</text>
+          </svg>
+        </div>
+
+        <!-- 3b1b Matrix Shape SVG for Vanilla -->
+        <div class="manim-stage rounded-xl p-4 overflow-x-auto">
+          <svg viewBox="0 0 760 154" class="w-full min-w-[600px] h-auto block" role="img" aria-label="Vanilla Attention 方形矩阵相乘与 O(N²) 瓶颈图">
+            <text x="12" y="18" font-size="11.5" font-weight="700" fill="#58c4dd">Vanilla 自注意力矩阵相乘 Shape 推演（看中间的红色炸弹）</text>
+            <!-- Q [N, d] -->
+            <rect x="14" y="34" width="66" height="88" rx="4" fill="#132a3a" stroke="#58c4dd" stroke-width="1.6"/>
+            <text x="47" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#58c4dd">Q</text>
+            <text x="47" y="90" text-anchor="middle" font-size="10.5" fill="#bae6fd">[N, d]</text>
+
+            <text x="96" y="82" text-anchor="middle" font-size="15" font-weight="700" fill="#94a3b8">×</text>
+
+            <!-- K^T [d, N] -->
+            <rect x="112" y="52" width="90" height="52" rx="4" fill="#2a2412" stroke="#f7d046" stroke-width="1.6"/>
+            <text x="157" y="74" text-anchor="middle" font-size="12" font-weight="700" fill="#f7d046">Kᵀ</text>
+            <text x="157" y="92" text-anchor="middle" font-size="10.5" fill="#fef08a">[d, N]</text>
+
+            <text x="218" y="82" text-anchor="middle" font-size="14" font-weight="700" fill="#94a3b8">=</text>
+
+            <!-- Intermediate N x N bomb -->
+            <rect x="234" y="28" width="114" height="100" rx="6" fill="#3a1418" stroke="#fc6255" stroke-width="2" stroke-dasharray="5 3"/>
+            <text x="291" y="64" text-anchor="middle" font-size="12" font-weight="700" fill="#fc6255">注意力矩阵 (中间)</text>
+            <text x="291" y="84" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">[N, N]</text>
+            <text x="291" y="104" text-anchor="middle" font-size="10" fill="#fca5a5">复杂度 O(N²) 爆炸!</text>
+
+            <text x="366" y="82" text-anchor="middle" font-size="15" font-weight="700" fill="#94a3b8">×</text>
+
+            <!-- V [N, d] -->
+            <rect x="382" y="34" width="66" height="88" rx="4" fill="#162e1e" stroke="#83c167" stroke-width="1.6"/>
+            <text x="415" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#83c167">V</text>
+            <text x="415" y="90" text-anchor="middle" font-size="10.5" fill="#bbf7d0">[N, d]</text>
+
+            <text x="464" y="82" text-anchor="middle" font-size="14" font-weight="700" fill="#94a3b8">=</text>
+
+            <!-- Output [N, d] -->
+            <rect x="480" y="34" width="76" height="88" rx="4" fill="#1d3a27" stroke="#83c167" stroke-width="2"/>
+            <text x="518" y="72" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">结果 Y</text>
+            <text x="518" y="90" text-anchor="middle" font-size="10.5" font-weight="700" fill="#83c167">[N, d]</text>
+
+            <!-- Annotation box -->
+            <rect x="574" y="34" width="174" height="88" rx="8" fill="#121826" stroke="#334155"/>
+            <text x="661" y="56" text-anchor="middle" font-size="11" font-weight="700" fill="#f7d046">为什么后面 9 年都在改它？</text>
+            <text x="661" y="76" text-anchor="middle" font-size="10" fill="#cbd5e1">1. 中间 [N,N] 随长度平方爆炸</text>
+            <text x="661" y="94" text-anchor="middle" font-size="10" fill="#cbd5e1">2. FFN 每词 100% 全参硬算</text>
+            <text x="661" y="112" text-anchor="middle" font-size="10" fill="#cbd5e1">3. 吐字时每次只能算 1 个词</text>
+          </svg>
+        </div>
+
+        <!-- Dead Ends + Why Good & Paper -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="rounded-xl bg-[#2a1216]/80 border border-[#fc6255]/35 p-4 space-y-2 glow-red">
+            <div class="text-xs font-bold text-[#fc6255]">💀 这一时期的失败尝试 &amp; 后来确认不好的设计</div>
+            <ul class="space-y-1.5 text-xs sm:text-sm text-slate-300 leading-relaxed">
+              <li><strong class="text-rose-300">深度堆叠 RNN / LSTM：</strong>必须按时间步串行计算，无法吃满 GPU 矩阵并行，长距离梯度消失，很快被 Transformer 彻底淘汰。</li>
+              <li><strong class="text-rose-300">Post-LN（把 LayerNorm 放在残差加法之后）：</strong>2017 原论文写法超过 24 层就梯度爆炸训不动，必须靠极其脆弱的 Warmup 续命，后来全面改为 <strong>Pre-LN + RMSNorm</strong>。</li>
+              <li><strong class="text-rose-300">绝对位置编码（正弦 / 可学习位置表）：</strong>训练 2K 长度、测试输入 4K 直接崩溃，后来被相对旋转位置编码 <strong>RoPE</strong> 全面取代。</li>
+            </ul>
+          </div>
+          <div class="rounded-xl bg-[#1a152e]/85 border border-[#c084fc]/35 p-4 space-y-2 glow-purple">
+            <div class="text-xs font-bold text-[#c084fc]">📝 为什么好 &amp; 为什么适合写论文</div>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              <strong class="text-[#83c167]">为什么好：</strong>极简规整、全序列并行训练速度极快，且展现出了惊人的 Scaling Law（堆数据与算力性能就稳定提升）。<br>
+              <strong class="text-[#f7d046]">为什么适合写论文：</strong>它是整个领域公认的黄金基准（Golden Baseline）。写架构论文时，把 Vanilla 在长上下文下的 $[N, N]$ 显存曲线和 100% 稠密 FLOPs 画成图 1，你的 Research Motivation 瞬间无懈可击。
+            </p>
+          </div>
+        </div>
+      </div>
+    
+        <div class="rounded-xl bg-[#0e1422] border border-slate-800 p-4 space-y-2.5">
+          <div class="text-xs font-bold text-[#58c4dd]">📚 本章核心论文引用 &amp; 扩展阅读（真实可点链接）</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-2 rounded-lg bg-[#0b0f17] border border-slate-800 hover:border-[#58c4dd]/60 px-3 py-2 transition"><div><div class="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">Attention Is All You Need (Vaswani et al.) <span class="text-[10px] text-slate-400 font-normal">(arXiv:1706.03762 · 2017)</span></div><div class="text-[11px] text-slate-400 mt-0.5">提出原味 Vanilla Transformer，彻底替代 RNN/LSTM 串行编码。</div></div><span class="text-xs text-slate-500 group-hover:text-cyan-300 shrink-0">↗</span></a>
+          <a href="https://arxiv.org/abs/2002.04745" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-2 rounded-lg bg-[#0b0f17] border border-slate-800 hover:border-[#58c4dd]/60 px-3 py-2 transition"><div><div class="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">On Layer Normalization in the Transformer Architecture (Xiong et al.) <span class="text-[10px] text-slate-400 font-normal">(arXiv:2002.04745 · 2020)</span></div><div class="text-[11px] text-slate-400 mt-0.5">理论证明 Post-LN 深层梯度爆炸及 Pre-LN 稳定训练的根因。</div></div><span class="text-xs text-slate-500 group-hover:text-cyan-300 shrink-0">↗</span></a>
+          <a href="https://arxiv.org/abs/2104.09864" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-2 rounded-lg bg-[#0b0f17] border border-slate-800 hover:border-[#58c4dd]/60 px-3 py-2 transition"><div><div class="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">RoFormer: Rotary Position Embedding (Su et al.) <span class="text-[10px] text-slate-400 font-normal">(arXiv:2104.09864 · 2021)</span></div><div class="text-[11px] text-slate-400 mt-0.5">提出 RoPE 旋转位置编码，取代易崩溃的绝对位置编码。</div></div><span class="text-xs text-slate-500 group-hover:text-cyan-300 shrink-0">↗</span></a>
+          </div>
+        </div>
+    </section>
+
+    <!-- ==================== CHAPTER 2: 2021-2023 MEMORY & KV COMPRESSION ==================== -->
+    <section id="ch2" class="chapter-sec space-y-6">
+      <div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-800 pb-3">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-widest text-[#58c4dd]">Chapter 2 · 2021 — 2023 · The Memory Wall</span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-white mt-1">第 2 章：显存突围 —— KV Cache 危机与低秩压缩（GQA → MLA）</h2>
+        </div>
+        <span class="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-300">代表：LLaMA (GQA) / DeepSeek-V2 (MLA)</span>
+      </div>
+
+      <!-- New Symbols Strip -->
+      <div class="rounded-xl bg-cyan-500/10 border border-cyan-400/25 px-4 py-3.5 text-xs sm:text-sm text-cyan-100 space-y-1.5">
+        <div><strong class="text-[#58c4dd]">本章新符号与概念预习（出现前先认全）：</strong></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5 text-xs text-slate-200">
+          <div>• <strong>KV Cache（键值缓存）</strong>：逐字吐答案时把算过的历史 $K, V$ 存进显存抽屉，免得每吐一字都从头重算。</div>
+          <div>• <strong>MHA / MQA / GQA</strong>：多头注意力的三种省显存写法——每头各存 1 份 KV（MHA）、全员共用 1 份（MQA）、分组共用（GQA）。</div>
+          <div>• <strong>$n_h, d_h, d_c$ 与 $c_j$</strong>：$n_h$ 是头数、$d_h = d/n_h$ 是单头维度；MLA 用 $W^{DKV}$ 把多头 KV 压成极小向量 $c_j \in \mathbb{R}^{d_c}$ ($d_c \ll n_h d_h$)，再用 $W^{UK}$ 还原。</div>
+          <div>• <strong>PPL（困惑度）&amp; Sliding Window &amp; Eckart-Young</strong>：PPL 衡量模型猜词有多懵（越低越好）；Sliding Window 只看最近局部窗口；Eckart-Young 是证明低秩压缩理论最优的经典定理。</div>
+        </div>
+      </div>
+
+      <p class="text-sm sm:text-base text-slate-300 leading-relaxed">
+        模型变大、上下文拉长到 128K 后，人们发现推理时最先炸掉的不是算力，而是存历史 $K, V$ 的 <strong>KV Cache 显存</strong>。业界先用 <strong>GQA</strong> 让几个头共用一组 KV，随后 <strong>MLA（多头潜在注意力）</strong>给出了更惊艳的数学解法：把庞大的多头 KV 先压成极小向量 $c_j$ 存起来，推理时利用<strong>矩阵结合律把升维矩阵 $W^{UK}$ 吸收到 $W^Q$ 里</strong>，连解压都省了！
+      </p>
+
+      <div class="manim-card rounded-2xl p-5 space-y-4">
+        <div class="bg-[#090d14] rounded-xl p-4 sm:p-5 border border-slate-800 space-y-3">
+          <div class="text-center">
+            $$c_j = W^{DKV} h_j \in \mathbb{R}^{d_c}, \qquad q_t^\top (W^{UK} c_j) = h_t^\top \underbrace{\Big((W^Q)^\top W^{UK}\Big)}_{\widetilde{W}^Q \in \mathbb{R}^{d \times d_c}} c_j$$
+          </div>
+          <div class="rounded-lg bg-[#121826] border border-slate-800 p-3 text-xs text-slate-300 grid grid-cols-1 md:grid-cols-2 gap-1.5 leading-relaxed">
+            <div>• <strong>$h_t, h_j \in \mathbb{R}^d$</strong>：当前第 $t$ 个查询词、历史第 $j$ 个词的隐状态向量；<strong>$q_t = W^Q h_t$</strong> 是查询向量。</div>
+            <div>• <strong>$W^{DKV} \in \mathbb{R}^{d_c \times d}$</strong>：降维压缩矩阵，把历史词压成极小缓存 <strong>$c_j \in \mathbb{R}^{d_c}$</strong>（$d_c \ll n_h d_h$）。</div>
+            <div>• <strong>$W^{UK} \in \mathbb{R}^{d \times d_c}$</strong>：原本用来把 $c_j$ 还原成键向量 $k_j = W^{UK} c_j$ 的升维矩阵。</div>
+            <div>• <strong>$\widetilde{W}^Q = (W^Q)^\top W^{UK}$</strong>：利用结合律把两个固定权重提前合并，推理时直接算 $(h_t^\top \widetilde{W}^Q) c_j$，零解压、零误差。</div>
+          </div>
+        </div>
+
+        <div class="manim-stage rounded-xl p-4 overflow-x-auto">
+          <svg viewBox="0 0 760 150" class="w-full min-w-[600px] h-auto block" role="img" aria-label="MLA 低秩压缩与矩阵吸收 Shape 推演图">
+            <text x="12" y="18" font-size="11.5" font-weight="700" fill="#83c167">MLA 两阶段方形矩阵推演：KV 体积压缩 90%+，且推理阶段零解压严格等价</text>
+
+            <!-- Stage 1: Compress -->
+            <rect x="14" y="34" width="60" height="84" rx="4" fill="#132a3a" stroke="#58c4dd" stroke-width="1.5"/>
+            <text x="44" y="72" text-anchor="middle" font-size="11.5" font-weight="700" fill="#58c4dd">H</text>
+            <text x="44" y="89" text-anchor="middle" font-size="10" fill="#bae6fd">[N, d]</text>
+
+            <text x="86" y="80" text-anchor="middle" font-size="14" font-weight="700" fill="#94a3b8">×</text>
+
+            <rect x="98" y="48" width="66" height="56" rx="4" fill="#2a2412" stroke="#f7d046" stroke-width="1.5"/>
+            <text x="131" y="72" text-anchor="middle" font-size="11" font-weight="700" fill="#f7d046">Wᴰᴷⱽ</text>
+            <text x="131" y="89" text-anchor="middle" font-size="10" fill="#fef08a">[d, d_c]</text>
+
+            <text x="176" y="80" text-anchor="middle" font-size="14" font-weight="700" fill="#94a3b8">=</text>
+
+            <rect x="188" y="34" width="70" height="84" rx="4" fill="#162e1e" stroke="#83c167" stroke-width="2"/>
+            <text x="223" y="70" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">C (缓存)</text>
+            <text x="223" y="88" text-anchor="middle" font-size="10" font-weight="700" fill="#83c167">[N, d_c]</text>
+            <text x="223" y="106" text-anchor="middle" font-size="9" fill="#bbf7d0">省 90%+ 显存</text>
+
+            <!-- Divider -->
+            <line x1="278" y1="30" x2="278" y2="124" stroke="#334155" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+            <!-- Stage 2: Absorbed Inference -->
+            <rect x="296" y="56" width="64" height="40" rx="4" fill="#132a3a" stroke="#58c4dd" stroke-width="1.5"/>
+            <text x="328" y="73" text-anchor="middle" font-size="11" font-weight="700" fill="#58c4dd">hₜ</text>
+            <text x="328" y="88" text-anchor="middle" font-size="10" fill="#bae6fd">[1, d]</text>
+
+            <text x="372" y="80" text-anchor="middle" font-size="14" font-weight="700" fill="#94a3b8">×</text>
+
+            <rect x="384" y="42" width="96" height="68" rx="4" fill="#26193a" stroke="#c084fc" stroke-width="1.8"/>
+            <text x="432" y="68" text-anchor="middle" font-size="11" font-weight="700" fill="#c084fc">W̃ᑫ (离线吸收)</text>
+            <text x="432" y="86" text-anchor="middle" font-size="10" fill="#e9d5ff">[d, d_c]</text>
+            <text x="432" y="101" text-anchor="middle" font-size="9" fill="#d8b4fe">(Wᑫ)ᵀWᵁᴷ</text>
+
+            <text x="492" y="80" text-anchor="middle" font-size="14" font-weight="700" fill="#94a3b8">=</text>
+
+            <rect x="504" y="56" width="66" height="40" rx="4" fill="#2a2412" stroke="#f7d046" stroke-width="1.5"/>
+            <text x="537" y="73" text-anchor="middle" font-size="11" font-weight="700" fill="#f7d046">q̃ₜ (中间)</text>
+            <text x="537" y="88" text-anchor="middle" font-size="10" fill="#fef08a">[1, d_c]</text>
+
+            <text x="582" y="80" text-anchor="middle" font-size="14" font-weight="700" fill="#94a3b8">×</text>
+
+            <rect x="594" y="52" width="60" height="48" rx="4" fill="#162e1e" stroke="#83c167" stroke-width="1.6"/>
+            <text x="624" y="72" text-anchor="middle" font-size="11" font-weight="700" fill="#83c167">Cᵀ</text>
+            <text x="624" y="88" text-anchor="middle" font-size="10" fill="#bbf7d0">[d_c, N]</text>
+
+            <text x="666" y="80" text-anchor="middle" font-size="14" font-weight="700" fill="#94a3b8">=</text>
+
+            <rect x="678" y="56" width="70" height="40" rx="4" fill="#1d3a27" stroke="#83c167" stroke-width="2"/>
+            <text x="713" y="73" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">Score</text>
+            <text x="713" y="88" text-anchor="middle" font-size="10" font-weight="700" fill="#83c167">[1, N]</text>
+          </svg>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="rounded-xl bg-[#2a1216]/80 border border-[#fc6255]/35 p-4 space-y-2 glow-red">
+            <div class="text-xs font-bold text-[#fc6255]">💀 这一时期的失败尝试 &amp; 后来确认不好的设计</div>
+            <ul class="space-y-1.5 text-xs sm:text-sm text-slate-300 leading-relaxed">
+              <li><strong class="text-rose-300">极端 MQA（所有头硬共用 1 组 KV）：</strong>虽然显存省到了极致，但在复杂推理任务上精度明显掉点且训练极易发散，后来被折中的 GQA 和更强的 MLA 取代。</li>
+              <li><strong class="text-rose-300">固定局部窗口（纯 Sliding Window / 固定棋盘稀疏）：</strong>看似把复杂度降为 $\mathcal{O}(N)$，但一旦关键信息落在窗口之外，模型直接“永久失忆”。</li>
+              <li><strong class="text-rose-300">直接线性插值拉长位置编码而不做退火微调：</strong>长文本困惑度（PPL）急剧恶化，注意力焦点彻底模糊。</li>
+            </ul>
+          </div>
+          <div class="rounded-xl bg-[#1a152e]/85 border border-[#c084fc]/35 p-4 space-y-2 glow-purple">
+            <div class="text-xs font-bold text-[#c084fc]">📝 为什么好 &amp; 为什么适合写论文</div>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              <strong class="text-[#83c167]">为什么好：</strong>既把 KV 显存压掉 90%+，又保留了全部头的独立表达力，精度甚至反超标准 MHA。<br>
+              <strong class="text-[#f7d046]">为什么适合写论文：</strong>理论有经典的 Eckart-Young 低秩定理 + 矩阵结合律零误差证明，实验上扫一遍压缩维度 $d_c$ 就能画出极其漂亮的“显存占用 vs 长文本精度”消融曲线，极易打动审稿人。
+            </p>
+          </div>
+        </div>
+      </div>
+    
+        <div class="rounded-xl bg-[#0e1422] border border-slate-800 p-4 space-y-2.5">
+          <div class="text-xs font-bold text-[#58c4dd]">📚 本章核心论文引用 &amp; 扩展阅读（真实可点链接）</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <a href="https://arxiv.org/abs/2305.13245" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-2 rounded-lg bg-[#0b0f17] border border-slate-800 hover:border-[#58c4dd]/60 px-3 py-2 transition"><div><div class="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">GQA: Generalized Multi-Query Transformer (Ainslie et al.) <span class="text-[10px] text-slate-400 font-normal">(arXiv:2305.13245 · EMNLP 2023)</span></div><div class="text-[11px] text-slate-400 mt-0.5">解决 MQA 掉点问题，提出分组共享 KV Cache 的 GQA 折中方案。</div></div><span class="text-xs text-slate-500 group-hover:text-cyan-300 shrink-0">↗</span></a>
+          <a href="https://arxiv.org/abs/2405.04434" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-2 rounded-lg bg-[#0b0f17] border border-slate-800 hover:border-[#58c4dd]/60 px-3 py-2 transition"><div><div class="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">DeepSeek-V2: Multi-head Latent Attention (MLA) <span class="text-[10px] text-slate-400 font-normal">(arXiv:2405.04434 · 2024)</span></div><div class="text-[11px] text-slate-400 mt-0.5">提出 MLA 低秩 KV 压缩与矩阵吸收，KV Cache 锐减 93.3%。</div></div><span class="text-xs text-slate-500 group-hover:text-cyan-300 shrink-0">↗</span></a>
+          <a href="https://arxiv.org/abs/2506.02523" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-2 rounded-lg bg-[#0b0f17] border border-slate-800 hover:border-[#58c4dd]/60 px-3 py-2 transition"><div><div class="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">Hardware-Centric Analysis of DeepSeek's MLA <span class="text-[10px] text-slate-400 font-normal">(arXiv:2506.02523 · 2025)</span></div><div class="text-[11px] text-slate-400 mt-0.5">从硬件带宽与算术强度角度分析 MLA 矩阵吸收的收益。</div></div><span class="text-xs text-slate-500 group-hover:text-cyan-300 shrink-0">↗</span></a>
+          </div>
+        </div>
+    </section>
+
+    <!-- ==================== CHAPTER 3: 2023-2024 DECOUPLING & SPARSITY ==================== -->
+    <section id="ch3" class="chapter-sec space-y-6">
+      <div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-800 pb-3">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-widest text-[#58c4dd]">Chapter 3 · 2023 — 2024 · Decoupling Compute &amp; Memory</span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-white mt-1">第 3 章：算力解耦 —— 线性注意力、稀疏 MoE 与 Engram 查表</h2>
+        </div>
+        <span class="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-300">代表：Mamba / 3:1 Hybrid / Dynamic-k MoE / Engram</span>
+      </div>
+
+      <!-- New Symbols Strip -->
+      <div class="rounded-xl bg-cyan-500/10 border border-cyan-400/25 px-4 py-3.5 text-xs sm:text-sm text-cyan-100 space-y-1.5">
+        <div><strong class="text-[#58c4dd]">本章新符号与概念预习（出现前先认全）：</strong></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5 text-xs text-slate-200">
+          <div>• <strong>$\phi(\cdot)$、$S_t$ 与 SSM（状态空间模型）</strong>：$\phi$ 拆开指数核，把历史压成固定方阵 $S_t \in \mathbb{R}^{d \times d}$（如 Mamba 等 SSM）；$\alpha_t$ 控制遗忘旧记忆的比例。</div>
+          <div>• <strong>矩阵秩 $\operatorname{rank}(S_t)$ 与 NIAH（大海捞针）</strong>：秩衡量 $S_t$ 最多能无碰撞塞下多少组独立信息；NIAH 是在 10 万字里藏一句暗号考模型能否精准找回。</div>
+          <div>• <strong>MoE（$E, k, g_i, E_{\text{shared}}$）</strong>：把大 FFN 拆成 $E$ 个小专家，路由权重 $g_i(x)$ 只挑前 $k \ll E$ 个干活，搭配所有词共用的基础专家 $E_{\text{shared}}$。</div>
+          <div>• <strong>Engram 与 Aux Loss</strong>：Engram 用哈希函数 $\operatorname{Hash}_m$ 做 $O(1)$ 查表背静态事实；Aux Loss 是早年为防 MoE 专家负载不均强加的惩罚损失。</div>
+        </div>
+      </div>
+
+      <p class="text-sm sm:text-base text-slate-300 leading-relaxed">
+        这一阶段人们悟透了两个震撼的数学事实：第一，<strong>利用矩阵结合律先算 $\phi(K)^\top V$</strong>，可以把 75% 层的显存永远锁死在固定方阵 $S_t \in \mathbb{R}^{d \times d}$（再留 25% MLA 全局层防止信息混叠）；第二，<strong>稠密 FFN 激活后 90%+ 神经元接近 0</strong>，因此静态事实直接抽成 $O(1)$ 哈希字典 <strong>Engram</strong>，动态推理改成只激活 5%~10% 参数的 <strong>Dynamic-k MoE</strong>！
+      </p>
+
+      <div class="manim-card rounded-2xl p-5 space-y-4">
+        <div class="bg-[#090d14] rounded-xl p-4 sm:p-5 border border-slate-800 space-y-3">
+          <div class="text-center">
+            $$\big(\phi(Q)\phi(K)^\top\big)V = \phi(Q)\underbrace{\big(\phi(K)^\top V\big)}_{S_t \in \mathbb{R}^{d \times d}}, \qquad S_t = \alpha_t S_{t-1} + \phi(k_t) v_t^\top$$
+            $$\operatorname{MoE}(x) = E_{\text{shared}}(x) + \sum_{i \in \operatorname{TopK}(x)} g_i(x) E_i(x), \qquad h_{\text{mem}} = \sum_{m=1}^{M} \operatorname{Table}_m\!\big[\operatorname{Hash}_m(w_{t-n+1:t})\big]$$
+          </div>
+          <div class="rounded-lg bg-[#121826] border border-slate-800 p-3 text-xs text-slate-300 grid grid-cols-1 md:grid-cols-2 gap-1.5 leading-relaxed">
+            <div>• <strong>$\phi(\cdot)$ 与 $S_t$</strong>：$\phi$ 将指数相似度拆成特征内积；$S_t \in \mathbb{R}^{d \times d}$ 是固定大小递推记忆矩阵；$\alpha_t \in (0,1)$ 是选择性遗忘系数。</div>
+            <div>• <strong>$E_{\text{shared}}, E_i, g_i(x)$</strong>：$E_{\text{shared}}$ 是常驻共享专家；$E_i$ 是第 $i$ 个路由专家；$g_i(x)$ 是路由器给出的归一化权重。</div>
+            <div>• <strong>$\operatorname{TopK}(x)$</strong>：仅挑得分最高的前 $k \ll E$ 个专家参与计算（简单词可动态取 $k=0$ 跳过）。</div>
+            <div>• <strong>$h_{\text{mem}}, \operatorname{Table}_m, \operatorname{Hash}_m$</strong>：用 $M$ 组哈希把局部 $n$ 个词 $w_{t-n+1:t}$ 映射到超大字典表 $\operatorname{Table}_m$，几乎零 FLOPs 取出静态记忆。</div>
+          </div>
+        </div>
+
+        <div class="manim-stage rounded-xl p-4 overflow-x-auto">
+          <svg viewBox="0 0 760 150" class="w-full min-w-[600px] h-auto block" role="img" aria-label="线性注意力结合律与 MoE 稀疏路由 Shape 推演图">
+            <text x="12" y="18" font-size="11.5" font-weight="700" fill="#f7d046">左：线性注意力换括号绕开 [N,N] ｜ 右：Dynamic-k MoE 只算前 k ≪ E 个专家</text>
+
+            <!-- Left: Linear Attn -->
+            <rect x="14" y="48" width="60" height="44" rx="4" fill="#2a2412" stroke="#f7d046" stroke-width="1.5"/>
+            <text x="44" y="67" text-anchor="middle" font-size="10.5" font-weight="700" fill="#f7d046">φ(K)ᵀ</text>
+            <text x="44" y="83" text-anchor="middle" font-size="9.5" fill="#fef08a">[d, N]</text>
+
+            <text x="85" y="74" text-anchor="middle" font-size="13" font-weight="700" fill="#94a3b8">×</text>
+
+            <rect x="96" y="34" width="54" height="76" rx="4" fill="#162e1e" stroke="#83c167" stroke-width="1.5"/>
+            <text x="123" y="68" text-anchor="middle" font-size="11" font-weight="700" fill="#83c167">V</text>
+            <text x="123" y="85" text-anchor="middle" font-size="9.5" fill="#bbf7d0">[N, d]</text>
+
+            <text x="161" y="74" text-anchor="middle" font-size="13" font-weight="700" fill="#94a3b8">=</text>
+
+            <rect x="172" y="44" width="58" height="54" rx="6" fill="#26193a" stroke="#c084fc" stroke-width="2"/>
+            <text x="201" y="68" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">Sₜ (中)</text>
+            <text x="201" y="85" text-anchor="middle" font-size="10" font-weight="700" fill="#c084fc">[d, d]</text>
+
+            <text x="246" y="74" text-anchor="middle" font-size="11" font-weight="700" fill="#58c4dd">←φ(Q)</text>
+
+            <rect x="274" y="34" width="66" height="76" rx="4" fill="#1d3a27" stroke="#83c167" stroke-width="2"/>
+            <text x="307" y="68" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">Y 结果</text>
+            <text x="307" y="85" text-anchor="middle" font-size="10" font-weight="700" fill="#83c167">[N, d]</text>
+            <text x="175" y="132" text-anchor="middle" font-size="10" fill="#c084fc">显存恒定 O(1)，但受限 rank(Sₜ) ≤ d → 需 25% 全局层兜底</text>
+
+            <!-- Divider -->
+            <line x1="364" y1="28" x2="364" y2="132" stroke="#334155" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+            <!-- Right: Dynamic-k MoE -->
+            <rect x="382" y="34" width="54" height="76" rx="4" fill="#132a3a" stroke="#58c4dd" stroke-width="1.5"/>
+            <text x="409" y="68" text-anchor="middle" font-size="11" font-weight="700" fill="#58c4dd">X</text>
+            <text x="409" y="85" text-anchor="middle" font-size="9.5" fill="#bae6fd">[N, d]</text>
+
+            <text x="447" y="74" text-anchor="middle" font-size="13" font-weight="700" fill="#94a3b8">×</text>
+
+            <rect x="458" y="48" width="58" height="46" rx="4" fill="#2a2412" stroke="#f7d046" stroke-width="1.5"/>
+            <text x="487" y="68" text-anchor="middle" font-size="10.5" font-weight="700" fill="#f7d046">W_r</text>
+            <text x="487" y="83" text-anchor="middle" font-size="9.5" fill="#fef08a">[d, E]</text>
+
+            <text x="534" y="74" text-anchor="middle" font-size="10" font-weight="700" fill="#83c167">TopK</text>
+
+            <rect x="554" y="34" width="60" height="76" rx="4" fill="#26193a" stroke="#c084fc" stroke-width="1.8"/>
+            <text x="584" y="68" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">G_k (中)</text>
+            <text x="584" y="85" text-anchor="middle" font-size="10" fill="#c084fc">[N, k]</text>
+
+            <text x="625" y="74" text-anchor="middle" font-size="13" font-weight="700" fill="#94a3b8">×</text>
+
+            <rect x="636" y="44" width="46" height="56" rx="4" fill="#162e1e" stroke="#83c167" stroke-width="1.5"/>
+            <text x="659" y="68" text-anchor="middle" font-size="10.5" font-weight="700" fill="#83c167">E_k</text>
+            <text x="659" y="84" text-anchor="middle" font-size="9" fill="#bbf7d0">[k, d]</text>
+
+            <text x="692" y="74" text-anchor="middle" font-size="13" font-weight="700" fill="#94a3b8">=</text>
+
+            <rect x="702" y="34" width="48" height="76" rx="4" fill="#1d3a27" stroke="#83c167" stroke-width="2"/>
+            <text x="726" y="68" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">Y</text>
+            <text x="726" y="85" text-anchor="middle" font-size="9.5" font-weight="700" fill="#83c167">[N, d]</text>
+            <text x="566" y="132" text-anchor="middle" font-size="10" fill="#83c167">截断误差 ≤ (Σ_{i∉TopK} |gᵢ|)·‖E‖ → 0（简单词 k=0 直接跳过）</text>
+          </svg>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="rounded-xl bg-[#2a1216]/80 border border-[#fc6255]/35 p-4 space-y-2 glow-red">
+            <div class="text-xs font-bold text-[#fc6255]">💀 这一时期的失败尝试 &amp; 后来确认不好的设计</div>
+            <ul class="space-y-1.5 text-xs sm:text-sm text-slate-300 leading-relaxed">
+              <li><strong class="text-rose-300">100% 纯线性注意力 / 纯 SSM 替换掉全部 Softmax：</strong>数学上 $\operatorname{rank}(S_t) \le d$ 存在硬容量天花板！超长文“大海捞针（NIAH）”与精确拷贝任务全军覆没，最终确认<strong>必须 3:1 混合全局层</strong>。</li>
+              <li><strong class="text-rose-300">早期 Switch Transformer 粗暴 Top-1 丢弃 Token：</strong>容量溢出直接把词扔掉，导致路由坍塌和训练震荡，后来全面改用“共享专家 + 动态无损负载均衡”。</li>
+              <li><strong class="text-rose-300">强辅助均衡 Loss（Aux Loss 权重过大）：</strong>虽然专家均衡了，但干扰了主任务梯度导致模型变笨，后来改用无梯度的动态偏置（Auxiliary-Loss-Free Balancing）。</li>
+            </ul>
+          </div>
+          <div class="rounded-xl bg-[#1a152e]/85 border border-[#c084fc]/35 p-4 space-y-2 glow-purple">
+            <div class="text-xs font-bold text-[#c084fc]">📝 为什么好 &amp; 为什么适合写论文</div>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              <strong class="text-[#83c167]">为什么好：</strong>把“静态背书（Engram）”、“长程略读（线性）”、“精准精读（稀疏/MLA）”和“按需算题（MoE）”四件事彻底解耦，万亿参数也能跑出小模型速度。<br>
+              <strong class="text-[#f7d046]">为什么适合写论文：</strong>用一句 $\operatorname{rank}(S_t) \le d$ 解释“为什么纯线性必败、必须混合”，再用三角不等式给出 MoE/Engram 的截断误差上界，理论+消融双杀！
+            </p>
+          </div>
+        </div>
+      </div>
+    
+        <div class="rounded-xl bg-[#0e1422] border border-slate-800 p-4 space-y-2.5">
+          <div class="text-xs font-bold text-[#58c4dd]">📚 本章核心论文引用 &amp; 扩展阅读（真实可点链接）</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <a href="https://arxiv.org/abs/2006.16236" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-2 rounded-lg bg-[#0b0f17] border border-slate-800 hover:border-[#58c4dd]/60 px-3 py-2 transition"><div><div class="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">Transformers are RNNs: Linear Attention (Katharopoulos et al.) <span class="text-[10px] text-slate-400 font-normal">(arXiv:2006.16236 · 2020)</span></div><div class="text-[11px] text-slate-400 mt-0.5">首次用核特征映射与矩阵结合律将注意力从 O(N²) 降为 O(N)。</div></div><span class="text-xs text-slate-500 group-hover:text-cyan-300 shrink-0">↗</span></a>
+          <a href="https://arxiv.org/abs/2312.00752" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-2 rounded-lg bg-[#0b0f17] border border-slate-800 hover:border-[#58c4dd]/60 px-3 py-2 transition"><div><div class="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">Mamba: Selective State Spaces (Gu & Dao) <span class="text-[10px] text-slate-400 font-normal">(arXiv:2312.00752 · 2023)</span></div><div class="text-[11px] text-slate-400 mt-0.5">提出数据相关选择性状态空间模型，推理吞吐达 Transformer 5×。</div></div><span class="text-xs text-slate-500 group-hover:text-cyan-300 shrink-0">↗</span></a>
+          <a href="https://arxiv.org/abs/2012.14913" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-2 rounded-lg bg-[#0b0f17] border border-slate-800 hover:border-[#58c4dd]/60 px-3 py-2 transition"><div><div class="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">Transformer FFN Layers Are Key-Value Memories (Geva et al.) <span class="text-[10px] text-slate-400 font-normal">(arXiv:2012.14913 · 2020)</span></div><div class="text-[11px] text-slate-400 mt-0.5">奠基论文：揭示 FFN 本质上是软匹配的 Key-Value 查表记忆。</div></div><span class="text-xs text-slate-500 group-hover:text-cyan-300 shrink-0">↗</span></a>
+          <a href="https://arxiv.org/abs/2412.19437" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-2 rounded-lg bg-[#0b0f17] border border-slate-800 hover:border-[#58c4dd]/60 px-3 py-2 transition"><div><div class="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">DeepSeek-V3 Technical Report (Aux-Loss-Free MoE + MTP) <span class="text-[10px] text-slate-400 font-normal">(arXiv:2412.19437 · 2024)</span></div><div class="text-[11px] text-slate-400 mt-0.5">提出无辅助损失负载均衡 MoE 与原生 MTP 训练目标。</div></div><span class="text-xs text-slate-500 group-hover:text-cyan-300 shrink-0">↗</span></a>
+          </div>
+        </div>
+    </section>
+
+    <!-- ==================== CHAPTER 4: 2024-2025 THINKING REVOLUTION ==================== -->
+    <section id="ch4" class="chapter-sec space-y-6">
+      <div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-800 pb-3">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-widest text-[#58c4dd]">Chapter 4 · 2024 — 2025 · The Thinking Revolution</span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-white mt-1">第 4 章：思考革命 —— RLVR 自举、隐空间循环、快权重与无损 MTP</h2>
+        </div>
+        <span class="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-300">代表：RLVR / Looped / Titans / MTP</span>
+      </div>
+
+      <!-- New Symbols Strip -->
+      <div class="rounded-xl bg-cyan-500/10 border border-cyan-400/25 px-4 py-3.5 text-xs sm:text-sm text-cyan-100 space-y-1.5">
+        <div><strong class="text-[#58c4dd]">本章新符号与概念预习（出现前先认全）：</strong></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5 text-xs text-slate-200">
+          <div>• <strong>RLHF vs RLVR 与 Reward Hacking</strong>：RLHF 靠人工打分训奖励模型，模型易钻空子拍马屁（Reward Hacking）；RLVR 改用沙盒客观对错奖励 $R_{\text{ver}}(\tau) \in \{0, 1\}$。</div>
+          <div>• <strong>CoT（思维链）与 Looped（$h^{(t)}$）</strong>：CoT 是把草稿写成文字输出；Looped 则让第 $t$ 圈隐向量 $h^{(t)}$ 在脑内默默循环推演，省去冗长文字。</div>
+          <div>• <strong>快权重 $W_t$、学习率 $\eta$ 与 Lost-in-the-Middle</strong>：长窗口硬塞会导致模型遗忘中间细节（Lost-in-the-Middle）；Titans 用学习率 $\eta$ 在推理期边读边局部微调快权重 $W_t \in \mathbb{R}^{d \times d}$。</div>
+          <div>• <strong>MTP 与拒绝采样（$q, p, \beta$）</strong>：MTP 一次猜多词得草稿分布 $q(x)$，主干并行算出真实分布 $p(x)$，$\beta = 1 - \sum \min(p, q)$ 是总拒绝概率，用于重采样补齐误差。</div>
+        </div>
+      </div>
+
+      <p class="text-sm sm:text-base text-slate-300 leading-relaxed">
+        当互联网人类文本快被读光、单纯把模型做大边际收益下降时，范式转向了四个新维度：用<strong>沙盒自动判分（RLVR）</strong>自己刷题进化；用 <strong>Looped 循环深度</strong>让难题在隐空间多转几圈；用 <strong>Titans 快权重</strong>在推理时边读边做一步梯度下降记住新代码库；再用 <strong>MTP + 拒绝采样</strong>把逐字生成加速 2~3 倍且数学上 100% 零损失！
+      </p>
+
+      <div class="manim-card rounded-2xl p-5 space-y-4">
+        <div class="bg-[#090d14] rounded-xl p-4 sm:p-5 border border-slate-800 space-y-3">
+          <div class="text-center">
+            $$h^{(t+1)} = h^{(t)} + f\!\big(h^{(t)};\, \theta\big), \qquad W_t = W_{t-1}\big(I - \eta k_t k_t^\top\big) + \eta v_t k_t^\top$$
+            $$\nabla_\theta J(\theta) = \mathbb{E}_{\tau \sim \pi_\theta}\!\Big[\big(R_{\text{ver}}(\tau) - b\big)\nabla_\theta \log \pi_\theta(\tau)\Big], \qquad P(X=x) = \min(p, q) + \beta\frac{\max(0, p-q)}{\beta} \equiv p(x)$$
+          </div>
+          <div class="rounded-lg bg-[#121826] border border-slate-800 p-3 text-xs text-slate-300 grid grid-cols-1 md:grid-cols-2 gap-1.5 leading-relaxed">
+            <div>• <strong>$h^{(t)}, f(\cdot; \theta)$</strong>：Looped 隐空间第 $t$ 圈状态与共享参数 $\theta$ 的核心层，循环 $k$ 圈逼近不动点 $h^*$。</div>
+            <div>• <strong>$W_t, I, \eta, k_t, v_t$</strong>：Titans 快权重矩阵、单位矩阵 $I$、在线学习率 $\eta$ 与新读入键值对；$I - \eta k_t k_t^\top$ 负责正交擦除旧错。</div>
+            <div>• <strong>$\pi_\theta, \tau, R_{\text{ver}}, b$</strong>：策略模型 $\pi_\theta$ 采出的轨迹 $\tau$、沙盒客观奖励 $R_{\text{ver}} \in \{0,1\}$、组内均值基线 $b$（GRPO 相对优势）。</div>
+            <div>• <strong>$p(x), q(x), \beta$</strong>：主干真实分布 $p$、MTP 草稿分布 $q$、总拒绝概率 $\beta = 1 - \sum \min(p, q)$，分子分母 $\beta$ 相消保证 100% 无损。</div>
+          </div>
+        </div>
+
+        <div class="manim-stage rounded-xl p-4 overflow-x-auto">
+          <svg viewBox="0 0 760 150" class="w-full min-w-[600px] h-auto block" role="img" aria-label="Titans 快权重外积更新与 MTP 并行验收 Shape 推演图">
+            <text x="12" y="18" font-size="11.5" font-weight="700" fill="#c084fc">左：Titans 误差外积更新快权重 [d,d] ｜ 右：MTP 并行猜 [k,V] + 主干零损验收</text>
+
+            <!-- Left: Titans Delta Rule -->
+            <rect x="14" y="42" width="54" height="58" rx="4" fill="#2a2412" stroke="#f7d046" stroke-width="1.5"/>
+            <text x="41" y="68" text-anchor="middle" font-size="10.5" font-weight="700" fill="#f7d046">Wₜ₋₁</text>
+            <text x="41" y="84" text-anchor="middle" font-size="9.5" fill="#fef08a">[d, d]</text>
+
+            <text x="77" y="75" text-anchor="middle" font-size="12" font-weight="700" fill="#94a3b8">×k−v=</text>
+
+            <rect x="106" y="42" width="52" height="58" rx="4" fill="#3a1418" stroke="#fc6255" stroke-width="1.6"/>
+            <text x="132" y="68" text-anchor="middle" font-size="10.5" font-weight="700" fill="#fc6255">eₜ (中)</text>
+            <text x="132" y="84" text-anchor="middle" font-size="9.5" fill="#fca5a5">[d, 1]</text>
+
+            <text x="169" y="75" text-anchor="middle" font-size="13" font-weight="700" fill="#94a3b8">×</text>
+
+            <rect x="180" y="56" width="52" height="32" rx="4" fill="#132a3a" stroke="#58c4dd" stroke-width="1.5"/>
+            <text x="206" y="70" text-anchor="middle" font-size="10" font-weight="700" fill="#58c4dd">kₜᵀ</text>
+            <text x="206" y="83" text-anchor="middle" font-size="9" fill="#bae6fd">[1, d]</text>
+
+            <text x="243" y="75" text-anchor="middle" font-size="13" font-weight="700" fill="#94a3b8">=</text>
+
+            <rect x="254" y="42" width="56" height="58" rx="4" fill="#26193a" stroke="#c084fc" stroke-width="1.6"/>
+            <text x="282" y="68" text-anchor="middle" font-size="10.5" font-weight="700" fill="#c084fc">ΔW</text>
+            <text x="282" y="84" text-anchor="middle" font-size="9.5" fill="#e9d5ff">[d, d]</text>
+
+            <text x="321" y="75" text-anchor="middle" font-size="12" font-weight="700" fill="#83c167">→</text>
+            <rect x="330" y="42" width="46" height="58" rx="4" fill="#1d3a27" stroke="#83c167" stroke-width="2"/>
+            <text x="353" y="68" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">Wₜ</text>
+            <text x="353" y="84" text-anchor="middle" font-size="9" fill="#83c167">[d, d]</text>
+            <text x="195" y="130" text-anchor="middle" font-size="10" fill="#f7d046">在线梯度下降 ≡ 带正交擦除纠错的广义注意力</text>
+
+            <!-- Divider -->
+            <line x1="392" y1="28" x2="392" y2="132" stroke="#334155" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+            <!-- Right: MTP Speculative Verification -->
+            <rect x="408" y="54" width="50" height="38" rx="4" fill="#132a3a" stroke="#58c4dd" stroke-width="1.5"/>
+            <text x="433" y="70" text-anchor="middle" font-size="10.5" font-weight="700" fill="#58c4dd">hₜ</text>
+            <text x="433" y="85" text-anchor="middle" font-size="9" fill="#bae6fd">[1, d]</text>
+
+            <text x="468" y="76" text-anchor="middle" font-size="12" font-weight="700" fill="#94a3b8">×W</text>
+
+            <rect x="486" y="40" width="68" height="62" rx="4" fill="#2a2412" stroke="#f7d046" stroke-width="1.5"/>
+            <text x="520" y="66" text-anchor="middle" font-size="10.5" font-weight="700" fill="#f7d046">Q (草稿)</text>
+            <text x="520" y="84" text-anchor="middle" font-size="10" fill="#fef08a">[k, V]</text>
+
+            <text x="572" y="76" text-anchor="middle" font-size="10" font-weight="700" fill="#58c4dd">并行验</text>
+
+            <rect x="594" y="40" width="68" height="62" rx="4" fill="#132a3a" stroke="#58c4dd" stroke-width="1.8"/>
+            <text x="628" y="66" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">P (真实)</text>
+            <text x="628" y="84" text-anchor="middle" font-size="10" fill="#58c4dd">[k, V]</text>
+
+            <text x="673" y="76" text-anchor="middle" font-size="13" font-weight="700" fill="#83c167">→</text>
+
+            <rect x="684" y="46" width="64" height="50" rx="6" fill="#1d3a27" stroke="#83c167" stroke-width="2"/>
+            <text x="716" y="68" text-anchor="middle" font-size="10.5" font-weight="700" fill="#ffffff">输出</text>
+            <text x="716" y="84" text-anchor="middle" font-size="9.5" font-weight="700" fill="#83c167">[k_acc, 1]</text>
+            <text x="578" y="130" text-anchor="middle" font-size="10" fill="#83c167">拒绝采样保证输出分布 ≡ p(x)，100% 数学零误差提速 2~3×</text>
+          </svg>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="rounded-xl bg-[#2a1216]/80 border border-[#fc6255]/35 p-4 space-y-2 glow-red">
+            <div class="text-xs font-bold text-[#fc6255]">💀 这一时期的失败尝试 &amp; 后来确认不好的设计</div>
+            <ul class="space-y-1.5 text-xs sm:text-sm text-slate-300 leading-relaxed">
+              <li><strong class="text-rose-300">纯靠 RLHF 人工奖励模型训练长链推理：</strong>模型迅速学会“写长废话拍马屁（Reward Hacking）”，逻辑反而变脆，被确定性 0/1 判分的 <strong>RLVR</strong> 取代。</li>
+              <li><strong class="text-rose-300">无节制的超长文字 CoT（Overthinking）：</strong>问一句“1+1 等于几”也狂吐 800 字自言自语，延迟爆炸且常常把原本对的答案想错，倒逼出难度门控与隐空间 Looped 循环。</li>
+              <li><strong class="text-rose-300">纯靠硬塞 1M 窗口代替记忆管理：</strong>无关噪声撑大 Softmax 分母导致注意力严重稀释（Lost-in-the-Middle），成本和效果双输。</li>
+            </ul>
+          </div>
+          <div class="rounded-xl bg-[#1a152e]/85 border border-[#c084fc]/35 p-4 space-y-2 glow-purple">
+            <div class="text-xs font-bold text-[#c084fc]">📝 为什么好 &amp; 为什么适合写论文</div>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              <strong class="text-[#83c167]">为什么好：</strong>摆脱了人类文本天花板和静态权重限制，把算力真正用在了“会反思、会纠错、无损提速”上。<br>
+              <strong class="text-[#f7d046]">为什么适合写论文：</strong>高校实验室最友好的一章！RLVR 不花钱请标注员就能 100% 客观复现；Looped 在小模型上就能做长度外推；Titans 梯度对偶和 MTP 拒绝采样 5 行证明直接撑起论文 Theory 章节。
+            </p>
+          </div>
+        </div>
+      </div>
+    
+        <div class="rounded-xl bg-[#0e1422] border border-slate-800 p-4 space-y-2.5">
+          <div class="text-xs font-bold text-[#58c4dd]">📚 本章核心论文引用 &amp; 扩展阅读（真实可点链接）</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <a href="https://arxiv.org/abs/2501.12948" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-2 rounded-lg bg-[#0b0f17] border border-slate-800 hover:border-[#58c4dd]/60 px-3 py-2 transition"><div><div class="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">DeepSeek-R1: Incentivizing Reasoning via RL (RLVR) <span class="text-[10px] text-slate-400 font-normal">(arXiv:2501.12948 · 2025)</span></div><div class="text-[11px] text-slate-400 mt-0.5">验证纯强化学习与确定性验证器涌现自我反思与纠错能力。</div></div><span class="text-xs text-slate-500 group-hover:text-cyan-300 shrink-0">↗</span></a>
+          <a href="https://arxiv.org/abs/2301.13196" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-2 rounded-lg bg-[#0b0f17] border border-slate-800 hover:border-[#58c4dd]/60 px-3 py-2 transition"><div><div class="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">Looped Transformers as Programmable Computers (Giannou et al.) <span class="text-[10px] text-slate-400 font-normal">(arXiv:2301.13196 · 2023)</span></div><div class="text-[11px] text-slate-400 mt-0.5">构造性证明共享权重循环 Transformer 可模拟通用指令集（图灵完备）。</div></div><span class="text-xs text-slate-500 group-hover:text-cyan-300 shrink-0">↗</span></a>
+          <a href="https://arxiv.org/abs/2501.00663" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-2 rounded-lg bg-[#0b0f17] border border-slate-800 hover:border-[#58c4dd]/60 px-3 py-2 transition"><div><div class="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">Titans: Learning to Memorize at Test Time (Behrouz et al.) <span class="text-[10px] text-slate-400 font-normal">(arXiv:2501.00663 · 2024)</span></div><div class="text-[11px] text-slate-400 mt-0.5">提出推理期在线更新的神经长时快权重记忆模块，扩展至 2M+ 窗口。</div></div><span class="text-xs text-slate-500 group-hover:text-cyan-300 shrink-0">↗</span></a>
+          <a href="https://arxiv.org/abs/2211.17192" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-2 rounded-lg bg-[#0b0f17] border border-slate-800 hover:border-[#58c4dd]/60 px-3 py-2 transition"><div><div class="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">Fast Inference via Speculative Decoding (Leviathan et al.) <span class="text-[10px] text-slate-400 font-normal">(arXiv:2211.17192 · 2022)</span></div><div class="text-[11px] text-slate-400 mt-0.5">严格证明拒绝采样投机解码提速 2~3× 且输出分布 100% 无损。</div></div><span class="text-xs text-slate-500 group-hover:text-cyan-300 shrink-0">↗</span></a>
+          </div>
+        </div>
+    </section>
+
+    <!-- ==================== CHAPTER 5: GRAND SYNTHESIS ==================== -->
+    <section id="ch5" class="chapter-sec space-y-6">
+      <div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-800 pb-3">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-widest text-[#f7d046]">Chapter 5 · 2025 — 2026 · The Grand Synthesis</span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-white mt-1">第 5 章：终局合体 —— 把它们全部结合在一起会发生什么？</h2>
+        </div>
+        <span class="text-xs px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/30">互动合体实验室 · 看懂协同乘数效应</span>
+      </div>
+
+      <!-- New Symbols Strip -->
+      <div class="rounded-xl bg-amber-500/10 border border-amber-400/25 px-4 py-3.5 text-xs sm:text-sm text-amber-100 space-y-1.5">
+        <div><strong class="text-[#f7d046]">本章新系统概念预习（出现前先认全）：</strong></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5 text-xs text-slate-200">
+          <div>• <strong>MemOS 与 L2 长期记忆</strong>：像操作系统管内存一样把上下文分为 L1（当前干净工作台）、L2（跨会话长期经验库）与 L3（主动混合检索）。</div>
+          <div>• <strong>PD 分离（Prefill-Decode Disaggregation）</strong>：一次性读长题（Prefill，吃算力）与逐字吐答案（Decode，吃显存带宽）拆到不同机器跑，避免互相卡顿。</div>
+          <div>• <strong>RDMA / NVLink 与 Batch</strong>：RDMA/NVLink 是跨机/跨卡超高速互联总线，负责秒传 KV Cache；Batch 是单次并发处理的请求数。</div>
+          <div>• <strong>Co-Design（软硬协同设计）与 Kitchen-Sink</strong>：Co-Design 指算法与系统互补设计；Kitchen-Sink 是审稿人嘲讽“不看瓶颈无脑堆料”的贬义词。</div>
+        </div>
+      </div>
+
+      <p class="text-sm sm:text-base text-slate-300 leading-relaxed">
+        单看任何一项技术都有短板（比如线性注意力会忘细节、MoE 总显存大、树搜索太慢），但把历史长河里大浪淘沙留下的赢家<strong>系统级合体</strong>——它们刚好互相补齐短板！勾选下方任意演进模块，实时看清它们结合后的<strong>协同效果</strong>：
+      </p>
+
+      <!-- Interactive Grand Synthesis Simulator -->
+      <div class="manim-card rounded-2xl p-5 sm:p-6 glow-blue space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="text-xs font-bold text-[#58c4dd]">勾选要合体的历史演进模块（点击切换）</span>
+          <div class="flex gap-2">
+            <button id="syn-reset" type="button" class="px-3 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700">退回 2017 纯 Vanilla</button>
+            <button id="syn-all" type="button" class="px-3 py-1 rounded-lg text-xs font-semibold bg-[#58c4dd] text-slate-950 hover:bg-cyan-300">一键 2026 满血合体</button>
+          </div>
+        </div>
+
+        <div id="syn-toggles" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+
+        <!-- Live Synergy Meters -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-2">
+          <div class="bg-[#090d14] rounded-xl p-3.5 border border-slate-800">
+            <div class="flex justify-between text-xs"><span class="text-slate-400">百万长文本显存效率</span><span id="m-mem-v" class="font-bold text-[#58c4dd]">95%</span></div>
+            <div class="mt-2 h-2 rounded-full bg-slate-800 overflow-hidden"><div id="m-mem-b" class="h-full bg-[#58c4dd] transition-all duration-300" style="width:95%"></div></div>
+          </div>
+          <div class="bg-[#090d14] rounded-xl p-3.5 border border-slate-800">
+            <div class="flex justify-between text-xs"><span class="text-slate-400">单位算力省钱效率</span><span id="m-cost-v" class="font-bold text-[#83c167]">92%</span></div>
+            <div class="mt-2 h-2 rounded-full bg-slate-800 overflow-hidden"><div id="m-cost-b" class="h-full bg-[#83c167] transition-all duration-300" style="width:92%"></div></div>
+          </div>
+          <div class="bg-[#090d14] rounded-xl p-3.5 border border-slate-800">
+            <div class="flex justify-between text-xs"><span class="text-slate-400">复杂推理与记忆上限</span><span id="m-iq-v" class="font-bold text-[#f7d046]">96%</span></div>
+            <div class="mt-2 h-2 rounded-full bg-slate-800 overflow-hidden"><div id="m-iq-b" class="h-full bg-[#f7d046] transition-all duration-300" style="width:96%"></div></div>
+          </div>
+          <div class="bg-[#090d14] rounded-xl p-3.5 border border-slate-800">
+            <div class="flex justify-between text-xs"><span class="text-slate-400">系统工程复杂度</span><span id="m-eng-v" class="font-bold text-[#fc6255]">90%</span></div>
+            <div class="mt-2 h-2 rounded-full bg-slate-800 overflow-hidden"><div id="m-eng-b" class="h-full bg-[#fc6255] transition-all duration-300" style="width:90%"></div></div>
+          </div>
+        </div>
+
+        <!-- Synergy Narrative Output -->
+        <div id="syn-summary" class="rounded-xl bg-[#090d14] border border-cyan-500/25 p-4 text-xs sm:text-sm text-slate-200 leading-relaxed"></div>
+
+        <!-- Combined Failures & Paper Pitch -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="rounded-xl bg-[#2a1216]/80 border border-[#fc6255]/35 p-4 space-y-2 glow-red">
+            <div class="text-xs font-bold text-[#fc6255]">💀 终局合体中“确认不好 / 千万别踩”的组合坑</div>
+            <ul class="space-y-1.5 text-xs sm:text-sm text-slate-300 leading-relaxed">
+              <li><strong class="text-rose-300">无脑堆料（Kitchen-Sink）不看硬件匹配：</strong>没有高速 RDMA/NVLink 却强行上 PD 分离，跨节点搬运 KV 的网络延迟反而比单机混跑更慢。</li>
+              <li><strong class="text-rose-300">高随机创意场景硬开 MTP + 动态循环：</strong>草稿命中率暴跌、同 Batch 循环步数参差不齐，GPU 并行度直接掉一半。</li>
+              <li><strong class="text-rose-300">不设校验的 L2 长期记忆写入：</strong>把一次错误的推理经验写进跨会话记忆库，会导致后续所有任务持续“带病运行”（记忆投毒）。</li>
+            </ul>
+          </div>
+          <div class="rounded-xl bg-[#1a152e]/85 border border-[#c084fc]/35 p-4 space-y-2 glow-purple">
+            <div class="text-xs font-bold text-[#c084fc]">📝 为什么好 &amp; 为什么适合写论文</div>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              <strong class="text-[#83c167]">为什么好：</strong>协同效应让 1+1 &gt; 2——线性注意力配 MLA 解决“既省显存又不忘事”，路由分流配树搜索解决“既省钱又高准”，PD 分离配三级 KV 池扛住万亿商用流量。<br>
+              <strong class="text-[#f7d046]">为什么适合写论文：</strong>把论文写成“针对单一系统瓶颈的协同解耦（Co-Design）”，用逐项消融证明缺了哪一块都会暴露出理论短板，直接击碎 Reviewer 2“只是拼乐高”的质疑！
+            </p>
+          </div>
+        </div>
+      </div>
+    
+        <div class="rounded-xl bg-[#0e1422] border border-slate-800 p-4 space-y-2.5">
+          <div class="text-xs font-bold text-[#58c4dd]">📚 本章核心论文引用 &amp; 扩展阅读（真实可点链接）</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-2 rounded-lg bg-[#0b0f17] border border-slate-800 hover:border-[#58c4dd]/60 px-3 py-2 transition"><div><div class="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">Lost in the Middle: How LLMs Use Long Contexts (Liu et al.) <span class="text-[10px] text-slate-400 font-normal">(arXiv:2307.03172 · 2023)</span></div><div class="text-[11px] text-slate-400 mt-0.5">实证揭示硬塞长上下文导致中间信息严重丢失（倒逼 MemOS 治理）。</div></div><span class="text-xs text-slate-500 group-hover:text-cyan-300 shrink-0">↗</span></a>
+          <a href="https://arxiv.org/abs/2401.09670" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-2 rounded-lg bg-[#0b0f17] border border-slate-800 hover:border-[#58c4dd]/60 px-3 py-2 transition"><div><div class="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">DistServe: Disaggregating Prefill and Decoding (Zhong et al.) <span class="text-[10px] text-slate-400 font-normal">(arXiv:2401.09670 · OSDI 2024)</span></div><div class="text-[11px] text-slate-400 mt-0.5">提出 PD 分离推理架构，消除 Prefill 与 Decode 互相干扰。</div></div><span class="text-xs text-slate-500 group-hover:text-cyan-300 shrink-0">↗</span></a>
+          <a href="https://arxiv.org/abs/2407.00079" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-2 rounded-lg bg-[#0b0f17] border border-slate-800 hover:border-[#58c4dd]/60 px-3 py-2 transition"><div><div class="text-xs font-semibold text-cyan-300 group-hover:text-cyan-200">Mooncake: KVCache-centric Disaggregated Serving (Qin et al.) <span class="text-[10px] text-slate-400 font-normal">(arXiv:2407.00079 · 2024)</span></div><div class="text-[11px] text-slate-400 mt-0.5">Kimi 底层架构：PD 分离 + GPU/DRAM/SSD 全局三级 KV 共享池。</div></div><span class="text-xs text-slate-500 group-hover:text-cyan-300 shrink-0">↗</span></a>
+          </div>
+        </div>
+    </section>
+
+    <!-- ==================== REFERENCES & READING ROADMAP ==================== -->
+    <section id="refs" class="chapter-sec space-y-6">
+      <div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-800 pb-3">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-widest text-[#c084fc]">Bibliography &amp; Further Reading</span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-white mt-1">完整参考文献与博士生精读路线图（19 篇真实核验链接）</h2>
+        </div>
+        <span class="text-xs text-slate-400">按“可视化入门 → 架构基石 → 前沿推理 → 顶会系统”分类</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+        <div class="manim-card rounded-2xl p-5 space-y-3">
+          <div class="text-xs font-bold text-[#58c4dd]">阶段一：可视化入门 &amp; Transformer 基石（第 0–2 章）</div>
+          <ul class="space-y-2 text-slate-300">
+            <li><a href="https://www.3blue1brown.com/lessons/attention/" target="_blank" rel="noopener noreferrer" class="text-cyan-300 hover:underline font-medium">3Blue1Brown: Attention in transformers, step-by-step</a> <span class="text-slate-500">· 2024</span></li>
+            <li><a href="https://www.3blue1brown.com/lessons/mlp/" target="_blank" rel="noopener noreferrer" class="text-cyan-300 hover:underline font-medium">3Blue1Brown: How might LLMs store facts (MLP)</a> <span class="text-slate-500">· 2024</span></li>
+            <li><a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener noreferrer" class="text-cyan-300 hover:underline font-medium">Vaswani et al. — Attention Is All You Need</a> <span class="text-slate-500">· arXiv:1706.03762</span></li>
+            <li><a href="https://arxiv.org/abs/2002.04745" target="_blank" rel="noopener noreferrer" class="text-cyan-300 hover:underline font-medium">Xiong et al. — On Layer Normalization in the Transformer Architecture</a> <span class="text-slate-500">· arXiv:2002.04745</span></li>
+            <li><a href="https://arxiv.org/abs/2104.09864" target="_blank" rel="noopener noreferrer" class="text-cyan-300 hover:underline font-medium">Su et al. — RoFormer: Rotary Position Embedding (RoPE)</a> <span class="text-slate-500">· arXiv:2104.09864</span></li>
+            <li><a href="https://arxiv.org/abs/2305.13245" target="_blank" rel="noopener noreferrer" class="text-cyan-300 hover:underline font-medium">Ainslie et al. — GQA: Generalized Multi-Query Transformer</a> <span class="text-slate-500">· arXiv:2305.13245</span></li>
+            <li><a href="https://arxiv.org/abs/2405.04434" target="_blank" rel="noopener noreferrer" class="text-cyan-300 hover:underline font-medium">DeepSeek-AI — DeepSeek-V2 (Multi-head Latent Attention)</a> <span class="text-slate-500">· arXiv:2405.04434</span></li>
+            <li><a href="https://arxiv.org/abs/2506.02523" target="_blank" rel="noopener noreferrer" class="text-cyan-300 hover:underline font-medium">Hardware-Centric Analysis of DeepSeek's MLA</a> <span class="text-slate-500">· arXiv:2506.02523</span></li>
+          </ul>
+        </div>
+
+        <div class="manim-card rounded-2xl p-5 space-y-3">
+          <div class="text-xs font-bold text-[#c084fc]">阶段二：稀疏解耦、思考革命与系统合体（第 3–5 章）</div>
+          <ul class="space-y-2 text-slate-300">
+            <li><a href="https://arxiv.org/abs/2006.16236" target="_blank" rel="noopener noreferrer" class="text-purple-300 hover:underline font-medium">Katharopoulos et al. — Transformers are RNNs (Linear Attention)</a> <span class="text-slate-500">· arXiv:2006.16236</span></li>
+            <li><a href="https://arxiv.org/abs/2312.00752" target="_blank" rel="noopener noreferrer" class="text-purple-300 hover:underline font-medium">Gu &amp; Dao — Mamba: Selective State Spaces</a> <span class="text-slate-500">· arXiv:2312.00752</span></li>
+            <li><a href="https://arxiv.org/abs/2012.14913" target="_blank" rel="noopener noreferrer" class="text-purple-300 hover:underline font-medium">Geva et al. — Transformer FFN Layers Are Key-Value Memories</a> <span class="text-slate-500">· arXiv:2012.14913</span></li>
+            <li><a href="https://arxiv.org/abs/2412.19437" target="_blank" rel="noopener noreferrer" class="text-purple-300 hover:underline font-medium">DeepSeek-AI — DeepSeek-V3 Technical Report (MoE + MTP)</a> <span class="text-slate-500">· arXiv:2412.19437</span></li>
+            <li><a href="https://arxiv.org/abs/2501.12948" target="_blank" rel="noopener noreferrer" class="text-purple-300 hover:underline font-medium">DeepSeek-AI — DeepSeek-R1 (RLVR / GRPO)</a> <span class="text-slate-500">· arXiv:2501.12948</span></li>
+            <li><a href="https://arxiv.org/abs/2301.13196" target="_blank" rel="noopener noreferrer" class="text-purple-300 hover:underline font-medium">Giannou et al. — Looped Transformers as Programmable Computers</a> <span class="text-slate-500">· arXiv:2301.13196</span></li>
+            <li><a href="https://arxiv.org/abs/2501.00663" target="_blank" rel="noopener noreferrer" class="text-purple-300 hover:underline font-medium">Behrouz et al. — Titans: Learning to Memorize at Test Time</a> <span class="text-slate-500">· arXiv:2501.00663</span></li>
+            <li><a href="https://arxiv.org/abs/2211.17192" target="_blank" rel="noopener noreferrer" class="text-purple-300 hover:underline font-medium">Leviathan et al. — Fast Inference via Speculative Decoding</a> <span class="text-slate-500">· arXiv:2211.17192</span></li>
+            <li><a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener noreferrer" class="text-purple-300 hover:underline font-medium">Liu et al. — Lost in the Middle: How LLMs Use Long Contexts</a> <span class="text-slate-500">· arXiv:2307.03172</span></li>
+            <li><a href="https://arxiv.org/abs/2401.09670" target="_blank" rel="noopener noreferrer" class="text-purple-300 hover:underline font-medium">Zhong et al. — DistServe: Disaggregating Prefill &amp; Decoding (OSDI)</a> <span class="text-slate-500">· arXiv:2401.09670</span></li>
+            <li><a href="https://arxiv.org/abs/2407.00079" target="_blank" rel="noopener noreferrer" class="text-purple-300 hover:underline font-medium">Qin et al. — Mooncake: KVCache-centric Disaggregated Serving</a> <span class="text-slate-500">· arXiv:2407.00079</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <footer class="text-center text-xs text-slate-500 pt-6 border-t border-slate-800/80">
+      从最简单的 $Q K^\top V$ 到 2026 系统合体 · 每一项伟大架构，都诞生于把一个矩阵 Shape 变小的瞬间。
+    </footer>
+  </div>
+
+  <script>
+    // Interactive Chapter 0 Matrix Multiplication Visualizer
+    function renderLab0() {
+      const a = parseInt(document.getElementById('lab0-a').value, 10);
+      const b = parseInt(document.getElementById('lab0-b').value, 10);
+      const c = parseInt(document.getElementById('lab0-c').value, 10);
+      document.getElementById('lab0-a-v').textContent = a;
+      document.getElementById('lab0-b-v').textContent = b;
+      document.getElementById('lab0-c-v').textContent = c;
+
+      const scale = 6.5;
+      const wA = Math.max(44, b * scale), hA = Math.max(36, a * scale);
+      const wB = Math.max(44, c * scale), hB = Math.max(36, b * scale);
+      const wC = Math.max(48, c * scale), hC = Math.max(36, a * scale);
+      const midY = 74;
+      const ops = a * b * c;
+
+      const x1 = 36;
+      const x2 = x1 + wA + 44;
+      const x3 = x2 + wB + 48;
+
+      document.getElementById('lab0-svg').innerHTML = `
+        <svg viewBox="0 0 680 154" class="w-full min-w-[520px] h-auto block mx-auto" role="img" aria-label="矩阵相乘形状实时演示">
+          <rect x="${x1}" y="${midY - hA/2}" width="${wA}" height="${hA}" rx="4" fill="#132a3a" stroke="#58c4dd" stroke-width="1.8"/>
+          <text x="${x1 + wA/2}" y="${midY - 3}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#58c4dd">矩阵 1</text>
+          <text x="${x1 + wA/2}" y="${midY + 13}" text-anchor="middle" font-size="10.5" fill="#bae6fd">[${a}, ${b}]</text>
+
+          <text x="${x1 + wA + 22}" y="${midY + 5}" text-anchor="middle" font-size="16" font-weight="700" fill="#94a3b8">×</text>
+
+          <rect x="${x2}" y="${midY - hB/2}" width="${wB}" height="${hB}" rx="4" fill="#2a2412" stroke="#f7d046" stroke-width="1.8"/>
+          <text x="${x2 + wB/2}" y="${midY - 3}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#f7d046">矩阵 2</text>
+          <text x="${x2 + wB/2}" y="${midY + 13}" text-anchor="middle" font-size="10.5" fill="#fef08a">[${b}, ${c}]</text>
+
+          <text x="${x2 + wB + 24}" y="${midY + 5}" text-anchor="middle" font-size="16" font-weight="700" fill="#94a3b8">=</text>
+
+          <rect x="${x3}" y="${midY - hC/2}" width="${wC}" height="${hC}" rx="4" fill="#1d3a27" stroke="#83c167" stroke-width="2"/>
+          <text x="${x3 + wC/2}" y="${midY - 3}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">结果</text>
+          <text x="${x3 + wC/2}" y="${midY + 13}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#83c167">[${a}, ${c}]</text>
+
+          <rect x="476" y="34" width="190" height="80" rx="10" fill="#121826" stroke="#334155"/>
+          <text x="571" y="56" text-anchor="middle" font-size="11" font-weight="700" fill="#f7d046">本次乘加计算量</text>
+          <text x="571" y="78" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">${a} × ${b} × ${c} = ${ops} 次</text>
+          <text x="571" y="99" text-anchor="middle" font-size="10" fill="#94a3b8">内侧维度 ${b} 消去，外侧留下 [${a}, ${c}]</text>
+        </svg>
+      `;
+    }
+
+    ['lab0-a', 'lab0-b', 'lab0-c'].forEach(id => {
+      document.getElementById(id).addEventListener('input', renderLab0);
+    });
+
+    // Interactive Chapter 5 Grand Synthesis Simulator
+    const SYN_ITEMS = [
+      { id: 'mla', era: '第 2 章', name: 'MLA 低秩压缩 + 矩阵吸收', sub: 'KV Cache 压缩 90%+，低秩内无损', mem: 28, cost: 8, iq: 6, eng: 14 },
+      { id: 'hybrid', era: '第 3 章', name: '75% 线性注意力 + 25% 全局层', sub: 'O(1) 显存略读 + 精准大海捞针', mem: 32, cost: 16, iq: 8, eng: 18 },
+      { id: 'moe', era: '第 3 章', name: 'Engram 查表 + Dynamic-k MoE', sub: '记忆与计算解耦，仅激活 5%~10%', mem: 15, cost: 34, iq: 12, eng: 18 },
+      { id: 'think', era: '第 4 章', name: 'RLVR + Looped + Titans 快权重', sub: '沙盒自举 + 隐空间深思 + 在线记忆', mem: 8, cost: 4, iq: 44, eng: 18 },
+      { id: 'mtp', era: '第 4 章', name: 'MTP 多词预测 + 拒绝采样', sub: '提速 2~3× 且数学 100% 零误差', mem: 2, cost: 14, iq: 4, eng: 10 },
+      { id: 'sys', era: '外围系统', name: 'MemOS + 异构路由 + PD 分离池', sub: '分层防失忆 + 省钱分诊 + 读写拆机', mem: 10, cost: 16, iq: 14, eng: 14 }
+    ];
+
+    const synState = { mla: true, hybrid: true, moe: true, think: true, mtp: true, sys: true };
+
+    function renderSynthesis() {
+      const box = document.getElementById('syn-toggles');
+      box.innerHTML = SYN_ITEMS.map(it => {
+        const on = synState[it.id];
+        return `
+          <button type="button" data-syn="${it.id}" class="text-left rounded-xl p-3.5 border transition ${
+            on ? 'bg-cyan-500/15 border-[#58c4dd] text-white' : 'bg-[#090d14] border-slate-800 text-slate-400 hover:border-slate-600'
+          }">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[11px] font-bold ${on ? 'text-[#58c4dd]' : 'text-slate-500'}">${it.era}</span>
+              <span class="text-[11px] px-2 py-0.5 rounded-full font-semibold ${on ? 'bg-[#58c4dd] text-slate-950' : 'bg-slate-800 text-slate-400'}">${on ? '已合体' : '未启用'}</span>
+            </div>
+            <div class="mt-1 text-sm font-bold">${it.name}</div>
+            <div class="mt-0.5 text-xs ${on ? 'text-slate-300' : 'text-slate-500'}">${it.sub}</div>
+          </button>
+        `;
+      }).join('');
+
+      box.querySelectorAll('[data-syn]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const k = btn.getAttribute('data-syn');
+          synState[k] = !synState[k];
+          renderSynthesis();
+        });
+      });
+
+      let mem = 12, cost = 12, iq = 18, eng = 10;
+      SYN_ITEMS.forEach(it => {
+        if (synState[it.id]) {
+          mem += it.mem; cost += it.cost; iq += it.iq; eng += it.eng;
+        }
+      });
+      mem = Math.min(100, mem); cost = Math.min(100, cost); iq = Math.min(100, iq); eng = Math.min(100, eng);
+
+      document.getElementById('m-mem-v').textContent = mem + '%';
+      document.getElementById('m-mem-b').style.width = mem + '%';
+      document.getElementById('m-cost-v').textContent = cost + '%';
+      document.getElementById('m-cost-b').style.width = cost + '%';
+      document.getElementById('m-iq-v').textContent = iq + '%';
+      document.getElementById('m-iq-b').style.width = iq + '%';
+      document.getElementById('m-eng-v').textContent = eng + '%';
+      document.getElementById('m-eng-b').style.width = eng + '%';
+
+      const activeCount = Object.values(synState).filter(Boolean).length;
+      const sumEl = document.getElementById('syn-summary');
+      if (activeCount === 0) {
+        sumEl.innerHTML = '<strong class="text-[#fc6255]">当前状态：2017 纯原味 Vanilla Transformer。</strong> 工程极简极稳，但长文本面临 $\\mathcal{O}(N^2)$ 显存爆炸、每词 100% 稠密硬算，且缺乏测试时深思与自我纠错能力。';
+      } else if (activeCount === SYN_ITEMS.length) {
+        sumEl.innerHTML = '<strong class="text-[#83c167]">当前状态：2026 满血协同终局形态！</strong> 线性注意力 + MLA 把百万长文本显存压到极致；Engram + MoE + 路由把算力成本压低一个数量级；RLVR + Looped + Titans 把复杂推理上限拉满；MTP + PD 分离让万亿级商用丝滑低延迟——代价是极高的多系统协同工程门槛。';
+      } else {
+        const notes = [];
+        if (synState.hybrid && !synState.mla) notes.push('已开启 3:1 线性混合，但未配 MLA，25% 全局层的 KV Cache 仍是显存大头');
+        if (synState.moe && !synState.sys) notes.push('已开启 MoE 降算力，但未配 PD 分离与路由，大并发下显存带宽容易吃紧');
+        if (synState.think && !synState.mtp) notes.push('已开启深度推理与快权重，建议顺手开启 MTP 无损加速抵消思考延迟');
+        if (notes.length === 0) notes.push('这是一套非常务实的工业界折中混搭方案：在可控工程复杂度下拿到了核心显存与算力红利');
+        sumEl.innerHTML = `<strong class="text-[#f7d046]">当前状态：自定义混搭（已启用 ${activeCount} / 6 项演进）。</strong> ${notes.join('；')}。`;
+      }
+      renderKatexSafe();
+    }
+
+    document.getElementById('syn-reset').addEventListener('click', () => {
+      Object.keys(synState).forEach(k => { synState[k] = false; });
+      renderSynthesis();
+    });
+    document.getElementById('syn-all').addEventListener('click', () => {
+      Object.keys(synState).forEach(k => { synState[k] = true; });
+      renderSynthesis();
+    });
+
+    function texToHtml(tex) {
+      let s = tex
+        .replace(/\\underbrace\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}_\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, '$1 <span class="m-rm text-xs text-cyan-300">($2)</span>')
+        .replace(/\\frac\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, '<span class="m-frac"><span class="m-frac-num">$1</span><span class="m-frac-den">$2</span></span>')
+        .replace(/\\sqrt\{([^{}]+)\}/g, '√$1')
+        .replace(/\\operatorname\{([^{}]+)\}/g, '<span class="m-rm">$1</span>')
+        .replace(/\\text\{([^{}]+)\}/g, '<span class="m-rm">$1</span>')
+        .replace(/\\mathbb\{R\}/g, '<span class="m-rm">ℝ</span>')
+        .replace(/\\mathbb\{E\}/g, '<span class="m-rm">𝔼</span>')
+        .replace(/\\odot/g, '⊙')
+        .replace(/\\mu/g, 'μ')
+        .replace(/\\epsilon/g, 'ε')
+        .replace(/\\nabla/g, '∇')
+        .replace(/\\log/g, '<span class="m-rm">log</span>')
+        .replace(/\\sim/g, '∼')
+        .replace(/\\mathcal\{O\}/g, '<span class="m-rm">𝒪</span>')
+        .replace(/\\left|\\right|\\big|\\Big|\\!|\\,|\\;|\\:/g, '')
+        .replace(/\\qquad/g, '&emsp;&emsp;')
+        .replace(/\\quad/g, '&emsp;')
+        .replace(/\\top/g, 'ᵀ')
+        .replace(/\\times/g, '×')
+        .replace(/\\cdot/g, '·')
+        .replace(/\\approx/g, '≈')
+        .replace(/\\equiv/g, '≡')
+        .replace(/\\le/g, '≤')
+        .replace(/\\ll/g, '≪')
+        .replace(/\\in/g, '∈')
+        .replace(/\\sum/g, '∑')
+        .replace(/\\min/g, '<span class="m-rm">min</span>')
+        .replace(/\\max/g, '<span class="m-rm">max</span>')
+        .replace(/\\phi/g, 'φ')
+        .replace(/\\sigma/g, 'σ')
+        .replace(/\\alpha/g, 'α')
+        .replace(/\\beta/g, 'β')
+        .replace(/\\eta/g, 'η')
+        .replace(/\\theta/g, 'θ')
+        .replace(/\\tau/g, 'τ')
+        .replace(/\\\{/g, '{').replace(/\\\}/g, '}')
+        .replace(/\^\{([^{}]+)\}/g, '<sup>$1</sup>')
+        .replace(/_\{([^{}]+)\}/g, '<sub>$1</sub>')
+        .replace(/\^([A-Za-z0-9ᵀ]+)/g, '<sup>$1</sup>')
+        .replace(/_([A-Za-z0-9]+)/g, '<sub>$1</sub>');
+      return s;
+    }
+
+    function fallbackRenderMath() {
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      let n;
+      while ((n = walker.nextNode())) {
+        const p = n.parentElement;
+        if (!p || ['SCRIPT', 'STYLE', 'SVG', 'TEXTAREA', 'CODE'].includes(p.tagName) || p.closest('svg')) continue;
+        if (n.nodeValue && n.nodeValue.includes('$')) nodes.push(n);
+      }
+      nodes.forEach(node => {
+        const raw = node.nodeValue;
+        const replaced = raw
+          .replace(/\$\$([\s\S]+?)\$\$/g, (_, eq) => `<span class="m-tex m-tex-block">${texToHtml(eq.trim())}</span>`)
+          .replace(/\$([^$\n]+?)\$/g, (_, eq) => `<span class="m-tex">${texToHtml(eq.trim())}</span>`);
+        if (replaced !== raw) {
+          const span = document.createElement('span');
+          span.innerHTML = replaced;
+          node.parentNode.replaceChild(span, node);
+        }
+      });
+    }
+
+    function renderKatexSafe(attempt = 0) {
+      if (typeof window.renderMathInElement === 'function') {
+        window.renderMathInElement(document.body, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false }
+          ],
+          ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'svg'],
+          throwOnError: false
+        });
+        return;
+      }
+      if (attempt < 8) {
+        setTimeout(() => renderKatexSafe(attempt + 1), 80);
+      } else {
+        fallbackRenderMath();
+      }
+    }
+
+    renderLab0();
+    renderSynthesis();
+    renderKatexSafe();
+    window.addEventListener('load', () => renderKatexSafe());
+  </script>
+</body>
+</html>

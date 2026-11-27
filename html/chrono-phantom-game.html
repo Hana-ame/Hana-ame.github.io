@@ -1,0 +1,1985 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>时空残影：量子怪盗 | Chrono Phantom</title>
+<style>
+  :root {
+    --bg-dark: #070913;
+    --bg-panel: rgba(14, 19, 38, 0.88);
+    --cyan: #00f0ff;
+    --magenta: #ff2a85;
+    --gold: #ffbe0b;
+    --emerald: #00f59b;
+    --danger: #ff3864;
+    --purple: #9d4edd;
+    --text-main: #e2f1ff;
+    --text-dim: #7b8db0;
+  }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  body {
+    background: radial-gradient(circle at 50% 25%, #121833 0%, #060811 75%);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0) 0px,
+      rgba(255, 255, 255, 0) 2px,
+      rgba(0, 240, 255, 0.018) 3px,
+      rgba(0, 0, 0, 0.12) 4px
+    );
+    pointer-events: none;
+    z-index: 99;
+  }
+
+  .app-shell {
+    width: 100%;
+    max-width: 1060px;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 10;
+  }
+
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-panel);
+    border: 1px solid rgba(0, 240, 255, 0.22);
+    border-radius: 12px;
+    padding: 10px 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), inset 0 0 20px rgba(0, 240, 255, 0.05);
+    backdrop-filter: blur(10px);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(0,240,255,0.2), rgba(255,42,133,0.25));
+    border: 1px solid var(--cyan);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 14px rgba(0, 240, 255, 0.4);
+    font-weight: 900;
+    font-size: 18px;
+    color: var(--cyan);
+  }
+  .brand-title h1 {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    background: linear-gradient(90deg, #ffffff, var(--cyan), var(--magenta));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .brand-title p {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .mode-tabs {
+    display: flex;
+    gap: 6px;
+    background: rgba(6, 9, 20, 0.75);
+    padding: 4px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .mode-tab {
+    background: transparent;
+    color: var(--text-dim);
+    border: none;
+    padding: 6px 13px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .mode-tab:hover {
+    color: var(--text-main);
+  }
+  .mode-tab.active {
+    background: linear-gradient(135deg, rgba(0, 240, 255, 0.22), rgba(157, 78, 221, 0.28));
+    color: #fff;
+    border: 1px solid rgba(0, 240, 255, 0.45);
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
+  }
+
+  .hud-stats {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .stat-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .stat-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-dim);
+  }
+  .stat-value {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--cyan);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .main-stage {
+    display: grid;
+    grid-template-columns: 1fr 270px;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .canvas-card {
+    position: relative;
+    background: #05070f;
+    border: 1px solid rgba(0, 240, 255, 0.28);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.65), 0 0 25px rgba(0, 240, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 16 / 10;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .timeline-overlay {
+    position: absolute;
+    top: 10px;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .loop-badges {
+    display: flex;
+    gap: 6px;
+  }
+  .loop-badge {
+    padding: 3px 9px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(10, 14, 28, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .timeline-track {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.09);
+    border-radius: 99px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 240, 255, 0.25);
+  }
+  .timeline-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--emerald), var(--cyan), var(--magenta));
+    box-shadow: 0 0 10px var(--cyan);
+    transition: width 0.05s linear;
+  }
+  .time-readout {
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: #fff;
+    background: rgba(10, 14, 28, 0.85);
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 240, 255, 0.25);
+  }
+
+  .canvas-banner {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10, 15, 32, 0.92);
+    border: 1px solid rgba(0, 240, 255, 0.4);
+    padding: 8px 18px;
+    border-radius: 99px;
+    font-size: 12.5px;
+    color: #fff;
+    pointer-events: none;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+    white-space: nowrap;
+    z-index: 6;
+    transition: opacity 0.25s ease;
+  }
+
+  .modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 8, 18, 0.84);
+    backdrop-filter: blur(6px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .modal-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .modal-box {
+    max-width: 440px;
+    background: rgba(16, 23, 46, 0.95);
+    border: 1px solid var(--cyan);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 0 35px rgba(0, 240, 255, 0.25);
+  }
+  .modal-box h2 {
+    font-size: 22px;
+    margin-bottom: 8px;
+    color: var(--cyan);
+  }
+  .modal-box p {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: #c8d8f0;
+    margin-bottom: 18px;
+    white-space: pre-line;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .side-panel {
+    background: var(--bg-panel);
+    border: 1px solid rgba(0, 240, 255, 0.2);
+    border-radius: 14px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  }
+  .panel-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--cyan);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .level-title-card {
+    background: rgba(6, 10, 22, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 3px solid var(--cyan);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .level-title-card h3 {
+    font-size: 14.5px;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .level-title-card p {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-dim);
+  }
+
+  .level-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .lvl-btn {
+    background: rgba(10, 15, 30, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-dim);
+    padding: 7px 4px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .lvl-btn:hover {
+    border-color: var(--cyan);
+    color: #fff;
+  }
+  .lvl-btn.active {
+    background: rgba(0, 240, 255, 0.18);
+    border-color: var(--cyan);
+    color: var(--cyan);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+  }
+  .lvl-btn.completed {
+    border-color: rgba(0, 245, 155, 0.45);
+    color: var(--emerald);
+  }
+
+  .sandbox-palette {
+    display: none;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .sandbox-palette.active {
+    display: grid;
+  }
+  .tool-btn {
+    background: rgba(10, 15, 30, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #d0e0ff;
+    padding: 7px 8px;
+    border-radius: 7px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tool-btn.active {
+    background: rgba(255, 42, 133, 0.2);
+    border-color: var(--magenta);
+    color: #fff;
+  }
+
+  .action-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .btn {
+    border: none;
+    border-radius: 9px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.18s ease;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #00c6ff, #0072ff);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(0, 198, 255, 0.35);
+  }
+  .btn-primary:hover {
+    filter: brightness(1.12);
+    transform: translateY(-1px);
+  }
+  .btn-rewind {
+    background: linear-gradient(135deg, #ff2a85, #9d4edd);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(255, 42, 133, 0.35);
+  }
+  .btn-rewind:hover {
+    filter: brightness(1.12);
+    transform: translateY(-1px);
+  }
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.07);
+    color: #d5e4ff;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+  }
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.13);
+  }
+
+  .key-legend {
+    background: rgba(6, 10, 22, 0.7);
+    border-radius: 8px;
+    padding: 9px 11px;
+    font-size: 11.5px;
+    color: var(--text-dim);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .key-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  kbd {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 10.5px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.25);
+  }
+
+  .touch-bar {
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .dpad {
+    display: grid;
+    grid-template-columns: repeat(3, 44px);
+    grid-template-rows: repeat(2, 40px);
+    gap: 4px;
+  }
+  .dpad-btn {
+    background: rgba(14, 19, 38, 0.9);
+    border: 1px solid rgba(0, 240, 255, 0.35);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  .dpad-btn:active {
+    background: rgba(0, 240, 255, 0.3);
+  }
+
+  @media (max-width: 860px) {
+    .main-stage {
+      grid-template-columns: 1fr;
+    }
+    .touch-bar {
+      display: flex;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <!-- Header -->
+  <div class="top-bar">
+    <div class="brand">
+      <div class="brand-logo">⏳</div>
+      <div class="brand-title">
+        <h1>时空残影：量子怪盗</h1>
+        <p>CHRONO PHANTOM — 与过去的自己跨时空联手</p>
+      </div>
+    </div>
+
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="tab-campaign" onclick="switchMode('campaign')">🎯 潜行闯关 (6关)</button>
+      <button class="mode-tab" id="tab-arcade" onclick="switchMode('arcade')">⚡ 悖论幸存者 (无尽)</button>
+      <button class="mode-tab" id="tab-sandbox" onclick="switchMode('sandbox')">🛠️ 造物沙盒 (自定义)</button>
+    </div>
+
+    <div class="hud-stats">
+      <div class="stat-pill">
+        <span class="stat-label" id="stat1-label">当前关卡</span>
+        <span class="stat-value" id="stat1-val">01 / 06</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-label" id="stat2-label">残影数量</span>
+        <span class="stat-value" id="stat2-val">0 / 3</span>
+      </div>
+      <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px;" id="audio-btn" onclick="toggleMute()">🔊 音效: 开</button>
+    </div>
+  </div>
+
+  <!-- Main Stage -->
+  <div class="main-stage">
+    <div class="canvas-card">
+      <div class="timeline-overlay">
+        <div class="loop-badges" id="loop-badges"></div>
+        <div class="timeline-track">
+          <div class="timeline-fill" id="timeline-fill"></div>
+        </div>
+        <div class="time-readout" id="time-readout">08.0s</div>
+      </div>
+
+      <canvas id="gameCanvas" width="800" height="500"></canvas>
+
+      <div class="canvas-banner" id="canvas-banner">
+        💡 按 [WASD/方向键] 移动，按 [空格] 倒流时间并生成过去的残影！
+      </div>
+
+      <!-- Modal for Level Clear / Paradox -->
+      <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-box">
+          <h2 id="modal-title">✨ 量子核心已窃取！</h2>
+          <p id="modal-desc">你与过去的残影达成了精妙的跨时空同步。</p>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="resetCurrentLevel()">🔄 重玩本关</button>
+            <button class="btn btn-primary" id="modal-next-btn" onclick="nextLevel()">下一关 ➡️</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Control Sidebar -->
+    <div class="side-panel">
+      <div class="panel-section">
+        <div class="section-title">
+          <span id="sidebar-mode-title">任务简报</span>
+          <span id="paradox-status" style="color: var(--emerald);">● 时空稳定</span>
+        </div>
+        <div class="level-title-card">
+          <h3 id="lvl-name">第一关：双生密钥</h3>
+          <p id="lvl-desc">金色大门需要持续踩住左侧踏板才能打开。先踩住踏板3秒，然后按【空格】倒流时间——让过去的你替你踩门，现在的你趁机夺取核心！</p>
+        </div>
+      </div>
+
+      <!-- Campaign Level Selector -->
+      <div class="panel-section" id="campaign-panel">
+        <div class="section-title"><span>选择记忆节点</span></div>
+        <div class="level-grid" id="level-grid"></div>
+      </div>
+
+      <!-- Sandbox Palette -->
+      <div class="panel-section" id="sandbox-panel" style="display:none;">
+        <div class="section-title"><span>沙盒画笔 (点击画布放置)</span></div>
+        <div class="sandbox-palette active" id="sandbox-palette">
+          <button class="tool-btn active" onclick="selectTool('wall', this)">🧱 量子墙体</button>
+          <button class="tool-btn" onclick="selectTool('plate', this)">🔘 压力踏板</button>
+          <button class="tool-btn" onclick="selectTool('door', this)">🚪 激光门障</button>
+          <button class="tool-btn" onclick="selectTool('turret', this)">🔫 脉冲激光炮</button>
+          <button class="tool-btn" onclick="selectTool('shield', this)">🛡️ 反射护盾</button>
+          <button class="tool-btn" onclick="selectTool('guard', this)">👁️ 巡逻哨兵</button>
+          <button class="tool-btn" onclick="selectTool('core', this)">💎 终点核心</button>
+          <button class="tool-btn" onclick="selectTool('erase', this)">🧹 橡皮擦除</button>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-stack">
+        <button class="btn btn-rewind" id="btn-rewind" onclick="triggerRewind()">
+          ⏪ 倒流时间 / 留下残影 (Space)
+        </button>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+          <button class="btn btn-secondary" onclick="emitEmpPulse()">💥 电磁脉冲 (E)</button>
+          <button class="btn btn-secondary" onclick="resetCurrentLevel()">🔄 重置时空 (R)</button>
+        </div>
+      </div>
+
+      <!-- Controls Legend -->
+      <div class="key-legend">
+        <div class="key-row"><span>移动 / 推动棱镜</span><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 或 <kbd>↑↓←→</kbd></span></div>
+        <div class="key-row"><span>倒流时间 (生成残影)</span><span><kbd>Space</kbd> 空格键</span></div>
+        <div class="key-row"><span>释放电磁脉冲 (眩晕哨兵)</span><span><kbd>E</kbd> 键</span></div>
+        <div class="key-row"><span>完全重置当前时空</span><span><kbd>R</kbd> 键</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile / Touch D-Pad -->
+  <div class="touch-bar">
+    <div class="dpad">
+      <div></div>
+      <button class="dpad-btn" ontouchstart="setTouchKey('up',true)" ontouchend="setTouchKey('up',false)">▲</button>
+      <div></div>
+      <button class="dpad-btn" ontouchstart="setTouchKey('left',true)" ontouchend="setTouchKey('left',false)">◀</button>
+      <button class="dpad-btn" ontouchstart="setTouchKey('down',true)" ontouchend="setTouchKey('down',false)">▼</button>
+      <button class="dpad-btn" ontouchstart="setTouchKey('right',true)" ontouchend="setTouchKey('right',false)">▶</button>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn btn-secondary" onclick="emitEmpPulse()">💥 脉冲</button>
+      <button class="btn btn-rewind" onclick="triggerRewind()">⏪ 倒流时间</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// 1. WEB AUDIO SYNTHESIZER (Zero external dependencies)
+// ============================================================================
+class SoundEngine {
+  constructor() {
+    this.ctx = null;
+    this.muted = false;
+  }
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) this.ctx = new AudioCtx();
+    }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+  playTone(freq, type = 'sine', duration = 0.15, vol = 0.15, slideFreq = null) {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    if (slideFreq) {
+      osc.frequency.exponentialRampToValueAtTime(slideFreq, now + duration);
+    }
+    gain.gain.setValueAtTime(vol, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + duration);
+  }
+  rewind() {
+    this.playTone(220, 'sawtooth', 0.38, 0.14, 880);
+    setTimeout(() => this.playTone(440, 'triangle', 0.25, 0.12, 1320), 90);
+  }
+  plateOn() {
+    this.playTone(523.25, 'sine', 0.12, 0.14, 659.25);
+  }
+  shieldPickup() {
+    this.playTone(440, 'triangle', 0.18, 0.16, 880);
+  }
+  emp() {
+    this.playTone(320, 'sawtooth', 0.35, 0.18, 55);
+  }
+  paradox() {
+    this.playTone(180, 'sawtooth', 0.45, 0.2, 48);
+    setTimeout(() => this.playTone(130, 'square', 0.4, 0.15, 40), 100);
+  }
+  win() {
+    const notes = [523.25, 659.25, 783.99, 1046.5];
+    notes.forEach((n, idx) => {
+      setTimeout(() => this.playTone(n, 'triangle', 0.25, 0.16), idx * 80);
+    });
+  }
+}
+const sfx = new SoundEngine();
+
+function toggleMute() {
+  sfx.muted = !sfx.muted;
+  document.getElementById('audio-btn').textContent = sfx.muted ? '🔇 音效: 关' : '🔊 音效: 开';
+}
+
+// ============================================================================
+// 2. CAMPAIGN LEVELS DEFINITION
+// ============================================================================
+const ECHO_COLORS = ['#00f0ff', '#ff2a85', '#ffbe0b', '#9d4edd'];
+
+const CAMPAIGN_LEVELS = [
+  {
+    name: "第一关：双生密钥",
+    desc: "金色激光门需要持续踩住左侧【1号踏板】才会敞开。先去踩住踏板约3秒，然后按【空格】倒流时间——让过去的残影替你踩住踏板，现在的你直接穿过敞开的大门夺取量子核心！",
+    banner: "💡 第1步：走到左上方青色踏板上停住3秒 ➡️ 第2步：按【空格】倒流时间 ➡️ 第3步：趁残影踩门时冲向右侧钻石！",
+    maxEchoes: 2,
+    loopDuration: 8.0,
+    start: { x: 110, y: 250 },
+    core: { x: 690, y: 250 },
+    walls: [
+      { x: 480, y: 0, w: 28, h: 190 },
+      { x: 480, y: 310, w: 28, h: 190 }
+    ],
+    doors: [
+      { x: 480, y: 190, w: 28, h: 120, channel: 1 }
+    ],
+    plates: [
+      { x: 240, y: 120, r: 22, channel: 1 }
+    ],
+    turrets: [],
+    shields: [],
+    boxes: [],
+    guards: []
+  },
+  {
+    name: "第二关：光子护盾",
+    desc: "致命的高能红光封锁了通道！先拾取左下方的【反射护盾】，站在激光束前阻挡射线几秒；再按【空格】倒流时间，让持有护盾的残影为你挡下激光，你从他身后安全通行！",
+    banner: "💡 拾取左下角蓝色护盾 🛡️ ➡️ 站在红色激光中间挡住光线3秒 ➡️ 按【空格】回溯并从残影身后穿过！",
+    maxEchoes: 2,
+    loopDuration: 9.0,
+    start: { x: 100, y: 250 },
+    core: { x: 700, y: 250 },
+    walls: [
+      { x: 360, y: 0, w: 28, h: 170 },
+      { x: 360, y: 330, w: 28, h: 170 }
+    ],
+    doors: [],
+    plates: [],
+    turrets: [
+      { x: 374, y: 22, dirX: 0, dirY: 1, maxDist: 460 }
+    ],
+    shields: [
+      { x: 180, y: 390 }
+    ],
+    boxes: [],
+    guards: []
+  },
+  {
+    name: "第三关：调虎离山",
+    desc: "巡逻哨兵守卫着通往核心的走廊。第1次循环先冲进中间走廊按下【E键】释放电磁脉冲眩晕哨兵，并踩住下方1号踏板；然后按【空格】倒流时间，趁过去的你控住哨兵并开门时直取核心！",
+    banner: "💡 靠近哨兵按【E】释放电磁脉冲瘫痪它3.2秒，残影也会完美复刻你的脉冲技能！",
+    maxEchoes: 2,
+    loopDuration: 9.0,
+    start: { x: 90, y: 250 },
+    core: { x: 710, y: 250 },
+    walls: [
+      { x: 260, y: 120, w: 24, h: 260 },
+      { x: 540, y: 0, w: 24, h: 190 },
+      { x: 540, y: 310, w: 24, h: 190 }
+    ],
+    doors: [
+      { x: 540, y: 190, w: 24, h: 120, channel: 1 }
+    ],
+    plates: [
+      { x: 400, y: 420, r: 22, channel: 1 }
+    ],
+    turrets: [],
+    shields: [],
+    boxes: [],
+    guards: [
+      { x: 400, y: 140, path: [{x: 400, y: 90}, {x: 400, y: 350}], speed: 105 }
+    ]
+  },
+  {
+    name: "第四关：三重奏鸣",
+    desc: "两道串联的量子门分别由【1号】和【2号】踏板控制，而2号踏板位于第一道门内部！利用两次时间倒流：1号残影开第一道门，2号残影进门踩第二道门，第3个你直取核心！",
+    banner: "💡 1号残影踩外侧踏板 ➡️ 倒流 ➡️ 2号残影穿过1号门去踩内侧踏板 ➡️ 倒流 ➡️ 本尊连过两门！",
+    maxEchoes: 3,
+    loopDuration: 9.5,
+    start: { x: 90, y: 250 },
+    core: { x: 715, y: 250 },
+    walls: [
+      { x: 300, y: 0, w: 24, h: 185 },
+      { x: 300, y: 315, w: 24, h: 185 },
+      { x: 550, y: 0, w: 24, h: 185 },
+      { x: 550, y: 315, w: 24, h: 185 }
+    ],
+    doors: [
+      { x: 300, y: 185, w: 24, h: 130, channel: 1 },
+      { x: 550, y: 185, w: 24, h: 130, channel: 2 }
+    ],
+    plates: [
+      { x: 180, y: 100, r: 22, channel: 1 },
+      { x: 425, y: 390, r: 22, channel: 2 }
+    ],
+    turrets: [],
+    shields: [],
+    boxes: [],
+    guards: []
+  },
+  {
+    name: "第五关：折射棱镜与幻影",
+    desc: "紫色【能量棱镜方块】可以被推动并阻挡致命激光，还能压住踏板！先与残影配合，推动方块压住踏板并拿起护盾阻挡右侧激光，突破双重封锁！",
+    banner: "💡 紫色量子方块可以被推动来压住踏板，或者帮你挡住致命激光！",
+    maxEchoes: 3,
+    loopDuration: 10.5,
+    start: { x: 90, y: 250 },
+    core: { x: 715, y: 250 },
+    walls: [
+      { x: 440, y: 0, w: 24, h: 185 },
+      { x: 440, y: 315, w: 24, h: 185 }
+    ],
+    doors: [
+      { x: 440, y: 185, w: 24, h: 65, channel: 1 },
+      { x: 440, y: 250, w: 24, h: 65, channel: 2 }
+    ],
+    plates: [
+      { x: 250, y: 110, r: 22, channel: 1 },
+      { x: 250, y: 390, r: 22, channel: 2 }
+    ],
+    turrets: [
+      { x: 580, y: 22, dirX: 0, dirY: 1, maxDist: 460 }
+    ],
+    shields: [
+      { x: 150, y: 390 }
+    ],
+    boxes: [
+      { x: 250, y: 250, size: 34 }
+    ],
+    guards: []
+  },
+  {
+    name: "第六关：终极量子劫案",
+    desc: "终极金库！结合你学会的一切：1号残影踩下1号踏板开门，2号残影拾取护盾站在激光前掩护并踩住2号踏板，第3个你使用【E键脉冲】控住巡逻哨兵夺走终极核心！",
+    banner: "💡 终极考验：最多召唤3个残影协同作战，统筹踏板、护盾挡激光与EMP控场！",
+    maxEchoes: 3,
+    loopDuration: 11.0,
+    start: { x: 85, y: 250 },
+    core: { x: 720, y: 250 },
+    walls: [
+      { x: 310, y: 0, w: 24, h: 185 },
+      { x: 310, y: 315, w: 24, h: 185 },
+      { x: 580, y: 0, w: 24, h: 185 },
+      { x: 580, y: 315, w: 24, h: 185 }
+    ],
+    doors: [
+      { x: 310, y: 185, w: 24, h: 130, channel: 1 },
+      { x: 580, y: 185, w: 24, h: 130, channel: 2 }
+    ],
+    plates: [
+      { x: 185, y: 105, r: 22, channel: 1 },
+      { x: 450, y: 395, r: 22, channel: 2 }
+    ],
+    turrets: [
+      { x: 450, y: 22, dirX: 0, dirY: 1, maxDist: 460 }
+    ],
+    shields: [
+      { x: 185, y: 395 }
+    ],
+    boxes: [],
+    guards: [
+      { x: 645, y: 130, path: [{x: 645, y: 110}, {x: 645, y: 390}], speed: 115 }
+    ]
+  }
+];
+
+// ============================================================================
+// 3. GAME STATE & ENGINE
+// ============================================================================
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let gameMode = 'campaign'; // 'campaign' | 'arcade' | 'sandbox'
+let currentLevelIdx = 0;
+let completedLevels = new Set();
+let sandboxTool = 'wall';
+
+let levelData = null;
+let echoes = [];
+let currentRecording = [];
+let loopTime = 0;
+let maxLoopTime = 8.0;
+let isPaused = false;
+let rewindFlash = 0;
+let screenShake = 0;
+
+let player = {
+  x: 100,
+  y: 250,
+  r: 14,
+  speed: 195,
+  hasShield: false,
+  empCooldown: 0
+};
+
+let dynamicBoxes = [];
+let dynamicShields = [];
+let dynamicGuards = [];
+let empWaves = [];
+let particles = [];
+let floatTexts = [];
+
+let arcadeScore = 0;
+let arcadeBest = 0;
+let arcadeOrb = { x: 400, y: 250, r: 12 };
+let arcadeHistory = [];
+let arcadeClones = [];
+
+const keys = { up: false, down: false, left: false, right: false };
+
+window.addEventListener('keydown', (e) => {
+  if (['ArrowUp', 'KeyW'].includes(e.code)) { keys.up = true; e.preventDefault(); }
+  if (['ArrowDown', 'KeyS'].includes(e.code)) { keys.down = true; e.preventDefault(); }
+  if (['ArrowLeft', 'KeyA'].includes(e.code)) { keys.left = true; e.preventDefault(); }
+  if (['ArrowRight', 'KeyD'].includes(e.code)) { keys.right = true; e.preventDefault(); }
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (document.getElementById('modal-overlay').classList.contains('visible')) {
+      nextLevel();
+    } else {
+      triggerRewind();
+    }
+  }
+  if (e.code === 'KeyE') { e.preventDefault(); emitEmpPulse(); }
+  if (e.code === 'KeyR') { e.preventDefault(); resetCurrentLevel(); }
+});
+
+window.addEventListener('keyup', (e) => {
+  if (['ArrowUp', 'KeyW'].includes(e.code)) keys.up = false;
+  if (['ArrowDown', 'KeyS'].includes(e.code)) keys.down = false;
+  if (['ArrowLeft', 'KeyA'].includes(e.code)) keys.left = false;
+  if (['ArrowRight', 'KeyD'].includes(e.code)) keys.right = false;
+});
+
+function setTouchKey(dir, val) {
+  keys[dir] = val;
+}
+
+function cloneObj(o) {
+  return JSON.parse(JSON.stringify(o));
+}
+
+function initLevelSelectUI() {
+  const grid = document.getElementById('level-grid');
+  grid.innerHTML = '';
+  CAMPAIGN_LEVELS.forEach((lvl, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'lvl-btn' + (idx === currentLevelIdx ? ' active' : '') + (completedLevels.has(idx) ? ' completed' : '');
+    btn.textContent = `第 ${idx + 1} 关` + (completedLevels.has(idx) ? ' ✓' : '');
+    btn.onclick = () => {
+      currentLevelIdx = idx;
+      loadCampaignLevel(idx);
+    };
+    grid.appendChild(btn);
+  });
+}
+
+function switchMode(mode) {
+  gameMode = mode;
+  document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + mode).classList.add('active');
+  hideModal();
+
+  if (mode === 'campaign') {
+    document.getElementById('campaign-panel').style.display = 'flex';
+    document.getElementById('sandbox-panel').style.display = 'none';
+    document.getElementById('btn-rewind').style.display = 'flex';
+    loadCampaignLevel(currentLevelIdx);
+  } else if (mode === 'arcade') {
+    document.getElementById('campaign-panel').style.display = 'none';
+    document.getElementById('sandbox-panel').style.display = 'none';
+    document.getElementById('btn-rewind').style.display = 'none';
+    startArcadeMode();
+  } else if (mode === 'sandbox') {
+    document.getElementById('campaign-panel').style.display = 'none';
+    document.getElementById('sandbox-panel').style.display = 'flex';
+    document.getElementById('btn-rewind').style.display = 'flex';
+    startSandboxMode();
+  }
+}
+
+function loadCampaignLevel(idx) {
+  hideModal();
+  levelData = cloneObj(CAMPAIGN_LEVELS[idx]);
+  maxLoopTime = levelData.loopDuration;
+  echoes = [];
+  resetLoopState();
+  updateSidebarUI();
+  initLevelSelectUI();
+}
+
+function startArcadeMode() {
+  levelData = {
+    name: "⚡ 悖论幸存者 (无尽街机)",
+    desc: "每拾取一颗【量子星核】，场地就会诞生一个6秒前的【时空残影】永远重复你的旧轨迹！千万不要撞上过去的自己（可使用【E键】电磁脉冲短暂虚化护体）！",
+    banner: "⚡ 收集星核并躲避不断增殖的过去自己！按【E】释放脉冲可短暂虚化残影！",
+    maxEchoes: 99,
+    loopDuration: 999,
+    start: { x: 400, y: 250 },
+    core: { x: -100, y: -100 },
+    walls: [
+      { x: 220, y: 140, w: 22, h: 90 },
+      { x: 558, y: 270, w: 22, h: 90 },
+      { x: 558, y: 140, w: 22, h: 90 },
+      { x: 220, y: 270, w: 22, h: 90 }
+    ],
+    doors: [],
+    plates: [],
+    turrets: [],
+    shields: [],
+    boxes: [],
+    guards: []
+  };
+  arcadeScore = 0;
+  arcadeHistory = [];
+  arcadeClones = [];
+  spawnArcadeOrb();
+  resetLoopState();
+  updateSidebarUI();
+}
+
+function spawnArcadeOrb() {
+  for (let tries = 0; tries < 50; tries++) {
+    const ox = 80 + Math.random() * 640;
+    const oy = 80 + Math.random() * 340;
+    const distP = Math.hypot(ox - player.x, oy - player.y);
+    if (distP > 140 && !circleRectCollide(ox, oy, 20, levelData.walls)) {
+      arcadeOrb = { x: ox, y: oy, r: 13 };
+      return;
+    }
+  }
+  arcadeOrb = { x: 400, y: 100, r: 13 };
+}
+
+function startSandboxMode() {
+  levelData = {
+    name: "🛠️ 造物主自定义沙盒",
+    desc: "点击右侧画笔并在画布上任意点击即可放置墙体、踏板、激光门、激光炮与巡逻哨兵！随时按【空格】测试你的时空谜题！",
+    banner: "🛠️ 鼠标点击画布即可放置机关，边搭边玩！支持无限测试你的脑洞关卡！",
+    maxEchoes: 3,
+    loopDuration: 10.0,
+    start: { x: 90, y: 250 },
+    core: { x: 710, y: 250 },
+    walls: [],
+    doors: [],
+    plates: [],
+    turrets: [],
+    shields: [],
+    boxes: [],
+    guards: []
+  };
+  echoes = [];
+  resetLoopState();
+  updateSidebarUI();
+}
+
+function selectTool(tool, btnEl) {
+  sandboxTool = tool;
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+}
+
+canvas.addEventListener('mousedown', (e) => {
+  if (gameMode !== 'sandbox') return;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const mx = Math.round(((e.clientX - rect.left) * scaleX) / 20) * 20;
+  const my = Math.round(((e.clientY - rect.top) * scaleY) / 20) * 20;
+
+  if (sandboxTool === 'wall') {
+    levelData.walls.push({ x: mx - 20, y: my - 20, w: 40, h: 40 });
+  } else if (sandboxTool === 'plate') {
+    const ch = (levelData.plates.length % 2) + 1;
+    levelData.plates.push({ x: mx, y: my, r: 22, channel: ch });
+  } else if (sandboxTool === 'door') {
+    const ch = (levelData.doors.length % 2) + 1;
+    levelData.doors.push({ x: mx - 12, y: my - 45, w: 24, h: 90, channel: ch });
+  } else if (sandboxTool === 'turret') {
+    levelData.turrets.push({ x: mx, y: my, dirX: 0, dirY: 1, maxDist: 460 });
+  } else if (sandboxTool === 'shield') {
+    levelData.shields.push({ x: mx, y: my });
+  } else if (sandboxTool === 'guard') {
+    levelData.guards.push({
+      x: mx, y: my,
+      path: [{ x: mx, y: Math.max(60, my - 100) }, { x: mx, y: Math.min(440, my + 100) }],
+      speed: 100
+    });
+  } else if (sandboxTool === 'core') {
+    levelData.core = { x: mx, y: my };
+  } else if (sandboxTool === 'erase') {
+    levelData.walls = levelData.walls.filter(w => !(mx >= w.x && mx <= w.x + w.w && my >= w.y && my <= w.y + w.h));
+    levelData.plates = levelData.plates.filter(p => Math.hypot(mx - p.x, my - p.y) > 28);
+    levelData.doors = levelData.doors.filter(d => !(mx >= d.x && mx <= d.x + d.w && my >= d.y && my <= d.y + d.h));
+    levelData.turrets = levelData.turrets.filter(t => Math.hypot(mx - t.x, my - t.y) > 25);
+    levelData.shields = levelData.shields.filter(s => Math.hypot(mx - s.x, my - s.y) > 25);
+    levelData.guards = levelData.guards.filter(g => Math.hypot(mx - g.x, my - g.y) > 30);
+  }
+  sfx.plateOn();
+  resetLoopState();
+});
+
+function resetLoopState() {
+  loopTime = 0;
+  currentRecording = [];
+  player.x = levelData.start.x;
+  player.y = levelData.start.y;
+  player.hasShield = false;
+  player.empCooldown = 0;
+
+  dynamicBoxes = cloneObj(levelData.boxes || []);
+  dynamicShields = (levelData.shields || []).map(s => ({ ...s, taken: false }));
+  dynamicGuards = (levelData.guards || []).map(g => ({
+    x: g.x,
+    y: g.y,
+    path: cloneObj(g.path),
+    targetIdx: 1,
+    speed: g.speed,
+    stunTimer: 0
+  }));
+  empWaves = [];
+  isPaused = false;
+  updateTimelineBadges();
+}
+
+function resetCurrentLevel() {
+  sfx.rewind();
+  rewindFlash = 0.7;
+  if (gameMode === 'arcade') {
+    startArcadeMode();
+  } else {
+    echoes = [];
+    resetLoopState();
+    hideModal();
+    updateSidebarUI();
+  }
+}
+
+function triggerRewind() {
+  if (gameMode === 'arcade' || isPaused) return;
+  if (currentRecording.length < 10) {
+    spawnFloatText(player.x, player.y - 20, "先移动一段距离再回溯！", "#ffbe0b");
+    return;
+  }
+  sfx.rewind();
+  rewindFlash = 1.0;
+  screenShake = 8;
+  spawnParticles(player.x, player.y, '#00f0ff', 24);
+
+  const color = ECHO_COLORS[echoes.length % ECHO_COLORS.length];
+  echoes.push({
+    frames: currentRecording,
+    color: color
+  });
+  if (echoes.length > levelData.maxEchoes) {
+    echoes.shift();
+  }
+  resetLoopState();
+  spawnFloatText(player.x, player.y - 24, `⏪ 时空回溯！残影 #${echoes.length} 已就位`, color);
+  updateSidebarUI();
+}
+
+function emitEmpPulse() {
+  if (player.empCooldown > 0 || isPaused) return;
+  player.empCooldown = 2.8;
+  sfx.emp();
+  screenShake = 6;
+  empWaves.push({ x: player.x, y: player.y, r: 10, maxR: 135, alpha: 1.0, color: '#00f59b' });
+  applyEmpAt(player.x, player.y);
+
+  if (currentRecording.length > 0) {
+    currentRecording[currentRecording.length - 1].emp = true;
+  }
+}
+
+function applyEmpAt(ex, ey) {
+  dynamicGuards.forEach(g => {
+    if (Math.hypot(g.x - ex, g.y - ey) <= 135) {
+      g.stunTimer = 3.2;
+      spawnFloatText(g.x, g.y - 20, "⚡ 电磁瘫痪 3.2s!", "#00f0ff");
+      spawnParticles(g.x, g.y, '#00f0ff', 18);
+    }
+  });
+  if (gameMode === 'arcade') {
+    arcadeClones.forEach(c => {
+      c.stunTimer = 2.0;
+    });
+    spawnFloatText(ex, ey - 25, "⚡ 残影虚化护体 2.0s!", "#00f59b");
+  }
+}
+
+function updateSidebarUI() {
+  document.getElementById('lvl-name').textContent = levelData.name;
+  document.getElementById('lvl-desc').textContent = levelData.desc;
+  document.getElementById('canvas-banner').textContent = levelData.banner;
+
+  if (gameMode === 'campaign') {
+    document.getElementById('stat1-label').textContent = '当前关卡';
+    document.getElementById('stat1-val').textContent = `0${currentLevelIdx + 1} / 0${CAMPAIGN_LEVELS.length}`;
+    document.getElementById('stat2-label').textContent = '活跃残影';
+    document.getElementById('stat2-val').textContent = `${echoes.length} / ${levelData.maxEchoes}`;
+  } else if (gameMode === 'arcade') {
+    document.getElementById('stat1-label').textContent = '窃取星核';
+    document.getElementById('stat1-val').textContent = `${arcadeScore} (最高 ${arcadeBest})`;
+    document.getElementById('stat2-label').textContent = '追猎残影';
+    document.getElementById('stat2-val').textContent = `${arcadeClones.length} 个`;
+  } else {
+    document.getElementById('stat1-label').textContent = '沙盒模式';
+    document.getElementById('stat1-val').textContent = '自由建造';
+    document.getElementById('stat2-label').textContent = '活跃残影';
+    document.getElementById('stat2-val').textContent = `${echoes.length} / ${levelData.maxEchoes}`;
+  }
+  updateTimelineBadges();
+}
+
+function updateTimelineBadges() {
+  const container = document.getElementById('loop-badges');
+  container.innerHTML = '';
+  if (gameMode === 'arcade') {
+    const b = document.createElement('div');
+    b.className = 'loop-badge';
+    b.innerHTML = `<span class="dot" style="background:var(--emerald)"></span> 幸存者模式`;
+    container.appendChild(b);
+    return;
+  }
+  echoes.forEach((ec, i) => {
+    const b = document.createElement('div');
+    b.className = 'loop-badge';
+    b.innerHTML = `<span class="dot" style="background:${ec.color}"></span> 残影 #${i + 1}`;
+    container.appendChild(b);
+  });
+  const cur = document.createElement('div');
+  cur.className = 'loop-badge';
+  cur.style.borderColor = 'var(--emerald)';
+  cur.innerHTML = `<span class="dot" style="background:var(--emerald)"></span> 当前本尊`;
+  container.appendChild(cur);
+}
+
+// ============================================================================
+// 4. PHYSICS, COLLISIONS & GAME LOOP
+// ============================================================================
+function circleRectCollide(cx, cy, cr, rects) {
+  for (const r of rects) {
+    const closestX = Math.max(r.x, Math.min(cx, r.x + r.w));
+    const closestY = Math.max(r.y, Math.min(cy, r.y + r.h));
+    const dx = cx - closestX;
+    const dy = cy - closestY;
+    if (dx * dx + dy * dy < cr * cr) return true;
+  }
+  return false;
+}
+
+function getActiveEchoStates(frameIndex) {
+  const states = [];
+  echoes.forEach((ec, idx) => {
+    if (ec.frames.length === 0) return;
+    const fIdx = Math.min(frameIndex, ec.frames.length - 1);
+    const f = ec.frames[fIdx];
+    states.push({
+      x: f.x,
+      y: f.y,
+      r: 14,
+      hasShield: f.hasShield,
+      emp: fIdx < ec.frames.length ? f.emp : false,
+      color: ec.color,
+      idx: idx + 1
+    });
+  });
+  return states;
+}
+
+function spawnParticles(x, y, color, count = 15) {
+  for (let i = 0; i < count; i++) {
+    const ang = Math.random() * Math.PI * 2;
+    const spd = 40 + Math.random() * 140;
+    particles.push({
+      x, y,
+      vx: Math.cos(ang) * spd,
+      vy: Math.sin(ang) * spd,
+      life: 0.4 + Math.random() * 0.4,
+      maxLife: 0.8,
+      color,
+      size: 2 + Math.random() * 3.5
+    });
+  }
+}
+
+function spawnFloatText(x, y, text, color = '#00f0ff') {
+  floatTexts.push({ x, y, text, color, life: 1.3 });
+}
+
+function triggerParadox(reason) {
+  if (isPaused) return;
+  sfx.paradox();
+  screenShake = 14;
+  rewindFlash = 0.8;
+  spawnParticles(player.x, player.y, '#ff3864', 32);
+  document.getElementById('paradox-status').textContent = '⚠ 时空坍缩';
+  document.getElementById('paradox-status').style.color = 'var(--danger)';
+  setTimeout(() => {
+    document.getElementById('paradox-status').textContent = '● 时空稳定';
+    document.getElementById('paradox-status').style.color = 'var(--emerald)';
+  }, 1500);
+
+  if (gameMode === 'arcade') {
+    showModal("💥 时空悖论坍缩！", `${reason}\n你在悖论幸存者模式中共窃取了 ${arcadeScore} 颗量子星核！`, false);
+  } else {
+    spawnFloatText(player.x, player.y - 20, `💥 ${reason}！本轮时间重置`, '#ff3864');
+    resetLoopState();
+  }
+}
+
+function showModal(title, desc, showNext = true) {
+  isPaused = true;
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-desc').textContent = desc;
+  document.getElementById('modal-next-btn').style.display = showNext ? 'inline-flex' : 'none';
+  document.getElementById('modal-overlay').classList.add('visible');
+}
+
+function hideModal() {
+  isPaused = false;
+  document.getElementById('modal-overlay').classList.remove('visible');
+}
+
+function nextLevel() {
+  hideModal();
+  if (currentLevelIdx < CAMPAIGN_LEVELS.length - 1) {
+    currentLevelIdx++;
+    loadCampaignLevel(currentLevelIdx);
+  } else {
+    currentLevelIdx = 0;
+    loadCampaignLevel(0);
+  }
+}
+
+let lastTime = performance.now();
+
+function update(dt) {
+  if (rewindFlash > 0) rewindFlash = Math.max(0, rewindFlash - dt * 2.4);
+  if (screenShake > 0) screenShake = Math.max(0, screenShake - dt * 25);
+
+  particles.forEach(p => {
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.life -= dt;
+  });
+  particles = particles.filter(p => p.life > 0);
+
+  floatTexts.forEach(ft => {
+    ft.y -= 28 * dt;
+    ft.life -= dt;
+  });
+  floatTexts = floatTexts.filter(ft => ft.life > 0);
+
+  empWaves.forEach(w => {
+    w.r += (w.maxR - w.r) * 8 * dt;
+    w.alpha -= dt * 1.8;
+  });
+  empWaves = empWaves.filter(w => w.alpha > 0);
+
+  if (isPaused || !levelData) return;
+
+  loopTime += dt;
+  if (player.empCooldown > 0) player.empCooldown = Math.max(0, player.empCooldown - dt);
+
+  if (gameMode !== 'arcade' && loopTime >= maxLoopTime) {
+    triggerRewind();
+    return;
+  }
+
+  const frameIdx = currentRecording.length;
+  const activeEchoes = getActiveEchoStates(frameIdx);
+
+  activeEchoes.forEach(ec => {
+    if (ec.emp) {
+      sfx.emp();
+      empWaves.push({ x: ec.x, y: ec.y, r: 10, maxR: 135, alpha: 1.0, color: ec.color });
+      applyEmpAt(ec.x, ec.y);
+    }
+  });
+
+  const activeChannels = new Set();
+  const actors = [{ x: player.x, y: player.y, hasShield: player.hasShield }, ...activeEchoes];
+
+  (levelData.plates || []).forEach(plate => {
+    let pressed = false;
+    for (const ac of actors) {
+      if (Math.hypot(ac.x - plate.x, ac.y - plate.y) < plate.r + 12) {
+        pressed = true;
+        break;
+      }
+    }
+    if (!pressed) {
+      for (const box of dynamicBoxes) {
+        if (Math.hypot(box.x - plate.x, box.y - plate.y) < plate.r + box.size * 0.5) {
+          pressed = true;
+          break;
+        }
+      }
+    }
+    if (pressed) {
+      if (!plate.wasPressed) sfx.plateOn();
+      activeChannels.add(plate.channel);
+    }
+    plate.wasPressed = pressed;
+  });
+
+  const closedDoors = (levelData.doors || []).filter(d => !activeChannels.has(d.channel));
+  const obstacles = [...(levelData.walls || []), ...closedDoors];
+
+  let vx = 0, vy = 0;
+  if (keys.left) vx -= 1;
+  if (keys.right) vx += 1;
+  if (keys.up) vy -= 1;
+  if (keys.down) vy += 1;
+  if (vx !== 0 && vy !== 0) {
+    vx *= 0.7071;
+    vy *= 0.7071;
+  }
+
+  const nextX = Math.max(22, Math.min(canvas.width - 22, player.x + vx * player.speed * dt));
+  const nextY = Math.max(22, Math.min(canvas.height - 22, player.y + vy * player.speed * dt));
+
+  if (!circleRectCollide(nextX, player.y, player.r, obstacles)) {
+    player.x = nextX;
+  }
+  if (!circleRectCollide(player.x, nextY, player.r, obstacles)) {
+    player.y = nextY;
+  }
+
+  for (const box of dynamicBoxes) {
+    for (const ac of actors) {
+      const dx = box.x - ac.x;
+      const dy = box.y - ac.y;
+      const dist = Math.hypot(dx, dy);
+      const minDist = player.r + box.size * 0.55;
+      if (dist < minDist && dist > 0.001) {
+        const pushX = box.x + (dx / dist) * (minDist - dist);
+        const pushY = box.y + (dy / dist) * (minDist - dist);
+        if (!circleRectCollide(pushX, pushY, box.size * 0.5, obstacles)) {
+          box.x = Math.max(30, Math.min(canvas.width - 30, pushX));
+          box.y = Math.max(30, Math.min(canvas.height - 30, pushY));
+        }
+      }
+    }
+  }
+
+  dynamicShields.forEach(sh => {
+    if (sh.taken) return;
+    if (!player.hasShield && Math.hypot(player.x - sh.x, player.y - sh.y) < player.r + 16) {
+      sh.taken = true;
+      player.hasShield = true;
+      sfx.shieldPickup();
+      spawnFloatText(player.x, player.y - 20, "🛡️ 已装备光子反射盾！", "#00f0ff");
+    }
+    activeEchoes.forEach(ec => {
+      if (!sh.taken && ec.hasShield && Math.hypot(ec.x - sh.x, ec.y - sh.y) < 24) {
+        sh.taken = true;
+      }
+    });
+  });
+
+  currentRecording.push({
+    x: player.x,
+    y: player.y,
+    hasShield: player.hasShield,
+    emp: false
+  });
+
+  (levelData.turrets || []).forEach(t => {
+    let beamLen = t.maxDist;
+    for (let d = 12; d <= t.maxDist; d += 4) {
+      const lx = t.x + t.dirX * d;
+      const ly = t.y + t.dirY * d;
+
+      if (circleRectCollide(lx, ly, 2, obstacles)) {
+        beamLen = d;
+        break;
+      }
+      let hitBox = false;
+      for (const box of dynamicBoxes) {
+        if (Math.abs(lx - box.x) < box.size * 0.55 && Math.abs(ly - box.y) < box.size * 0.55) {
+          beamLen = d;
+          hitBox = true;
+          break;
+        }
+      }
+      if (hitBox) break;
+
+      let hitShield = false;
+      for (const ac of actors) {
+        if (ac.hasShield && Math.hypot(lx - ac.x, ly - ac.y) <= 21) {
+          beamLen = d;
+          hitShield = true;
+          break;
+        }
+      }
+      if (hitShield) break;
+
+      if (!player.hasShield && Math.hypot(lx - player.x, ly - player.y) < player.r - 2) {
+        t.currentLen = d;
+        triggerParadox("被高能脉冲激光击中");
+        return;
+      }
+    }
+    t.currentLen = beamLen;
+  });
+
+  for (const g of dynamicGuards) {
+    if (g.stunTimer > 0) {
+      g.stunTimer = Math.max(0, g.stunTimer - dt);
+      continue;
+    }
+    let target = g.path[g.targetIdx];
+    const dx = target.x - g.x;
+    const dy = target.y - g.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 8) {
+      g.targetIdx = (g.targetIdx + 1) % g.path.length;
+    } else {
+      g.x += (dx / dist) * g.speed * dt;
+      g.y += (dy / dist) * g.speed * dt;
+    }
+
+    if (Math.hypot(player.x - g.x, player.y - g.y) < player.r + 18) {
+      triggerParadox("被巡逻哨兵捕获");
+      return;
+    }
+  }
+
+  if (gameMode === 'arcade') {
+    arcadeHistory.push({ x: player.x, y: player.y });
+    if (Math.hypot(player.x - arcadeOrb.x, player.y - arcadeOrb.y) < player.r + arcadeOrb.r) {
+      arcadeScore++;
+      if (arcadeScore > arcadeBest) arcadeBest = arcadeScore;
+      sfx.win();
+      spawnParticles(arcadeOrb.x, arcadeOrb.y, '#ffbe0b', 22);
+      spawnArcadeOrb();
+
+      const startFrame = Math.max(0, arcadeHistory.length - 360);
+      const slice = arcadeHistory.slice(startFrame);
+      if (slice.length > 20) {
+        arcadeClones.push({
+          frames: slice,
+          cursor: 0,
+          dir: 1,
+          graceTimer: 1.5,
+          stunTimer: 0,
+          color: ECHO_COLORS[arcadeClones.length % ECHO_COLORS.length]
+        });
+        spawnFloatText(player.x, player.y - 24, `⚠️ 新增时空残影 #${arcadeClones.length}!`, '#ff2a85');
+      }
+      updateSidebarUI();
+    }
+
+    for (const c of arcadeClones) {
+      if (c.graceTimer > 0) c.graceTimer -= dt;
+      if (c.stunTimer > 0) {
+        c.stunTimer -= dt;
+        continue;
+      }
+      c.cursor += c.dir;
+      if (c.cursor >= c.frames.length - 1) { c.cursor = c.frames.length - 1; c.dir = -1; }
+      if (c.cursor <= 0) { c.cursor = 0; c.dir = 1; }
+      const pos = c.frames[c.cursor];
+      c.x = pos.x;
+      c.y = pos.y;
+
+      if (c.graceTimer <= 0 && Math.hypot(player.x - c.x, player.y - c.y) < player.r + 11) {
+        triggerParadox("与过去的时空残影发生相撞悖论");
+        return;
+      }
+    }
+  }
+
+  if (gameMode !== 'arcade' && levelData.core) {
+    const distCore = Math.hypot(player.x - levelData.core.x, player.y - levelData.core.y);
+    if (distCore < player.r + 18) {
+      sfx.win();
+      spawnParticles(levelData.core.x, levelData.core.y, '#00f59b', 40);
+      if (gameMode === 'campaign') {
+        completedLevels.add(currentLevelIdx);
+        initLevelSelectUI();
+        const isLast = currentLevelIdx === CAMPAIGN_LEVELS.length - 1;
+        showModal(
+          isLast ? "🏆 恭喜通关全部时空节点！" : `✨ 第 ${currentLevelIdx + 1} 关：窃取成功！`,
+          isLast
+            ? "你已完美掌握跨时空协同作战的精髓！现在可以试试【悖论幸存者】无尽模式，或在【造物沙盒】设计你自己的关卡！"
+            : `你利用 ${echoes.length} 个时空残影成功突破了量子防线，耗时 ${loopTime.toFixed(1)} 秒！`,
+          true
+        );
+      } else {
+        showModal("🎉 沙盒测试通关！", "你设计的自定义时空谜题已验证可解！可以继续添加更多机关挑战自己。", false);
+      }
+    }
+  }
+
+  if (gameMode !== 'arcade') {
+    const pct = Math.min(100, (loopTime / maxLoopTime) * 100);
+    document.getElementById('timeline-fill').style.width = pct + '%';
+    document.getElementById('time-readout').textContent = (maxLoopTime - loopTime).toFixed(1) + 's';
+  } else {
+    document.getElementById('timeline-fill').style.width = '100%';
+    document.getElementById('time-readout').textContent = `得分: ${arcadeScore}`;
+  }
+}
+
+// ============================================================================
+// 5. RENDERING ENGINE (60FPS Neon Cyberpunk Aesthetics)
+// ============================================================================
+function draw() {
+  ctx.save();
+  if (screenShake > 0) {
+    const sx = (Math.random() - 0.5) * screenShake;
+    const sy = (Math.random() - 0.5) * screenShake;
+    ctx.translate(sx, sy);
+  }
+
+  ctx.fillStyle = '#050811';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = 'rgba(0, 240, 255, 0.055)';
+  ctx.lineWidth = 1;
+  const gridSize = 40;
+  for (let x = 0; x <= canvas.width; x += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.stroke();
+  }
+  for (let y = 0; y <= canvas.height; y += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.stroke();
+  }
+
+  if (!levelData) { ctx.restore(); return; }
+
+  const frameIdx = Math.max(0, currentRecording.length - 1);
+  const activeEchoes = getActiveEchoStates(frameIdx);
+
+  const activeChannels = new Set();
+  (levelData.plates || []).forEach(p => { if (p.wasPressed) activeChannels.add(p.channel); });
+
+  (levelData.plates || []).forEach(p => {
+    const isOn = activeChannels.has(p.channel);
+    (levelData.doors || []).filter(d => d.channel === p.channel).forEach(d => {
+      ctx.save();
+      ctx.strokeStyle = isOn ? 'rgba(0, 245, 155, 0.45)' : 'rgba(255, 190, 11, 0.22)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(d.x + d.w / 2, d.y + d.h / 2);
+      ctx.stroke();
+      ctx.restore();
+    });
+  });
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(levelData.start.x, levelData.start.y, 24, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(0, 240, 255, 0.08)';
+  ctx.fill();
+  ctx.restore();
+
+  (levelData.plates || []).forEach(p => {
+    const isOn = activeChannels.has(p.channel);
+    const col = isOn ? '#00f59b' : '#ffbe0b';
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = isOn ? 'rgba(0, 245, 155, 0.22)' : 'rgba(255, 190, 11, 0.14)';
+    ctx.fill();
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = col;
+    ctx.shadowColor = col;
+    ctx.shadowBlur = isOn ? 14 : 6;
+    ctx.stroke();
+
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`#${p.channel}`, p.x, p.y);
+    ctx.restore();
+  });
+
+  (levelData.walls || []).forEach(w => {
+    ctx.save();
+    ctx.fillStyle = '#101935';
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.45)';
+    ctx.lineWidth = 1.5;
+    ctx.fillRect(w.x, w.y, w.w, w.h);
+    ctx.strokeRect(w.x, w.y, w.w, w.h);
+    ctx.restore();
+  });
+
+  (levelData.doors || []).forEach(d => {
+    const isOpen = activeChannels.has(d.channel);
+    ctx.save();
+    if (isOpen) {
+      ctx.strokeStyle = 'rgba(0, 245, 155, 0.35)';
+      ctx.setLineDash([4, 4]);
+      ctx.strokeRect(d.x, d.y, d.w, d.h);
+    } else {
+      ctx.fillStyle = 'rgba(255, 190, 11, 0.28)';
+      ctx.strokeStyle = '#ffbe0b';
+      ctx.shadowColor = '#ffbe0b';
+      ctx.shadowBlur = 12;
+      ctx.fillRect(d.x, d.y, d.w, d.h);
+      ctx.strokeRect(d.x, d.y, d.w, d.h);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`门#${d.channel}`, d.x + d.w / 2, d.y + d.h / 2 + 4);
+    }
+    ctx.restore();
+  });
+
+  dynamicBoxes.forEach(b => {
+    ctx.save();
+    ctx.fillStyle = 'rgba(157, 78, 221, 0.35)';
+    ctx.strokeStyle = '#c77dff';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#9d4edd';
+    ctx.shadowBlur = 10;
+    ctx.fillRect(b.x - b.size / 2, b.y - b.size / 2, b.size, b.size);
+    ctx.strokeRect(b.x - b.size / 2, b.y - b.size / 2, b.size, b.size);
+    ctx.restore();
+  });
+
+  (levelData.turrets || []).forEach(t => {
+    const len = t.currentLen || t.maxDist;
+    const endX = t.x + t.dirX * len;
+    const endY = t.y + t.dirY * len;
+
+    ctx.save();
+    ctx.strokeStyle = '#ff3864';
+    ctx.lineWidth = 4;
+    ctx.shadowColor = '#ff3864';
+    ctx.shadowBlur = 14;
+    ctx.beginPath();
+    ctx.moveTo(t.x, t.y);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(t.x, t.y);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
+
+    ctx.fillStyle = '#ff3864';
+    ctx.beginPath();
+    ctx.arc(endX, endY, 5 + Math.sin(performance.now() * 0.02) * 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#2b192e';
+    ctx.strokeStyle = '#ff3864';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(t.x, t.y, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  dynamicShields.forEach(s => {
+    if (s.taken) return;
+    ctx.save();
+    ctx.strokeStyle = '#00f0ff';
+    ctx.fillStyle = 'rgba(0, 240, 255, 0.2)';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🛡️', s.x, s.y);
+    ctx.restore();
+  });
+
+  const targetOrb = gameMode === 'arcade' ? arcadeOrb : levelData.core;
+  if (targetOrb && targetOrb.x > 0) {
+    const pulse = Math.sin(performance.now() * 0.006) * 4;
+    ctx.save();
+    ctx.translate(targetOrb.x, targetOrb.y);
+    ctx.rotate(performance.now() * 0.002);
+    ctx.strokeStyle = gameMode === 'arcade' ? '#ffbe0b' : '#00f59b';
+    ctx.fillStyle = gameMode === 'arcade' ? 'rgba(255, 190, 11, 0.25)' : 'rgba(0, 245, 155, 0.25)';
+    ctx.shadowColor = gameMode === 'arcade' ? '#ffbe0b' : '#00f59b';
+    ctx.shadowBlur = 18;
+    ctx.lineWidth = 2.5;
+    const s = 14 + pulse * 0.4;
+    ctx.strokeRect(-s, -s, s * 2, s * 2);
+    ctx.rotate(Math.PI / 4);
+    ctx.fillRect(-s * 0.8, -s * 0.8, s * 1.6, s * 1.6);
+    ctx.strokeRect(-s * 0.8, -s * 0.8, s * 1.6, s * 1.6);
+    ctx.restore();
+  }
+
+  dynamicGuards.forEach(g => {
+    const stunned = g.stunTimer > 0;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(g.x, g.y, 22, 0, Math.PI * 2);
+    ctx.fillStyle = stunned ? 'rgba(0, 240, 255, 0.12)' : 'rgba(255, 56, 100, 0.16)';
+    ctx.fill();
+    ctx.strokeStyle = stunned ? '#00f0ff' : '#ff3864';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(g.x, g.y, 11, 0, Math.PI * 2);
+    ctx.fillStyle = stunned ? '#00f0ff' : '#ff3864';
+    ctx.fill();
+
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(stunned ? `⚡${g.stunTimer.toFixed(1)}s` : '哨兵', g.x, g.y - 26);
+    ctx.restore();
+  });
+
+  empWaves.forEach(w => {
+    ctx.save();
+    ctx.strokeStyle = w.color;
+    ctx.globalAlpha = Math.max(0, w.alpha);
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(w.x, w.y, w.r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  echoes.forEach((ec, idx) => {
+    if (ec.frames.length < 2) return;
+    ctx.save();
+    ctx.strokeStyle = ec.color;
+    ctx.globalAlpha = 0.22;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < ec.frames.length; i += 3) {
+      const pt = ec.frames[i];
+      if (i === 0) ctx.moveTo(pt.x, pt.y);
+      else ctx.lineTo(pt.x, pt.y);
+    }
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  activeEchoes.forEach(ec => {
+    drawCharacter(ec.x, ec.y, ec.color, `残影#${ec.idx}`, ec.hasShield, true);
+  });
+
+  if (gameMode === 'arcade') {
+    arcadeClones.forEach((c) => {
+      if (c.x === undefined) return;
+      const alpha = (c.graceTimer > 0 || c.stunTimer > 0) ? 0.35 : 0.85;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      drawCharacter(c.x, c.y, c.color, `残影`, false, true);
+      ctx.restore();
+    });
+  }
+
+  drawCharacter(player.x, player.y, '#00f59b', '本尊', player.hasShield, false);
+
+  particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+    ctx.fillStyle = p.color;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+
+  floatTexts.forEach(ft => {
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, ft.life);
+    ctx.fillStyle = ft.color;
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = '#000';
+    ctx.shadowBlur = 6;
+    ctx.fillText(ft.text, ft.x, ft.y);
+    ctx.restore();
+  });
+
+  if (rewindFlash > 0) {
+    ctx.save();
+    ctx.fillStyle = `rgba(0, 240, 255, ${rewindFlash * 0.28})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
+function drawCharacter(x, y, color, label, hasShield, isGhost) {
+  ctx.save();
+  if (hasShield) {
+    ctx.beginPath();
+    ctx.arc(x, y, 21, 0, Math.PI * 2);
+    ctx.strokeStyle = '#00f0ff';
+    ctx.fillStyle = 'rgba(0, 240, 255, 0.16)';
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = '#00f0ff';
+    ctx.shadowBlur = 12;
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  ctx.beginPath();
+  ctx.arc(x, y, 13, 0, Math.PI * 2);
+  ctx.fillStyle = isGhost ? 'rgba(15, 23, 42, 0.85)' : color;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 14;
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(x, y, 4, 0, Math.PI * 2);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+
+  ctx.fillStyle = color;
+  ctx.font = 'bold 10.5px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, x, y - 20);
+  ctx.restore();
+}
+
+function loop(now) {
+  const dt = Math.min(0.05, (now - lastTime) / 1000);
+  lastTime = now;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+
+loadCampaignLevel(0);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

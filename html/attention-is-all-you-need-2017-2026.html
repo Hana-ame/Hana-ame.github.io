@@ -1,0 +1,2188 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>全球大模型巨头演进时间线 (2017–2026)：从 Attention Is All You Need 到 Agent 时代</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans SC', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.4);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.5);
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.8);
+    }
+    .card-hover {
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+
+  <!-- Top Header -->
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-slate-950/90 border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 font-extrabold text-white text-lg">
+          ⚡
+        </div>
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-base sm:text-lg font-bold tracking-tight text-white">全球 LLM 巨头演进全景时间线</h1>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-medium">2017.06 – 2026.10</span>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">从《Attention Is All You Need》到 GPT-6.1、Gemini 4 Argon、Claude 5.5、DeepSeek-V4.1 与 Qwen 3.8</p>
+        </div>
+      </div>
+
+      <!-- Main Navigation Tabs -->
+      <nav class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 overflow-x-auto max-w-full" aria-label="视图切换">
+        <button id="tab-swimlane" type="button" class="view-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all bg-indigo-600 text-white shadow" data-view="swimlane">
+          📊 横向泳道对比
+        </button>
+        <button id="tab-timeline" type="button" class="view-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all text-slate-400 hover:text-white" data-view="timeline">
+          🕒 编年史时间轴
+        </button>
+        <button id="tab-lineage" type="button" class="view-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all text-slate-400 hover:text-white" data-view="lineage">
+          🧬 八大巨头族谱
+        </button>
+        <button id="tab-analytics" type="button" class="view-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all text-slate-400 hover:text-white" data-view="analytics">
+          📈 趋势图表与横评表
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero KPI Strip & Filter Controls -->
+  <section class="bg-slate-900/60 border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-4">
+      <!-- Summary Metrics -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5" id="company-kpi-grid"></div>
+
+      <!-- Filter Bar -->
+      <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+        <!-- Search & Era Filter -->
+        <div class="flex flex-wrap items-center gap-2 flex-1">
+          <div class="relative flex-1 min-w-[200px]">
+            <input
+              id="search-input"
+              type="text"
+              placeholder="搜索模型名称、架构 (如 MoE、Reasoning、1M、Transformer)..."
+              class="w-full pl-8 pr-8 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+            />
+            <span class="absolute left-2.5 top-2 text-slate-500 text-xs">🔍</span>
+            <button id="clear-search-btn" type="button" class="hidden absolute right-2 top-1.5 text-slate-400 hover:text-white text-xs px-1">✕</button>
+          </div>
+
+          <select id="era-select" aria-label="按阶段筛选" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+            <option value="all">📅 全部时期 (2017–2026)</option>
+            <option value="2017-2020">🌱 2017–2020 架构奠基与预训练</option>
+            <option value="2021-2022">🚀 2021–2022 千亿规模与RLHF破圈</option>
+            <option value="2023">⚔️ 2023 群雄逐鹿与开源觉醒</option>
+            <option value="2024">🧠 2024 原生多模态与慢思考推理</option>
+            <option value="2025">🤖 2025 混合推理与Agent爆发</option>
+            <option value="2026">🌐 2026 百万上下文与自主智能体</option>
+          </select>
+
+          <select id="license-select" aria-label="按开源或闭源筛选" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+            <option value="all">🔓 全部开放类型</option>
+            <option value="open">🟢 开源 / 开放权重 (Open-Weight)</option>
+            <option value="closed">🔒 商业闭源 (Proprietary)</option>
+            <option value="paper">📄 奠基架构论文</option>
+          </select>
+
+          <select id="tag-select" aria-label="按核心特性筛选" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+            <option value="all">🏷️ 全部技术特性</option>
+            <option value="flagship">⭐ 历代核心旗舰</option>
+            <option value="reasoning">🧠 深度推理 / Hybrid Thinking</option>
+            <option value="multimodal">👁️ 原生多模态 (Vision/Audio/Omni)</option>
+            <option value="moe">🧩 混合专家架构 (MoE)</option>
+            <option value="agent">🛠️ Agentic 编程与电脑操作</option>
+            <option value="longctx">📚 超长上下文 (≥1M Tokens)</option>
+          </select>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="flex items-center justify-between sm:justify-end gap-2 border-t lg:border-t-0 pt-2 lg:pt-0 border-slate-800">
+          <span id="filter-count-badge" class="text-xs text-slate-400 font-medium">显示 0 个里程碑</span>
+          <button id="reset-filters-btn" type="button" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 transition">
+            重置筛选
+          </button>
+          <button id="open-compare-btn" type="button" class="px-3 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-xs text-indigo-300 font-medium transition flex items-center gap-1">
+            <span>⚖️ 模型同台 PK</span>
+            <span id="compare-count-pill" class="px-1.5 py-0.2 rounded-full bg-indigo-500 text-white text-[10px]">0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Company Filter Pills -->
+      <div class="flex items-center gap-1.5 flex-wrap" id="company-filter-pills"></div>
+    </div>
+  </section>
+
+  <!-- Main Workspace Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
+
+    <!-- VIEW 1: SWIMLANE MATRIX VIEW -->
+    <div id="view-swimlane" class="space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-900/70 border border-slate-800 rounded-xl p-3.5">
+        <div>
+          <h2 class="text-sm sm:text-base font-semibold text-white flex items-center gap-2">
+            <span>📊 跨巨头横向对齐泳道图 (2017–2026)</span>
+            <span class="text-xs font-normal text-slate-400">同一时间段各家大模型代际、开源策略与关键突破一目了然</span>
+          </h2>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="inline-flex items-center gap-1.5 text-xs text-slate-300 cursor-pointer select-none">
+            <input type="checkbox" id="swimlane-compact-toggle" class="rounded bg-slate-800 border-slate-700 text-indigo-500 focus:ring-0" />
+            <span>仅看重大旗舰节点</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto custom-scrollbar rounded-xl border border-slate-800 bg-slate-900/40 shadow-xl">
+        <table class="w-full border-collapse text-left min-w-[1100px]">
+          <thead>
+            <tr id="swimlane-header-row" class="bg-slate-900/95 border-b border-slate-800 text-xs font-semibold text-slate-300">
+              <th class="p-3 w-36 sticky left-0 z-20 bg-slate-900 border-r border-slate-800">时期 / 阶段</th>
+            </tr>
+          </thead>
+          <tbody id="swimlane-tbody" class="divide-y divide-slate-800/70 text-xs"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VIEW 2: CHRONOLOGICAL MASTER TIMELINE -->
+    <div id="view-timeline" class="hidden space-y-6">
+      <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-sm sm:text-base font-semibold text-white">🕒 大模型演进编年史 (2017.06 – 2026.10)</h2>
+          <p class="text-xs text-slate-400 mt-0.5">按精确发布时间排序，点击任意模型卡片可查看技术细节、参数规模与官方文献链接，或加入 PK 栏对比</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="sort-asc-btn" type="button" class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-medium">2017 → 2026 正序</button>
+          <button id="sort-desc-btn" type="button" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white text-xs font-medium">2026 → 2017 倒序</button>
+        </div>
+      </div>
+      <div id="timeline-container" class="space-y-8"></div>
+    </div>
+
+    <!-- VIEW 3: COMPANY LINEAGE CARDS -->
+    <div id="view-lineage" class="hidden space-y-6">
+      <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4">
+        <h2 class="text-sm sm:text-base font-semibold text-white">🧬 八大 LLM 巨头技术路线与代际族谱</h2>
+        <p class="text-xs text-slate-400 mt-0.5">对比各家从早期架构探索到 2026 年最新旗舰（GPT-6.1、Gemini 4 Argon、Claude 5.5、Muse Spark、DeepSeek-V4.1、Qwen 3.8、Grok 4.7、Mistral Large 4）的完整演进脉络</p>
+      </div>
+      <div id="lineage-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
+    </div>
+
+    <!-- VIEW 4: ANALYTICS & COMPARISON TABLE -->
+    <div id="view-analytics" class="hidden space-y-6">
+      <!-- Charts Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-sm font-semibold text-white">📊 年度重磅模型发布密度演进 (2017–2026)</h3>
+              <p class="text-xs text-slate-400">反映从早期单一论文突破到 2023–2026 年多巨头高频迭代的竞争格局</p>
+            </div>
+          </div>
+          <div class="relative h-72 w-full">
+            <canvas id="releaseCadenceChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-sm font-semibold text-white">📈 上下文窗口 (Context Window) 指数级跃迁</h3>
+              <p class="text-xs text-slate-400">从 2017 Transformer (512) 到 Gemini 1.5 Pro (2M) 与 2026 普遍标配 1M Tokens (对数坐标)</p>
+            </div>
+          </div>
+          <div class="relative h-72 w-full">
+            <canvas id="contextWindowChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2026 Latest Flagship Head-to-Head Table -->
+      <div class="bg-slate-900/70 border border-slate-800 rounded-xl overflow-hidden">
+        <div class="p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h3 class="text-sm sm:text-base font-semibold text-white">🏆 截至 2026 年 10 月各家最新主力旗舰横评表</h3>
+            <p class="text-xs text-slate-400 mt-0.5">汇总八大巨头最新一代旗舰与开源代表作的发布日期、参数架构、上下文窗口与核心定位</p>
+          </div>
+        </div>
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr class="bg-slate-950/70 text-slate-300 border-b border-slate-800">
+                <th class="p-3 font-semibold">厂商</th>
+                <th class="p-3 font-semibold">最新主力旗舰</th>
+                <th class="p-3 font-semibold">发布日期</th>
+                <th class="p-3 font-semibold">开源/闭源策略</th>
+                <th class="p-3 font-semibold">架构与参数规模</th>
+                <th class="p-3 font-semibold">上下文窗口</th>
+                <th class="p-3 font-semibold">核心突破与定位</th>
+                <th class="p-3 font-semibold">来源</th>
+              </tr>
+            </thead>
+            <tbody id="flagship-comparison-tbody" class="divide-y divide-slate-800/70"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Detail Modal -->
+  <div id="detail-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-5 shadow-2xl space-y-4 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-start justify-between gap-3">
+        <div id="modal-header-content"></div>
+        <button id="close-detail-modal" type="button" class="text-slate-400 hover:text-white text-lg px-2 py-0.5 rounded-lg bg-slate-800">✕</button>
+      </div>
+      <div id="modal-body-content" class="space-y-3 text-xs sm:text-sm text-slate-300"></div>
+      <div class="pt-3 border-t border-slate-800 flex items-center justify-between gap-3">
+        <button id="modal-toggle-compare-btn" type="button" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition"></button>
+        <a id="modal-source-link" href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 text-xs font-medium transition inline-flex items-center gap-1">
+          <span>🔗 查看官方发布 / 论文来源</span>
+          <span>↗</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- PK Compare Modal -->
+  <div id="compare-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-5xl w-full p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between gap-3 border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-base font-bold text-white">⚖️ 模型同台深度对比 (PK 模式)</h3>
+          <p class="text-xs text-slate-400">可从任意视图点击模型卡片右上角的「+PK」按钮添加（最多同时对比 4 款模型）</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="clear-compare-btn" type="button" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300">清空对比</button>
+          <button id="close-compare-modal" type="button" class="text-slate-400 hover:text-white text-lg px-2 py-0.5 rounded-lg bg-slate-800">✕</button>
+        </div>
+      </div>
+      <div id="compare-modal-body" class="overflow-x-auto custom-scrollbar"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-900 bg-slate-950 py-4 px-4 sm:px-6 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <span>数据范围：2017年6月《Attention Is All You Need》至 2026年10月各巨头最新发布</span>
+      <span>点击任意模型卡片可查阅详细架构参数与原始出处链接</span>
+    </div>
+  </footer>
+
+  <script>
+    const COMPANIES = [
+      {
+        id: 'google',
+        name: 'Google / DeepMind',
+        shortName: 'Google',
+        color: '#3b82f6',
+        badgeClass: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
+        borderClass: 'border-blue-500/40',
+        dotClass: 'bg-blue-500',
+        origin: '美国 · Transformer 发源地',
+        strategy: '闭源旗舰 (Gemini) + 开源生态 (Gemma)',
+        latestFlagship: 'Gemini 4 Argon (2026.10)',
+        summary: '2017年发明 Transformer 架构，经历 BERT、T5、LaMDA、PaLM 到原生多模态 Gemini 系列；率先突破 1M–2M 超长上下文，并在 2026 年推出代号级前沿模型 Gemini 4 Argon 与高频迭代的 Flash 家族。'
+      },
+      {
+        id: 'openai',
+        name: 'OpenAI',
+        shortName: 'OpenAI',
+        color: '#10b981',
+        badgeClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+        borderClass: 'border-emerald-500/40',
+        dotClass: 'bg-emerald-500',
+        origin: '美国 · GPT 与强化学习推理先驱',
+        strategy: '闭源商业为主 (GPT-6 / o系列) + 少量开放权重 (GPT-OSS)',
+        latestFlagship: 'GPT-6 Astra / 6.1 Sol (2026.09)',
+        summary: '从 2018 年 GPT-1 坚定走自回归 Decoder-only 缩放路线，2022 年凭 ChatGPT 引爆全球 AI 浪潮，2024 年以 o1 开创慢思考强化学习推理范式，2025–2026 年将通用与推理由 GPT-5 推进至 GPT-6 Astra/Sol 时代。'
+      },
+      {
+        id: 'anthropic',
+        name: 'Anthropic',
+        shortName: 'Anthropic',
+        color: '#f59e0b',
+        badgeClass: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+        borderClass: 'border-amber-500/40',
+        dotClass: 'bg-amber-500',
+        origin: '美国 · 安全对齐与 Agent 编程标杆',
+        strategy: '全线闭源商业 API 与云平台分发',
+        latestFlagship: 'Claude 5.5 / Fable 5.1 (2026.09–10)',
+        summary: '由前 OpenAI 核心成员创立，提出 Constitutional AI；自 2024 年 Claude 3.5 Sonnet 起在代码工程与 Computer Use 领域建立统治力，2025 年首发混合推理 Claude 3.7 与 Claude Code，2026 年演进至 Claude 5.5 及超越 Opus 的 Mythos/Fable 5.1 级别。'
+      },
+      {
+        id: 'meta',
+        name: 'Meta AI',
+        shortName: 'Meta',
+        color: '#8b5cf6',
+        badgeClass: 'bg-violet-500/15 text-violet-300 border-violet-500/30',
+        borderClass: 'border-violet-500/40',
+        dotClass: 'bg-violet-500',
+        origin: '美国 · 开源权重生态奠基者与 Muse 转型',
+        strategy: '2023–2025 开源 Llama 1–4 → 2026 转向 Muse 系列 (闭源+开放并行)',
+        latestFlagship: 'Muse Wonder / Muse Spark Open (2026.10)',
+        summary: '2023 年 2 月以 LLaMA 1 点燃全球开源大模型生态，经 Llama 2、Llama 3.1 (405B) 到 2025 年原生多模态 MoE Llama 4；2026 年成立超级智能实验室 (MSL) 转向全新 Muse 家族（Muse Spark 1.1–1.3、Muse Wonder 及开放权重 Muse Spark Open）。'
+      },
+      {
+        id: 'deepseek',
+        name: 'DeepSeek (深度求索)',
+        shortName: 'DeepSeek',
+        color: '#06b6d4',
+        badgeClass: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
+        borderClass: 'border-cyan-500/40',
+        dotClass: 'bg-cyan-500',
+        origin: '中国 · 极致算力效率与开源推理先锋',
+        strategy: '核心权重开源 (MIT 协议为主) + 高性价比 API',
+        latestFlagship: 'DeepSeek-V4 Pro / V4.1-Flash (2026.08–09)',
+        summary: '2024 年凭 MLA（多头潜在注意力）与 DeepSeekMoE 架构在 V2/V3 上大幅降低训练与推理成本；2025 年 1 月开源 DeepSeek-R1 震动全球市场；2026 年推出支持 1M 上下文与原生多模态的 DeepSeek-V4 Pro 及 V4.1-Flash。'
+      },
+      {
+        id: 'qwen',
+        name: 'Alibaba Qwen (通义千问)',
+        shortName: 'Qwen',
+        color: '#ec4899',
+        badgeClass: 'bg-pink-500/15 text-pink-300 border-pink-500/30',
+        borderClass: 'border-pink-500/40',
+        dotClass: 'bg-pink-500',
+        origin: '中国 · 全球衍生模型最多的开源基座家族',
+        strategy: '全尺寸 Apache 2.0 开源 + 云端商业旗舰 (Max/Plus)',
+        latestFlagship: 'Qwen 3.8 (2.4T 开放权重) / 3.7 Max (2026.08)',
+        summary: '2023 年开启开源之路，凭 Qwen 2.5 与 Qwen 3（0.6B–235B 全尺寸 Apache 2.0 混合思考）成为 Hugging Face 衍生微调最多的基座模型；2026 年推出 1M 上下文 Qwen 3.7 Max 并开放 2.4 万亿参数 MoE 旗舰 Qwen 3.8 权重。'
+      },
+      {
+        id: 'xai',
+        name: 'xAI (Grok)',
+        shortName: 'xAI',
+        color: '#f97316',
+        badgeClass: 'bg-orange-500/15 text-orange-300 border-orange-500/30',
+        borderClass: 'border-orange-500/40',
+        dotClass: 'bg-orange-500',
+        origin: '美国 · 超算集群驱动的极速追赶者',
+        strategy: '商业闭源为主 (早期开源 Grok-1)',
+        latestFlagship: 'Grok-4.7 (2026.09)',
+        summary: '2023 年底推出 Grok-1，依托 Colossus 十万卡超算集群实现极速跃迁：2024 年发布 Grok-1.5/2，2025 年发布推理旗舰 Grok-3 与多工具协同 Grok-4 Heavy，2026 年演进至支持 1M 上下文与长周期工程的 Grok-4.3 至 Grok-4.7。'
+      },
+      {
+        id: 'mistral',
+        name: 'Mistral AI',
+        shortName: 'Mistral',
+        color: '#eab308',
+        badgeClass: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30',
+        borderClass: 'border-yellow-500/40',
+        dotClass: 'bg-yellow-500',
+        origin: '法国 · 欧洲开源与稀疏 MoE 代表',
+        strategy: '开放权重与商业 API 并行',
+        latestFlagship: 'Mistral Large 4 "Le Chonk" (2026.10)',
+        summary: '2023 年以 Mistral 7B 与开源稀疏混合专家模型 Mixtral 8x7B 惊艳业界；随后构建 Mistral Large、Codestral、Pixtral、Magistral 推理系列；2026 年 10 月发布万亿参数级 (1.05T 总参 / 49B 激活) 开放权重旗舰 Mistral Large 4。'
+      }
+    ];
+
+    const ERAS = [
+      { id: '2017-2020', label: '2017–2020', title: '架构奠基与预训练时代', desc: 'Transformer 诞生，Encoder-only (BERT) 与 Decoder-only (GPT-1/2/3) 分道扬镳，Scaling Law 初现锋芒。' },
+      { id: '2021-2022', label: '2021–2022', title: '千亿规模与 RLHF 对齐破圈', desc: 'PaLM 突破 540B，Codex 开启代码生成，InstructGPT 与 ChatGPT (GPT-3.5) 将大模型带入大众视野。' },
+      { id: '2023', label: '2023', title: '群雄逐鹿与开源生态觉醒', desc: 'GPT-4 确立多模态霸权；Claude 1/2、PaLM 2/Gemini 1.0 迎头赶上；LLaMA、Mistral、Qwen、DeepSeek 引爆全球开源生态。' },
+      { id: '2024', label: '2024', title: '原生多模态、超长上下文与慢思考推理', desc: 'Gemini 1.5 突破 1M–2M 上下文，GPT-4o 实现端到端语音视觉多模态，Claude 3.5 Sonnet 领跑编程，OpenAI o1 与 DeepSeek-V3 掀开推理与极致性价比序幕。' },
+      { id: '2025', label: '2025', title: '混合推理普及与 Agentic 工程爆发', desc: 'DeepSeek-R1 开源推理震动业界；Claude 3.7/4、Gemini 2.5/3、Qwen 3、GPT-5 将快思考与慢思考融为一体，编程智能体成为主战场。' },
+      { id: '2026', label: '2026', title: '百万上下文标配、万亿 MoE 与自主智能体', desc: 'GPT-6 Astra/Sol、Gemini 4 Argon、Claude 5.5/Fable 5.1、DeepSeek-V4.1、Qwen 3.8 (2.4T)、Muse Wonder 与 Mistral Large 4 (1.05T) 全面转向长周期自主 Agent 与万亿级稀疏架构。' }
+    ];
+
+    const EVENTS = [
+      // 2017-2020
+      {
+        id: 'google-transformer-2017',
+        date: '2017-06-12',
+        era: '2017-2020',
+        company: 'google',
+        name: 'Transformer (Attention Is All You Need)',
+        params: '65M – 213M',
+        context: '512',
+        license: 'paper',
+        tags: ['flagship'],
+        highlight: '提出自注意力机制 (Self-Attention) 与多头注意力，彻底抛弃 RNN/CNN 循环结构，奠定现代所有 LLM 的架构基石。',
+        url: 'https://arxiv.org/abs/1706.03762',
+        sourceTitle: 'arXiv:1706.03762'
+      },
+      {
+        id: 'openai-gpt1-2018',
+        date: '2018-06-11',
+        era: '2017-2020',
+        company: 'openai',
+        name: 'GPT-1',
+        params: '117M',
+        context: '512',
+        license: 'paper',
+        tags: ['flagship'],
+        highlight: '验证基于 Transformer Decoder 的「无监督生成式预训练 + 监督微调」范式，开启 GPT 自回归路线。',
+        url: 'https://pushleads.com/chatgpt-seo-marketing/gpt-model-lineage/',
+        sourceTitle: 'GPT Lineage History'
+      },
+      {
+        id: 'google-bert-2018',
+        date: '2018-10-11',
+        era: '2017-2020',
+        company: 'google',
+        name: 'BERT',
+        params: '110M / 340M',
+        context: '512',
+        license: 'open',
+        tags: ['flagship'],
+        highlight: '开创深度双向 Encoder 预训练 (Masked LM)，横扫 11 项 NLP 基准并在 2019 年全面赋能 Google 搜索。',
+        url: 'https://arxiv.org/abs/1810.04805',
+        sourceTitle: 'arXiv:1810.04805'
+      },
+      {
+        id: 'openai-gpt2-2019',
+        date: '2019-02-14',
+        era: '2017-2020',
+        company: 'openai',
+        name: 'GPT-2',
+        params: '1.5B',
+        context: '1K',
+        license: 'open',
+        tags: ['flagship'],
+        highlight: '参数扩展至 15 亿，首次展现强大的零样本 (Zero-shot) 连贯长文本生成能力。',
+        url: 'https://openai.com/index/better-language-models/',
+        sourceTitle: 'OpenAI GPT-2 Blog'
+      },
+      {
+        id: 'google-t5-2019',
+        date: '2019-10-23',
+        era: '2017-2020',
+        company: 'google',
+        name: 'T5 (Text-to-Text)',
+        params: '60M – 11B',
+        context: '512',
+        license: 'open',
+        tags: ['flagship'],
+        highlight: '将所有 NLP 任务统一框定为 Text-to-Text 文本到文本转换，并构建经典的 C4 预训练语料库。',
+        url: 'https://arxiv.org/abs/1910.10683',
+        sourceTitle: 'arXiv:1910.10683'
+      },
+      {
+        id: 'openai-gpt3-2020',
+        date: '2020-05-28',
+        era: '2017-2020',
+        company: 'openai',
+        name: 'GPT-3',
+        params: '175B',
+        context: '2K',
+        license: 'closed',
+        tags: ['flagship'],
+        highlight: '参数跃升百倍至 1750 亿，涌现强大的上下文少样本学习 (In-Context Few-Shot Learning) 能力，确立商业 API 模式。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+
+      // 2021-2022
+      {
+        id: 'google-lamda-2021',
+        date: '2021-05-18',
+        era: '2021-2022',
+        company: 'google',
+        name: 'LaMDA',
+        params: '137B',
+        context: '2K',
+        license: 'closed',
+        tags: ['flagship'],
+        highlight: '专为开放域多轮自然对话设计的 Transformer 语言模型，成为后续初代 Bard 的底层基础。',
+        url: 'https://www.scriptbyai.com/google-ai-timeline-biggest-moments/',
+        sourceTitle: 'Google AI Timeline'
+      },
+      {
+        id: 'openai-codex-2021',
+        date: '2021-08-10',
+        era: '2021-2022',
+        company: 'openai',
+        name: 'OpenAI Codex',
+        params: '12B',
+        context: '4K',
+        license: 'closed',
+        tags: ['agent'],
+        highlight: '基于 GitHub 代码微调的 GPT-3 后代，驱动初代 GitHub Copilot，开创 AI 辅助编程商业化先河。',
+        url: 'https://datasciencedojo.com/blog/the-complete-history-of-openai-models/',
+        sourceTitle: 'History of OpenAI Models'
+      },
+      {
+        id: 'google-palm-2022',
+        date: '2022-04-04',
+        era: '2021-2022',
+        company: 'google',
+        name: 'PaLM',
+        params: '540B',
+        context: '2K',
+        license: 'closed',
+        tags: ['flagship', 'reasoning'],
+        highlight: '利用 Pathways 架构训练的 5400 亿参数密集模型，结合思维链 (Chain-of-Thought) 在多步数学与逻辑推理上实现涌现跃迁。',
+        url: 'https://d-nb.info/1374836508/34',
+        sourceTitle: 'LLM Architecture Survey'
+      },
+      {
+        id: 'openai-chatgpt-2022',
+        date: '2022-11-30',
+        era: '2021-2022',
+        company: 'openai',
+        name: 'GPT-3.5 / ChatGPT',
+        params: '~175B',
+        context: '4K',
+        license: 'closed',
+        tags: ['flagship'],
+        highlight: '通过人类反馈强化学习 (RLHF) 对齐对话体验，上线两个月月活破亿，正式引爆全球生成式 AI 纪元。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+
+      // 2023
+      {
+        id: 'meta-llama1-2023',
+        date: '2023-02-24',
+        era: '2023',
+        company: 'meta',
+        name: 'LLaMA 1',
+        params: '7B / 13B / 33B / 65B',
+        context: '2K',
+        license: 'open',
+        tags: ['flagship'],
+        highlight: '证明用更高质量数据和更充分训练的小模型 (13B) 可击败 GPT-3 (175B)，彻底点燃全球开源大模型生态。',
+        url: 'https://sapling.ai/llm/llama',
+        sourceTitle: 'Sapling Llama Timeline'
+      },
+      {
+        id: 'openai-gpt4-2023',
+        date: '2023-03-14',
+        era: '2023',
+        company: 'openai',
+        name: 'GPT-4',
+        params: 'MoE (未公开)',
+        context: '8K / 32K',
+        license: 'closed',
+        tags: ['flagship', 'multimodal', 'moe', 'reasoning'],
+        highlight: '支持图文输入的旗舰大模型，在律师资格考试、复杂编程与推理上实现代际跨越，奠定 2023–2024 行业最高标杆。',
+        url: 'https://openai.com/index/gpt-4-research/',
+        sourceTitle: 'OpenAI GPT-4 Research'
+      },
+      {
+        id: 'anthropic-claude1-2023',
+        date: '2023-03-14',
+        era: '2023',
+        company: 'anthropic',
+        name: 'Claude 1 & Claude Instant',
+        params: '未公开',
+        context: '9K → 100K',
+        license: 'closed',
+        tags: ['flagship'],
+        highlight: 'Anthropic 首款商业模型（与 GPT-4 同日发布），基于 Constitutional AI 对齐，随后在 5 月率先将上下文推至 100K。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+      {
+        id: 'google-palm2-2023',
+        date: '2023-05-10',
+        era: '2023',
+        company: 'google',
+        name: 'PaLM 2',
+        params: 'Gecko – Unicorn',
+        context: '8K / 32K',
+        license: 'closed',
+        tags: ['flagship'],
+        highlight: '采用计算最优缩放 (Compute-Optimal Scaling)，大幅强化百种语言翻译、编程与数学推理，全面接入 Bard 与 Google Workspace。',
+        url: 'https://www.scriptbyai.com/google-ai-timeline-biggest-moments/',
+        sourceTitle: 'Google AI Timeline'
+      },
+      {
+        id: 'anthropic-claude2-2023',
+        date: '2023-07-11',
+        era: '2023',
+        company: 'anthropic',
+        name: 'Claude 2 & 2.1',
+        params: '未公开',
+        context: '100K → 200K',
+        license: 'closed',
+        tags: ['flagship'],
+        highlight: '显著提升代码、数学与长文档处理能力；11月发布的 Claude 2.1 将上下文窗口扩展至 200K Tokens 并大幅降低幻觉率。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+      {
+        id: 'meta-llama2-2023',
+        date: '2023-07-18',
+        era: '2023',
+        company: 'meta',
+        name: 'Llama 2',
+        params: '7B / 13B / 70B',
+        context: '4K',
+        license: 'open',
+        tags: ['flagship'],
+        highlight: '首次免费开放商业使用许可并提供精细调优的 Llama 2-Chat，成为 2023 年企业私有化部署的事实标准。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+      {
+        id: 'qwen-1-2023',
+        date: '2023-08-03',
+        era: '2023',
+        company: 'qwen',
+        name: 'Qwen 1 (7B / 14B / 72B)',
+        params: '7B – 72B',
+        context: '8K / 32K',
+        license: 'open',
+        tags: ['flagship'],
+        highlight: '阿里云在 4 月公测通义千问后，于 8 月正式开源 Qwen-7B、9 月开源 14B、12 月开源 72B，奠定中英双语开源基座地位。',
+        url: 'https://www.taskade.com/blog/alibaba-qwen-history',
+        sourceTitle: 'Alibaba Qwen History'
+      },
+      {
+        id: 'mistral-7b-2023',
+        date: '2023-09-27',
+        era: '2023',
+        company: 'mistral',
+        name: 'Mistral 7B',
+        params: '7.3B',
+        context: '8K',
+        license: 'open',
+        tags: ['flagship'],
+        highlight: '采用分组查询注意力 (GQA) 与滑动窗口注意力 (SWA)，以 7B 体积全面超越 Llama 2 13B，Apache 2.0 完全开源。',
+        url: 'https://opper.ai/model-releases/mistral',
+        sourceTitle: 'Mistral Release Tracker'
+      },
+      {
+        id: 'xai-grok1-2023',
+        date: '2023-11-03',
+        era: '2023',
+        company: 'xai',
+        name: 'Grok-1',
+        params: '314B MoE',
+        context: '8K',
+        license: 'open',
+        tags: ['flagship', 'moe'],
+        highlight: 'xAI 首款模型，仅用数月训练完成并打通 X 平台实时信息流，随后于 2024 年 3 月将 314B MoE 权重以 Apache 2.0 开源。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+      {
+        id: 'openai-gpt4turbo-2023',
+        date: '2023-11-06',
+        era: '2023',
+        company: 'openai',
+        name: 'GPT-4 Turbo',
+        params: 'MoE (未公开)',
+        context: '128K',
+        license: 'closed',
+        tags: ['flagship', 'multimodal'],
+        highlight: '在 OpenAI 首届 DevDay 发布，上下文跃升至 128K，API 价格大幅下调并支持 JSON Mode 与多工具并行调用。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+      {
+        id: 'deepseek-llm-coder-2023',
+        date: '2023-11-29',
+        era: '2023',
+        company: 'deepseek',
+        name: 'DeepSeek-LLM & Coder',
+        params: '1.3B – 67B',
+        context: '4K / 16K',
+        license: 'open',
+        tags: ['flagship', 'agent'],
+        highlight: '深度求索首批开源通用模型 (7B/67B) 与代码模型 DeepSeek-Coder，基于 2 万亿 Token 从零训练，吹响硬核开源号角。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+      {
+        id: 'google-gemini1-2023',
+        date: '2023-12-06',
+        era: '2023',
+        company: 'google',
+        name: 'Gemini 1.0 (Ultra / Pro / Nano)',
+        params: 'Nano – Ultra',
+        context: '32K',
+        license: 'closed',
+        tags: ['flagship', 'multimodal'],
+        highlight: 'Google DeepMind 首代从零开始原生多模态训练的旗舰模型家族，涵盖云端 Ultra/Pro 与端侧手机运行的 Nano。',
+        url: 'https://www.scriptbyai.com/google-ai-timeline-biggest-moments/',
+        sourceTitle: 'Google AI Timeline'
+      },
+      {
+        id: 'mistral-mixtral8x7b-2023',
+        date: '2023-12-11',
+        era: '2023',
+        company: 'mistral',
+        name: 'Mixtral 8x7B',
+        params: '46.7B 总参 (12.9B 激活)',
+        context: '32K',
+        license: 'open',
+        tags: ['flagship', 'moe'],
+        highlight: '引爆开源界的稀疏混合专家 (Sparse MoE) 模型，每 Token 仅激活 2 个专家 (12.9B)，性能超越 Llama 2 70B 且推理快 6 倍。',
+        url: 'https://mistral.ai/fr/news/mixtral-of-experts/',
+        sourceTitle: 'Mistral AI Mixtral Blog'
+      },
+
+      // 2024
+      {
+        id: 'google-gemini15-2024',
+        date: '2024-02-15',
+        era: '2024',
+        company: 'google',
+        name: 'Gemini 1.5 Pro & 1.5 Flash',
+        params: 'MoE 架构',
+        context: '1M → 2M',
+        license: 'closed',
+        tags: ['flagship', 'multimodal', 'moe', 'longctx'],
+        highlight: '采用高效 MoE 架构，首次将生产级上下文窗口推至 100万–200万 Tokens，支持一次性理解整部电影、数小时音频与数万行代码库（5月推出高性价比 1.5 Flash）。',
+        url: 'https://www.scriptbyai.com/google-ai-timeline-biggest-moments/',
+        sourceTitle: 'Google AI Timeline'
+      },
+      {
+        id: 'anthropic-claude3-2024',
+        date: '2024-03-04',
+        era: '2024',
+        company: 'anthropic',
+        name: 'Claude 3 (Opus / Sonnet / Haiku)',
+        params: '未公开',
+        context: '200K',
+        license: 'closed',
+        tags: ['flagship', 'multimodal'],
+        highlight: '确立 Opus（最强智能）、Sonnet（均衡主力）、Haiku（极速轻量）三级产品矩阵，Claude 3 Opus 首次在多项综合基准上超越 GPT-4。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+      {
+        id: 'xai-grok15-2024',
+        date: '2024-03-28',
+        era: '2024',
+        company: 'xai',
+        name: 'Grok-1.5 & Grok-1.5V',
+        params: '未公开',
+        context: '128K',
+        license: 'closed',
+        tags: ['multimodal'],
+        highlight: '上下文扩展至 128K 并大幅强化数学与代码能力；4月12日推出首款支持多模态图像理解的 Grok-1.5V。',
+        url: 'https://x.ai/news/grok-1.5',
+        sourceTitle: 'xAI Grok-1.5 Announcement'
+      },
+      {
+        id: 'meta-llama3-2024',
+        date: '2024-04-18',
+        era: '2024',
+        company: 'meta',
+        name: 'Llama 3 (8B / 70B)',
+        params: '8B / 70B',
+        context: '8K',
+        license: 'open',
+        tags: ['flagship'],
+        highlight: '在 15 万亿高质量 Token 上预训练，采用 128K 词表的新 Tokenizer，将同尺寸开源模型性能推向新高度。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+      {
+        id: 'openai-gpt4o-2024',
+        date: '2024-05-13',
+        era: '2024',
+        company: 'openai',
+        name: 'GPT-4o & GPT-4o mini',
+        params: '未公开',
+        context: '128K',
+        license: 'closed',
+        tags: ['flagship', 'multimodal'],
+        highlight: 'Omni 全能模型：由单一神经网络端到端处理文本、视觉与毫秒级实时语音交互；7月推出极低成本的 GPT-4o mini 替代 GPT-3.5。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+      {
+        id: 'deepseek-v2-2024',
+        date: '2024-05-17',
+        era: '2024',
+        company: 'deepseek',
+        name: 'DeepSeek-V2 & Coder-V2',
+        params: '236B 总参 (21B 激活)',
+        context: '128K',
+        license: 'open',
+        tags: ['flagship', 'moe', 'agent'],
+        highlight: '首发多头潜在注意力 (MLA) 与 DeepSeekMoE 架构，KV Cache 显存占用锐减 93.3%，以百万 Token 1 元人民币引发行业API降价潮。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+      {
+        id: 'qwen-2-2024',
+        date: '2024-06-06',
+        era: '2024',
+        company: 'qwen',
+        name: 'Qwen 2 (0.5B – 72B)',
+        params: '0.5B – 72B (含 57B-A14B MoE)',
+        context: '128K',
+        license: 'open',
+        tags: ['flagship', 'moe'],
+        highlight: '主力尺寸全面转向 Apache 2.0 宽松开源协议，Qwen2-72B 在多语言、代码与数学评测中超越 Llama-3-70B。',
+        url: 'https://qwen.ai/blog?id=qwen2',
+        sourceTitle: 'Hello Qwen2 Official Blog'
+      },
+      {
+        id: 'anthropic-claude35sonnet-2024',
+        date: '2024-06-20',
+        era: '2024',
+        company: 'anthropic',
+        name: 'Claude 3.5 Sonnet & Computer Use',
+        params: '未公开',
+        context: '200K',
+        license: 'closed',
+        tags: ['flagship', 'multimodal', 'agent'],
+        highlight: '以中杯成本全面超越上代超大杯 Claude 3 Opus，首发 Artifacts 交互预览；10月升级版更在业内首创 Computer Use（直接看屏幕操作电脑键鼠）。',
+        url: 'https://www.anthropic.com/news/claude-3-5-sonnet',
+        sourceTitle: 'Introducing Claude 3.5 Sonnet'
+      },
+      {
+        id: 'meta-llama31-2024',
+        date: '2024-07-23',
+        era: '2024',
+        company: 'meta',
+        name: 'Llama 3.1 (8B / 70B / 405B)',
+        params: '8B / 70B / 405B',
+        context: '128K',
+        license: 'open',
+        tags: ['flagship'],
+        highlight: '发布 4050 亿参数密集型开源巨兽 Llama 3.1 405B，上下文统一升至 128K，首次让开源权重模型在综合实力上追平 GPT-4o。',
+        url: 'https://ai.meta.com/blog/meta-llama-3-1/',
+        sourceTitle: 'Meta Llama 3.1 Blog'
+      },
+      {
+        id: 'mistral-large2-2024',
+        date: '2024-07-24',
+        era: '2024',
+        company: 'mistral',
+        name: 'Mistral Large 2 & Pixtral Large',
+        params: '123B',
+        context: '128K',
+        license: 'open',
+        tags: ['flagship', 'multimodal'],
+        highlight: '以 123B 参数规模和 128K 上下文追平顶尖闭源模型的代码与多语言表现；11月推出原生多模态视觉版 Pixtral Large。',
+        url: 'https://opper.ai/model-releases/mistral',
+        sourceTitle: 'Mistral Release Tracker'
+      },
+      {
+        id: 'xai-grok2-2024',
+        date: '2024-08-13',
+        era: '2024',
+        company: 'xai',
+        name: 'Grok-2 & Grok-2 Mini',
+        params: '未公开',
+        context: '128K',
+        license: 'closed',
+        tags: ['flagship', 'multimodal'],
+        highlight: '在 LMSYS Chatbot Arena 榜单跻身第一梯队，大幅提升指令遵循、编码与视觉推理能力。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+      {
+        id: 'openai-o1-2024',
+        date: '2024-09-12',
+        era: '2024',
+        company: 'openai',
+        name: 'OpenAI o1-preview & o1',
+        params: '未公开',
+        context: '128K → 200K',
+        license: 'closed',
+        tags: ['flagship', 'reasoning', 'multimodal'],
+        highlight: '开创「测试时计算缩放 (Test-Time Compute Scaling)」与强化学习长思维链推理范式（9月发布 preview，12月5日发布支持视觉推理的正式版 o1）。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+      {
+        id: 'qwen-25-2024',
+        date: '2024-09-19',
+        era: '2024',
+        company: 'qwen',
+        name: 'Qwen 2.5 & QwQ-32B-Preview',
+        params: '0.5B – 72B',
+        context: '128K',
+        license: 'open',
+        tags: ['flagship', 'reasoning', 'agent'],
+        highlight: '在 18 万亿 Token 上预训练，一口气开源 0.5B 到 72B 七个尺寸及 Coder/Math 专精版；11月推出首款开源长思维链推理模型 QwQ-32B-Preview。',
+        url: 'https://arxiv.org/abs/2412.15115',
+        sourceTitle: 'arXiv:2412.15115 (Qwen2.5 Report)'
+      },
+      {
+        id: 'meta-llama32-33-2024',
+        date: '2024-09-25',
+        era: '2024',
+        company: 'meta',
+        name: 'Llama 3.2 (Vision/Edge) & 3.3 (70B)',
+        params: '1B / 3B / 11B / 90B / 70B',
+        context: '128K',
+        license: 'open',
+        tags: ['multimodal'],
+        highlight: '9月推出端侧轻量 1B/3B 与多模态视觉 11B/90B；12月推出 Llama 3.3 70B，以 70B 参数实现媲美 Llama 3.1 405B 的性能。',
+        url: 'https://ai.meta.com/blog/llama-3-2-connect-2024-vision-edge-mobile-devices/',
+        sourceTitle: 'Meta Llama 3.2 Blog'
+      },
+      {
+        id: 'google-gemini20-2024',
+        date: '2024-12-11',
+        era: '2024',
+        company: 'google',
+        name: 'Gemini 2.0 Flash',
+        params: '未公开',
+        context: '1M',
+        license: 'closed',
+        tags: ['flagship', 'multimodal', 'agent', 'longctx'],
+        highlight: '面向 Agent 时代打造，支持原生图像/音频多模态输出、实时多模态流式 API 与原生工具调用，速度翻倍且超越 1.5 Pro。',
+        url: 'https://www.scriptbyai.com/google-ai-timeline-biggest-moments/',
+        sourceTitle: 'Google AI Timeline'
+      },
+      {
+        id: 'deepseek-v3-2024',
+        date: '2024-12-26',
+        era: '2024',
+        company: 'deepseek',
+        name: 'DeepSeek-V3',
+        params: '671B 总参 (37B 激活)',
+        context: '128K',
+        license: 'open',
+        tags: ['flagship', 'moe'],
+        highlight: '引入无辅助损失负载均衡与多 Token 预测 (MTP) 及 FP8 混合精度训练，仅耗资约 558 万美元训练出比肩 GPT-4o 与 Claude 3.5 Sonnet 的开源巨作。',
+        url: 'https://arxiv.org/html/2412.19437v1',
+        sourceTitle: 'arXiv:2412.19437 (DeepSeek-V3)'
+      },
+
+      // 2025
+      {
+        id: 'deepseek-r1-2025',
+        date: '2025-01-20',
+        era: '2025',
+        company: 'deepseek',
+        name: 'DeepSeek-R1',
+        params: '671B 总参 (37B 激活) + 蒸馏家族',
+        context: '128K',
+        license: 'open',
+        tags: ['flagship', 'reasoning', 'moe'],
+        highlight: '证明纯强化学习 (RL) 可激发大模型自我反思与长链推理，性能比肩 OpenAI o1 并以 MIT 协议完全开源权重与技术报告，震撼全球科技与资本市场。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+      {
+        id: 'xai-grok3-2025',
+        date: '2025-02-19',
+        era: '2025',
+        company: 'xai',
+        name: 'Grok-3 & Grok-3 Mini',
+        params: '未公开',
+        context: '128K → 1M',
+        license: 'closed',
+        tags: ['flagship', 'reasoning'],
+        highlight: '依托 20 万卡 Colossus 超算集群训练，内置 Think 深度推理模式与 DeepSearch 实时研究智能体，在数学与科学评测中大幅跃升。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+      {
+        id: 'anthropic-claude37-2025',
+        date: '2025-02-24',
+        era: '2025',
+        company: 'anthropic',
+        name: 'Claude 3.7 Sonnet & Claude Code',
+        params: '未公开',
+        context: '200K',
+        license: 'closed',
+        tags: ['flagship', 'reasoning', 'agent'],
+        highlight: '业界首款「混合推理 (Hybrid Reasoning)」模型，在同一模型内支持极速直答与可控 Token 预算的扩展思考 (Extended Thinking)，同日首发终端编程智能体 Claude Code。',
+        url: 'https://www.anthropic.com/news/claude-3-7-sonnet',
+        sourceTitle: 'Anthropic Claude 3.7 Announcement'
+      },
+      {
+        id: 'openai-gpt45-2025',
+        date: '2025-02-27',
+        era: '2025',
+        company: 'openai',
+        name: 'GPT-4.5 (Orion)',
+        params: '超大密集预训练模型',
+        context: '128K',
+        license: 'closed',
+        tags: ['multimodal'],
+        highlight: 'OpenAI 最后一代非思维链超大规模无监督预训练模型，主打高情商对话、创意写作与世界知识直觉（已于2026年5月退役）。',
+        url: 'https://openai.com/index/introducing-gpt-4-5/',
+        sourceTitle: 'Introducing GPT-4.5'
+      },
+      {
+        id: 'google-gemini25-2025',
+        date: '2025-03-25',
+        era: '2025',
+        company: 'google',
+        name: 'Gemini 2.5 Pro & 2.5 Flash',
+        params: 'MoE 思考模型',
+        context: '1M',
+        license: 'closed',
+        tags: ['flagship', 'reasoning', 'multimodal', 'moe', 'longctx'],
+        highlight: 'Google 全面转向「原生思考模型 (Thinking Models)」，2.5 Pro 登顶 LMArena 与前端 WebDev 榜首；4月推出的 2.5 Flash 支持开发者精细调节思考预算 (Thinking Budget)。',
+        url: 'https://www.scriptbyai.com/google-ai-timeline-biggest-moments/',
+        sourceTitle: 'Google AI Timeline'
+      },
+      {
+        id: 'meta-llama4-2025',
+        date: '2025-04-05',
+        era: '2025',
+        company: 'meta',
+        name: 'Llama 4 (Scout & Maverick)',
+        params: '109B / 400B 总参 (17B 激活 MoE)',
+        context: '1M – 10M (Scout)',
+        license: 'open',
+        tags: ['flagship', 'multimodal', 'moe', 'longctx'],
+        highlight: 'Llama 家族首次全面转向原生多模态早期融合与混合专家 (MoE) 架构；Scout 支持高达 10M 上下文，成为开源 Llama 系列的收官之作（2T 参数 Behemoth 未公开权重）。',
+        url: 'https://ai.meta.com/blog/llama-4-multimodal-intelligence/',
+        sourceTitle: 'The Llama 4 Herd Blog'
+      },
+      {
+        id: 'openai-o3-gpt41-2025',
+        date: '2025-04-16',
+        era: '2025',
+        company: 'openai',
+        name: 'OpenAI o3 / o4-mini & GPT-4.1',
+        params: '未公开',
+        context: '200K (o3) / 1M (GPT-4.1)',
+        license: 'closed',
+        tags: ['flagship', 'reasoning', 'multimodal', 'agent', 'longctx'],
+        highlight: '4月14日发布 1M 上下文编程主力 GPT-4.1；4月16日发布满血推理模型 o3 与 o4-mini，首次支持在思维链内部缩放裁剪图像并组合调用多种工具。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+      {
+        id: 'qwen-3-2025',
+        date: '2025-04-28',
+        era: '2025',
+        company: 'qwen',
+        name: 'Qwen 3 & Qwen3-Coder / Max',
+        params: '0.6B–32B 稠密 + 30B-A3B / 235B-A22B MoE',
+        context: '128K',
+        license: 'open',
+        tags: ['flagship', 'reasoning', 'moe', 'agent'],
+        highlight: '基于 36 万亿 Token（覆盖 119 种语言）预训练，全线 8 款尺寸采用 Apache 2.0 开源并引入快慢混合思考模式；7月开源 480B 参数 Qwen3-Coder，9月推出超万亿参数闭源旗舰 Qwen3-Max。',
+        url: 'https://www.taskade.com/blog/alibaba-qwen-history',
+        sourceTitle: 'Alibaba Qwen History'
+      },
+      {
+        id: 'anthropic-claude4-2025',
+        date: '2025-05-22',
+        era: '2025',
+        company: 'anthropic',
+        name: 'Claude Opus 4 & Sonnet 4 (及 4.5 家族)',
+        params: '未公开',
+        context: '200K → 1M (Beta)',
+        license: 'closed',
+        tags: ['flagship', 'reasoning', 'agent'],
+        highlight: '专为长周期 Agent 工作流打造，支持在扩展思考过程中交替调用工具；随后在 9–11 月推出 Sonnet 4.5、Haiku 4.5 与 Opus 4.5（首个 SWE-bench Verified 突破 80% 的模型，且价格下调 67%）。',
+        url: 'https://www.anthropic.com/news/claude-4',
+        sourceTitle: 'Introducing Claude 4'
+      },
+      {
+        id: 'mistral-magistral-large3-2025',
+        date: '2025-06-10',
+        era: '2025',
+        company: 'mistral',
+        name: 'Magistral & Mistral Large 3',
+        params: '稀疏 MoE + Ministral 3 (3B/8B/14B)',
+        context: '128K → 256K',
+        license: 'open',
+        tags: ['flagship', 'reasoning', 'moe'],
+        highlight: '6月推出多语言透明思维链推理系列 Magistral；12月2日发布 Apache 2.0 开源稀疏 MoE 旗舰 Mistral Large 3 与端侧 Ministral 3、编程模型 Devstral 2。',
+        url: 'https://mistral.ai/news/mistral-3/',
+        sourceTitle: 'Introducing Mistral 3'
+      },
+      {
+        id: 'xai-grok4-2025',
+        date: '2025-07-09',
+        era: '2025',
+        company: 'xai',
+        name: 'Grok-4 & Grok-4 Heavy / 4.1',
+        params: '未公开',
+        context: '256K',
+        license: 'closed',
+        tags: ['flagship', 'reasoning', 'agent'],
+        highlight: '原生集成实时搜索与代码解释器工具链，Grok-4 Heavy 采用多智能体并行测试时协同推理；11月推出日常响应更快的 Grok-4.1。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+      {
+        id: 'openai-gpt5-2025',
+        date: '2025-08-07',
+        era: '2025',
+        company: 'openai',
+        name: 'GPT-5 & GPT-OSS (及 5.1 / 5.2)',
+        params: '统一路由 + 20B/120B (GPT-OSS)',
+        context: '256K → 400K',
+        license: 'closed',
+        tags: ['flagship', 'reasoning', 'multimodal', 'agent'],
+        highlight: '8月5日先发布阔别多年的开放权重模型 GPT-OSS (20B/120B)；8月7日正式发布 GPT-5，将 GPT 通用系列与 o 系列深度推理彻底合流，并于 11–12 月迭代至 GPT-5.1 与 5.2。',
+        url: 'https://openai.com/index/introducing-gpt-5/',
+        sourceTitle: 'Introducing GPT-5'
+      },
+      {
+        id: 'google-gemini3-2025',
+        date: '2025-11-18',
+        era: '2025',
+        company: 'google',
+        name: 'Gemini 3 Pro & 3 Flash',
+        params: 'MoE 架构',
+        context: '1M',
+        license: 'closed',
+        tags: ['flagship', 'reasoning', 'multimodal', 'agent', 'longctx'],
+        highlight: '与 Agent-First 开发平台 Google Antigravity 同步登场，全面强化多步自主软件工程、工具编排与多模态推理（12月17日推出 Gemini 3 Flash）。',
+        url: 'https://www.scriptbyai.com/google-ai-timeline-biggest-moments/',
+        sourceTitle: 'Google AI Timeline'
+      },
+      {
+        id: 'deepseek-v32-2025',
+        date: '2025-12-01',
+        era: '2025',
+        company: 'deepseek',
+        name: 'DeepSeek-V3.2 & V3.2-Speciale',
+        params: 'MoE 架构',
+        context: '128K',
+        license: 'open',
+        tags: ['flagship', 'reasoning', 'moe', 'agent'],
+        highlight: '继 8 月混合思考 V3.1 后，12月1日正式发布面向 Agent 工具调用的「推理优先 (Reasoning-First)」主模型 DeepSeek-V3.2 与高阶推理版 V3.2-Speciale。',
+        url: 'https://api-docs.deepseek.com/news/news251201/',
+        sourceTitle: 'DeepSeek-V3.2 Official Release'
+      },
+
+      // 2026
+      {
+        id: 'qwen-35-36-2026',
+        date: '2026-02-15',
+        era: '2026',
+        company: 'qwen',
+        name: 'Qwen 3.5 (397B MoE) & Qwen 3.6',
+        params: '397B MoE / 35B-A3B MoE',
+        context: '256K → 1M',
+        license: 'open',
+        tags: ['multimodal', 'moe', 'agent', 'longctx'],
+        highlight: '2月开源 397B 原生多模态智能体模型 Qwen 3.5；4月推出默认 1M 上下文的 Qwen 3.6-Plus 并以 Apache 2.0 开源高性价比编程模型 Qwen3.6-35B-A3B。',
+        url: 'https://qwen.ai/blog?id=qwen3.5',
+        sourceTitle: 'Qwen3.5 & 3.6 Official Blog'
+      },
+      {
+        id: 'google-gemini31-35-2026',
+        date: '2026-02-19',
+        era: '2026',
+        company: 'google',
+        name: 'Gemini 3.1 Pro & 3.5 Flash / Omni',
+        params: 'MoE 架构',
+        context: '1M',
+        license: 'closed',
+        tags: ['reasoning', 'multimodal', 'agent', 'longctx'],
+        highlight: '2月推出复杂推理模型 Gemini 3.1 Pro；4月开源 Gemma 4；5月 Google I/O 发布支持内置电脑操作 (Computer Use) 的 Gemini 3.5 Flash 与原生视频创作模型 Gemini Omni。',
+        url: 'https://www.scriptbyai.com/google-ai-timeline-biggest-moments/',
+        sourceTitle: 'Google AI Timeline'
+      },
+      {
+        id: 'openai-gpt54-56-2026',
+        date: '2026-03-05',
+        era: '2026',
+        company: 'openai',
+        name: 'GPT-5.4 / 5.5 / 5.6 (Sol / Terra / Luna)',
+        params: '分级推理矩阵',
+        context: '1M',
+        license: 'closed',
+        tags: ['reasoning', 'agent', 'longctx'],
+        highlight: '2026 上半年密集迭代：3月发布专业文档与智能体模型 GPT-5.4，4月发布强化电脑操作的 GPT-5.5，7月9日推出采用 Sol（高阶推理）、Terra（中端）、Luna（极速）三级命名的 GPT-5.6 家族。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+      {
+        id: 'deepseek-v4-2026',
+        date: '2026-04-24',
+        era: '2026',
+        company: 'deepseek',
+        name: 'DeepSeek-V4 Pro & V4.1-Flash',
+        params: 'MoE 架构',
+        context: '1M',
+        license: 'open',
+        tags: ['flagship', 'reasoning', 'multimodal', 'moe', 'agent', 'longctx'],
+        highlight: '4月预览百万 Token 上下文的 DeepSeek-V4 系列；8月16日 V4-Pro 正式全面商用 (GA)；9月10日上线支持视觉多模态、更快更省的当前主力模型 DeepSeek-V4.1-Flash。',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceTitle: 'AI Model Release Timeline'
+      },
+      {
+        id: 'anthropic-claude48-50-2026',
+        date: '2026-05-28',
+        era: '2026',
+        company: 'anthropic',
+        name: 'Claude Opus 4.8 & Claude 5 (Sonnet 5 / Opus 5)',
+        params: '未公开',
+        context: '1M',
+        license: 'closed',
+        tags: ['flagship', 'reasoning', 'agent', 'longctx'],
+        highlight: '5月发布诚实度与可靠性大幅提升的 Opus 4.8；6月开辟超越 Opus 的第四档顶级能力线 Claude Fable 5 / Mythos 5 并于 6月30日推出 Claude Sonnet 5，7月24日发布旗舰 Claude Opus 5。',
+        url: 'https://hidekazu-konishi.com/entry/anthropic_claude_model_release_timeline.html',
+        sourceTitle: 'Anthropic Claude Timeline'
+      },
+      {
+        id: 'qwen-37-38-2026',
+        date: '2026-08-12',
+        era: '2026',
+        company: 'qwen',
+        name: 'Qwen 3.7 Max & Qwen 3.8 (2.4T Open)',
+        params: '2.4T 总参 (95B 激活 MoE) + 27B 稠密',
+        context: '1M',
+        license: 'open',
+        tags: ['flagship', 'reasoning', 'multimodal', 'moe', 'agent', 'longctx'],
+        highlight: '5月推出百万上下文智能体旗舰 Qwen 3.7 Max；8月推出 Qwen 3.8 Max 并首次开放 2.4 万亿参数 (95B 激活) 旗舰级 MoE 权重及 Apache 2.0 协议的 Qwen3.8-27B。',
+        url: 'https://www.taskade.com/blog/alibaba-qwen-history',
+        sourceTitle: 'Alibaba Qwen History'
+      },
+      {
+        id: 'xai-grok47-2026',
+        date: '2026-09-21',
+        era: '2026',
+        company: 'xai',
+        name: 'Grok-4.3 → Grok-4.7',
+        params: '未公开',
+        context: '1M',
+        license: 'closed',
+        tags: ['flagship', 'reasoning', 'multimodal', 'agent', 'longctx'],
+        highlight: '6月 Grok-4.3 升级 1M 上下文与可调推理深度；经 7–8 月 4.5/4.6 迭代，于 9月21日推出专为长周期复杂软件工程与自主 Agent 打造的 Grok-4.7。',
+        url: 'https://docs.x.ai/developers/models',
+        sourceTitle: 'xAI Grok Models Docs'
+      },
+      {
+        id: 'openai-gpt6-2026',
+        date: '2026-09-29',
+        era: '2026',
+        company: 'openai',
+        name: 'GPT-6 Astra & GPT-6.1 Sol / Luna',
+        params: '新一代旗舰架构',
+        context: '1M+',
+        license: 'closed',
+        tags: ['flagship', 'reasoning', 'multimodal', 'agent', 'longctx'],
+        highlight: '2026年9月开启 GPT-6 时代：旗舰 GPT-6 Astra 专攻复杂科研、全自主浏览与电脑控制；9月22日推出高性价比 GPT-6 Sol 与日常跑量 Luna；9月29日火速升级针对 Agent 编程的 GPT-6.1 Sol。',
+        url: 'https://developers.openai.com/api/docs/models',
+        sourceTitle: 'OpenAI API Models Docs'
+      },
+      {
+        id: 'anthropic-claude55-2026',
+        date: '2026-09-28',
+        era: '2026',
+        company: 'anthropic',
+        name: 'Claude 5.5 (Opus / Sonnet / Haiku) & Fable 5.1',
+        params: '自适应思考架构',
+        context: '1M (128K 输出)',
+        license: 'closed',
+        tags: ['flagship', 'reasoning', 'multimodal', 'agent', 'longctx'],
+        highlight: '9月1日发布顶级科研与网络安全模型 Fable 5.1 / Mythos 5.1；9月22日与28日相继发布 Claude Opus 5.5（成本较 Opus 5 降 40% 且追平 Fable 5.1）与 Sonnet 5.5，10月7日补齐 1M 上下文的 Haiku 5.5。',
+        url: 'https://hidekazu-konishi.com/entry/anthropic_claude_model_release_timeline.html',
+        sourceTitle: 'Anthropic Claude Timeline'
+      },
+      {
+        id: 'mistral-large4-2026',
+        date: '2026-10-06',
+        era: '2026',
+        company: 'mistral',
+        name: 'Mistral Large 4 ("Le Chonk")',
+        params: '1.05T 总参 (49B 激活 MoE) + 1.6B 视觉',
+        context: '1M',
+        license: 'open',
+        tags: ['flagship', 'reasoning', 'multimodal', 'moe', 'agent', 'longctx'],
+        highlight: '继 2026 年 7–9 月 Gemini 3.6/3.7/3.8 Flash 之后，欧洲 AI 旗舰迎头赶上：采用细粒度稀疏 MoE 架构（1.05 万亿总参，每 Token 激活 49B），支持 1M 上下文与原生多模态，开放权重。',
+        url: 'https://mistral.ai/news/mistral-large-4/',
+        sourceTitle: 'Introducing Mistral Large 4'
+      },
+      {
+        id: 'google-gemini4argon-2026',
+        date: '2026-10-13',
+        era: '2026',
+        company: 'google',
+        name: 'Gemini 4 Argon & Gemini 3.8 Flash',
+        params: '新一代前沿架构',
+        context: '1M (支持 65K 流式长输出)',
+        license: 'closed',
+        tags: ['flagship', 'reasoning', 'multimodal', 'agent', 'longctx'],
+        highlight: '9月2日发布主力快模型 Gemini 3.8 Flash；9月30日官宣并于10月13日全面开放首款 Gemini 4 代际模型 Gemini 4 Argon，首次采用元素代号命名，在长周期软件工程、金融法律推理与网络安全防御上登顶 12 项基准。',
+        url: 'https://www.scriptbyai.com/google-ai-timeline-biggest-moments/',
+        sourceTitle: 'Google AI Timeline: Gemini 4 Argon'
+      },
+      {
+        id: 'meta-musespark-2026',
+        date: '2026-10-15',
+        era: '2026',
+        company: 'meta',
+        name: 'Muse Wonder & Muse Spark Open',
+        params: 'MoE 架构 (另含 Muse Glimmer 30B)',
+        context: '1M',
+        license: 'open',
+        tags: ['flagship', 'reasoning', 'multimodal', 'agent', 'longctx'],
+        highlight: 'Meta 终结 Llama 品牌后由超级智能实验室 (MSL) 打造的全新模型线：7–9月推出闭源付费 API 模型 Muse Spark 1.1–1.3，10月12日发布前沿旗舰 Muse Wonder，10月15日重返开源发布 1M 上下文的 Muse Spark Open。',
+        url: 'https://www.theguardian.com/technology/2026/oct/16/meta-releases-muse-spark-open-a-new-open-weight-ai-model',
+        sourceTitle: 'The Guardian: Meta Muse Spark Open'
+      }
+    ];
+
+    const LATEST_FLAGSHIPS_2026 = [
+      {
+        companyId: 'google',
+        model: 'Gemini 4 Argon / Gemini 3.8 Flash',
+        date: '2026-09-30 官宣 / 2026-10-13 GA',
+        license: '商业闭源 (另有开源 Gemma 4)',
+        arch: '原生多模态 + 扩展推理架构',
+        context: '1,048,576 (1M)',
+        focus: '长周期软件工程、金融法律专业工作流、Fairwind 网络安全防御，18项主流基准中12项第一',
+        url: 'https://www.scriptbyai.com/google-ai-timeline-biggest-moments/',
+        sourceLabel: 'ScriptByAI Timeline'
+      },
+      {
+        companyId: 'openai',
+        model: 'GPT-6 Astra / GPT-6.1 Sol / Luna',
+        date: '2026-09-22 / 2026-09-29',
+        license: '商业闭源 (另有开源 GPT-OSS)',
+        arch: '通用+推理全融合分级矩阵',
+        context: '1M+',
+        focus: 'Astra 攻克复杂科研与自主浏览；GPT-6.1 Sol 专攻 Agentic 编程、Codex 与电脑操作 (Computer Use)',
+        url: 'https://developers.openai.com/api/docs/models',
+        sourceLabel: 'OpenAI API Docs'
+      },
+      {
+        companyId: 'anthropic',
+        model: 'Claude Opus 5.5 / Sonnet 5.5 / Fable 5.1',
+        date: '2026-09-01 至 2026-10-07',
+        license: '商业闭源',
+        arch: '强制自适应思考 (Adaptive Thinking)',
+        context: '1M (最高 128K 输出)',
+        focus: '开辟超越 Opus 的 Mythos/Fable 顶级档位；Opus 5.5 成本降低 40% 且追平 Fable 5.1，数百子 Agent 并行编排',
+        url: 'https://hidekazu-konishi.com/entry/anthropic_claude_model_release_timeline.html',
+        sourceLabel: 'Anthropic Timeline'
+      },
+      {
+        companyId: 'meta',
+        model: 'Muse Wonder / Muse Spark Open',
+        date: '2026-10-12 / 2026-10-15',
+        license: '闭源旗舰 (Wonder) + 开放权重 (Spark Open / Glimmer 30B)',
+        arch: '新一代稀疏 MoE 架构',
+        context: '1M',
+        focus: 'Meta 超级智能实验室 (MSL) 接棒 Llama 后的主力旗舰，兼顾商业 API 与美国最强开放权重模型',
+        url: 'https://www.theguardian.com/technology/2026/oct/16/meta-releases-muse-spark-open-a-new-open-weight-ai-model',
+        sourceLabel: 'The Guardian'
+      },
+      {
+        companyId: 'deepseek',
+        model: 'DeepSeek-V4 Pro / V4.1-Flash',
+        date: '2026-08-16 (Pro GA) / 2026-09-10 (4.1 Flash)',
+        license: '开放权重与低价商业 API 并行',
+        arch: 'MLA + DeepSeekMoE 混合推理',
+        context: '1M',
+        focus: '百万上下文长程 Agent、原生多模态视觉理解与极致推理性价比',
+        url: 'https://learn.aivoicepro.in/ai/tutorials/ai-model-release-timeline-october-2026',
+        sourceLabel: 'AI Model Timeline'
+      },
+      {
+        companyId: 'qwen',
+        model: 'Qwen 3.8 (2.4T) / Qwen 3.7 Max',
+        date: '2026-05-20 (3.7 Max) / 2026-08-12 (3.8)',
+        license: '开放权重 (2.4T 自定义许可 / 27B Apache 2.0)',
+        arch: '2.4T 总参 (95B 激活) 超大稀疏 MoE',
+        context: '1M',
+        focus: '全球首个开放权重的 Max 级 2.4 万亿参数旗舰，OSWorld 与长程 Agent 评测领先',
+        url: 'https://www.taskade.com/blog/alibaba-qwen-history',
+        sourceLabel: 'Taskade Qwen History'
+      },
+      {
+        companyId: 'xai',
+        model: 'Grok-4.7',
+        date: '2026-09-21',
+        license: '商业闭源',
+        arch: 'Colossus 超算训练长程推理架构',
+        context: '1M',
+        focus: '专攻长耗时软件工程、代码库重构与实时多工具协同',
+        url: 'https://docs.x.ai/developers/models',
+        sourceLabel: 'xAI Docs'
+      },
+      {
+        companyId: 'mistral',
+        model: 'Mistral Large 4 ("Le Chonk")',
+        date: '2026-10-06',
+        license: '开放权重 (Mistral 许可)',
+        arch: '1.05T 总参 (49B 激活 MoE) + 1.6B 视觉编码器',
+        context: '1M',
+        focus: '美中之外最强万亿参数多模态模型，专精 CAD/STEM、网络安全防御与企业级私有化部署',
+        url: 'https://mistral.ai/news/mistral-large-4/',
+        sourceLabel: 'Mistral Official Blog'
+      }
+    ];
+
+    // App State
+    const state = {
+      currentView: 'swimlane',
+      selectedCompanies: new Set(COMPANIES.map(c => c.id)),
+      selectedEra: 'all',
+      selectedLicense: 'all',
+      selectedTag: 'all',
+      searchQuery: '',
+      swimlaneFlagshipOnly: false,
+      timelineOrder: 'asc',
+      compareList: ['google-transformer-2017', 'openai-gpt4-2023', 'deepseek-r1-2025', 'google-gemini4argon-2026'],
+      activeModalEventId: null
+    };
+
+    const companyMap = Object.fromEntries(COMPANIES.map(c => [c.id, c]));
+
+    function getLicenseBadge(license) {
+      if (license === 'open') {
+        return '<span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">🟢 开源/开放权重</span>';
+      }
+      if (license === 'paper') {
+        return '<span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-sky-500/15 text-sky-300 border border-sky-500/30">📄 奠基论文</span>';
+      }
+      return '<span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-800 text-slate-300 border border-slate-700">🔒 商业闭源</span>';
+    }
+
+    function getTagLabel(tag) {
+      const map = {
+        flagship: '⭐ 核心代际',
+        reasoning: '🧠 深度推理',
+        multimodal: '👁️ 多模态',
+        moe: '🧩 MoE架构',
+        agent: '🛠️ Agent/编程',
+        longctx: '📚 ≥1M上下文'
+      };
+      return map[tag] || tag;
+    }
+
+    function filterEvents() {
+      const q = state.searchQuery.trim().toLowerCase();
+      return EVENTS.filter(ev => {
+        if (!state.selectedCompanies.has(ev.company)) return false;
+        if (state.selectedEra !== 'all' && ev.era !== state.selectedEra) return false;
+        if (state.selectedLicense !== 'all' && ev.license !== state.selectedLicense) return false;
+        if (state.selectedTag !== 'all' && !ev.tags.includes(state.selectedTag)) return false;
+        if (q) {
+          const hay = `${ev.name} ${ev.params} ${ev.context} ${ev.highlight} ${companyMap[ev.company].name}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    // Render KPI Cards & Company Pills
+    function renderCompanyControls() {
+      const kpiGrid = document.getElementById('company-kpi-grid');
+      const pillsContainer = document.getElementById('company-filter-pills');
+
+      kpiGrid.innerHTML = COMPANIES.map(c => {
+        const count = EVENTS.filter(e => e.company === c.id).length;
+        const active = state.selectedCompanies.has(c.id);
+        return `
+          <button type="button" data-company-card="${c.id}" class="text-left p-2.5 rounded-xl border transition-all ${active ? 'bg-slate-900/90 border-slate-700 shadow-sm' : 'bg-slate-950/40 border-slate-900 opacity-45'} hover:border-slate-600">
+            <div class="flex items-center justify-between gap-1">
+              <span class="inline-flex items-center gap-1.5 text-xs font-bold text-white truncate">
+                <span class="w-2 h-2 rounded-full" style="background:${c.color}"></span>
+                ${c.shortName}
+              </span>
+              <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-medium">${count} 节点</span>
+            </div>
+            <div class="mt-1.5 text-[11px] text-slate-400 truncate" title="${c.latestFlagship}">最新: <span class="text-slate-200 font-medium">${c.latestFlagship}</span></div>
+          </button>
+        `;
+      }).join('');
+
+      const allSelected = state.selectedCompanies.size === COMPANIES.length;
+      pillsContainer.innerHTML = `
+        <span class="text-xs text-slate-400 mr-1">厂商筛选：</span>
+        <button type="button" id="toggle-all-companies-btn" class="px-2.5 py-1 rounded-full text-xs font-medium border transition ${allSelected ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'}">
+          全部 (${COMPANIES.length})
+        </button>
+        ${COMPANIES.map(c => {
+          const isSelected = state.selectedCompanies.has(c.id);
+          return `
+            <button type="button" data-company-pill="${c.id}" class="px-2.5 py-1 rounded-full text-xs font-medium border transition inline-flex items-center gap-1.5 ${isSelected ? 'bg-slate-800 text-white border-slate-600' : 'bg-slate-950 text-slate-500 border-slate-800/80 hover:text-slate-300'}">
+              <span class="w-2 h-2 rounded-full" style="background:${c.color}"></span>
+              <span>${c.shortName}</span>
+            </button>
+          `;
+        }).join('')}
+      `;
+
+      // Attach listeners
+      kpiGrid.querySelectorAll('[data-company-card]').forEach(btn => {
+        btn.addEventListener('click', () => toggleCompany(btn.getAttribute('data-company-card')));
+      });
+      pillsContainer.querySelectorAll('[data-company-pill]').forEach(btn => {
+        btn.addEventListener('click', () => toggleCompany(btn.getAttribute('data-company-pill')));
+      });
+      const toggleAllBtn = document.getElementById('toggle-all-companies-btn');
+      if (toggleAllBtn) {
+        toggleAllBtn.addEventListener('click', () => {
+          if (state.selectedCompanies.size === COMPANIES.length) {
+            state.selectedCompanies = new Set([COMPANIES[0].id]);
+          } else {
+            state.selectedCompanies = new Set(COMPANIES.map(c => c.id));
+          }
+          renderAll();
+        });
+      }
+    }
+
+    function toggleCompany(companyId) {
+      if (state.selectedCompanies.has(companyId)) {
+        if (state.selectedCompanies.size > 1) {
+          state.selectedCompanies.delete(companyId);
+        }
+      } else {
+        state.selectedCompanies.add(companyId);
+      }
+      renderAll();
+    }
+
+    // Render View 1: Swimlane Matrix
+    function renderSwimlane(filteredEvents) {
+      const headerRow = document.getElementById('swimlane-header-row');
+      const tbody = document.getElementById('swimlane-tbody');
+      const activeCompanies = COMPANIES.filter(c => state.selectedCompanies.has(c.id));
+
+      headerRow.innerHTML = `
+        <th class="p-3 w-40 sticky left-0 z-20 bg-slate-900 border-r border-slate-800">时期 / 阶段</th>
+        ${activeCompanies.map(c => `
+          <th class="p-3 min-w-[195px] border-r border-slate-800/60">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full" style="background:${c.color}"></span>
+              <span class="text-white font-bold">${c.shortName}</span>
+            </div>
+            <div class="text-[10px] text-slate-400 font-normal mt-0.5 truncate">${c.latestFlagship}</div>
+          </th>
+        `).join('')}
+      `;
+
+      const erasToShow = state.selectedEra === 'all' ? ERAS : ERAS.filter(e => e.id === state.selectedEra);
+
+      tbody.innerHTML = erasToShow.map(era => {
+        const eraEvents = filteredEvents.filter(e => e.era === era.id && (!state.swimlaneFlagshipOnly || e.tags.includes('flagship')));
+        return `
+          <tr class="align-top hover:bg-slate-900/30 transition">
+            <td class="p-3 sticky left-0 z-10 bg-slate-950/95 border-r border-slate-800">
+              <div class="font-bold text-indigo-400 text-xs">${era.label}</div>
+              <div class="font-semibold text-white text-xs mt-0.5">${era.title}</div>
+              <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">${era.desc}</p>
+            </td>
+            ${activeCompanies.map(c => {
+              const cellEvents = eraEvents.filter(e => e.company === c.id).sort((a, b) => a.date.localeCompare(b.date));
+              if (cellEvents.length === 0) {
+                return `<td class="p-2.5 border-r border-slate-800/50 text-slate-600 text-[11px] italic align-middle text-center">—</td>`;
+              }
+              return `
+                <td class="p-2 border-r border-slate-800/50 space-y-2">
+                  ${cellEvents.map(ev => {
+                    const inCompare = state.compareList.includes(ev.id);
+                    return `
+                      <div class="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-600 card-hover cursor-pointer relative group" data-event-card="${ev.id}">
+                        <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 mb-1">
+                          <span class="font-mono text-slate-300">${ev.date.slice(0, 7)}</span>
+                          <div class="flex items-center gap-1">
+                            ${ev.license === 'open' ? '<span class="text-emerald-400" title="开源/开放权重">🟢开源</span>' : ''}
+                            <button type="button" data-compare-toggle="${ev.id}" class="px-1.5 py-0.2 rounded text-[10px] font-medium transition ${inCompare ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}" title="加入或移出同台对比">
+                              ${inCompare ? '✓PK' : '+PK'}
+                            </button>
+                          </div>
+                        </div>
+                        <div class="font-bold text-white text-xs leading-snug">${ev.name}</div>
+                        <div class="mt-1 flex flex-wrap gap-1 text-[10px] text-slate-400">
+                          <span class="px-1.5 py-0.2 rounded bg-slate-950 border border-slate-800">参数: ${ev.params}</span>
+                          <span class="px-1.5 py-0.2 rounded bg-slate-950 border border-slate-800">窗口: ${ev.context}</span>
+                        </div>
+                        <p class="mt-1.5 text-[11px] text-slate-300 line-clamp-3 leading-relaxed">${ev.highlight}</p>
+                      </div>
+                    `;
+                  }).join('')}
+                </td>
+              `;
+            }).join('')}
+          </tr>
+        `;
+      }).join('');
+
+      attachCardListeners(tbody);
+    }
+
+    // Render View 2: Chronological Timeline
+    function renderTimeline(filteredEvents) {
+      const container = document.getElementById('timeline-container');
+      if (filteredEvents.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-slate-400 bg-slate-900/40 rounded-xl border border-slate-800">未找到匹配的模型节点，请尝试放宽筛选条件。</div>`;
+        return;
+      }
+
+      const erasOrdered = state.timelineOrder === 'asc' ? [...ERAS] : [...ERAS].reverse();
+
+      container.innerHTML = erasOrdered.map(era => {
+        const eraEvents = filteredEvents
+          .filter(e => e.era === era.id)
+          .sort((a, b) => state.timelineOrder === 'asc' ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date));
+
+        if (eraEvents.length === 0) return '';
+
+        return `
+          <div class="space-y-3">
+            <div class="sticky top-16 z-10 backdrop-blur-md bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 shadow">
+              <div class="flex items-center gap-2.5">
+                <span class="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold">${era.label}</span>
+                <h3 class="text-sm font-bold text-white">${era.title}</h3>
+              </div>
+              <p class="text-xs text-slate-400">${era.desc}</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 pl-2 sm:pl-4 border-l-2 border-slate-800">
+              ${eraEvents.map(ev => {
+                const comp = companyMap[ev.company];
+                const inCompare = state.compareList.includes(ev.id);
+                return `
+                  <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-slate-600 card-hover cursor-pointer flex flex-col justify-between" data-event-card="${ev.id}">
+                    <div>
+                      <div class="flex items-center justify-between gap-2 mb-2">
+                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold border ${comp.badgeClass}">
+                          <span class="w-2 h-2 rounded-full" style="background:${comp.color}"></span>
+                          ${comp.shortName}
+                        </span>
+                        <div class="flex items-center gap-1.5">
+                          <span class="font-mono text-xs text-slate-400">${ev.date}</span>
+                          <button type="button" data-compare-toggle="${ev.id}" class="px-2 py-0.5 rounded text-[11px] font-medium transition ${inCompare ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+                            ${inCompare ? '✓ 已加PK' : '+ PK'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <h4 class="text-sm sm:text-base font-bold text-white">${ev.name}</h4>
+
+                      <div class="mt-2 flex flex-wrap items-center gap-1.5">
+                        ${getLicenseBadge(ev.license)}
+                        <span class="px-2 py-0.5 rounded text-[11px] bg-slate-950 text-slate-300 border border-slate-800">参数: ${ev.params}</span>
+                        <span class="px-2 py-0.5 rounded text-[11px] bg-slate-950 text-slate-300 border border-slate-800">上下文: ${ev.context}</span>
+                      </div>
+
+                      <p class="mt-2.5 text-xs text-slate-300 leading-relaxed">${ev.highlight}</p>
+                    </div>
+
+                    <div class="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                      <div class="flex flex-wrap gap-1">
+                        ${ev.tags.map(t => `<span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-400">${getTagLabel(t)}</span>`).join('')}
+                      </div>
+                      <a href="${ev.url}" target="_blank" rel="noopener noreferrer" data-stop-prop="true" class="text-[11px] text-indigo-400 hover:text-indigo-300 font-medium whitespace-nowrap">
+                        来源 ↗
+                      </a>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      attachCardListeners(container);
+    }
+
+    // Render View 3: Company Lineage Cards
+    function renderLineage() {
+      const grid = document.getElementById('lineage-grid');
+      const activeCompanies = COMPANIES.filter(c => state.selectedCompanies.has(c.id));
+
+      grid.innerHTML = activeCompanies.map(comp => {
+        const compEvents = EVENTS.filter(e => e.company === comp.id).sort((a, b) => a.date.localeCompare(b.date));
+        return `
+          <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+            <div class="space-y-3">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-3.5 h-3.5 rounded-full shrink-0" style="background:${comp.color}"></span>
+                  <div>
+                    <h3 class="text-base font-bold text-white">${comp.name}</h3>
+                    <p class="text-xs text-slate-400">${comp.origin} · ${comp.strategy}</p>
+                  </div>
+                </div>
+                <span class="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-xs font-semibold text-indigo-300 shrink-0">
+                  ${comp.latestFlagship}
+                </span>
+              </div>
+
+              <p class="text-xs text-slate-300 leading-relaxed bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+                ${comp.summary}
+              </p>
+
+              <!-- Step-by-step Lineage Chain -->
+              <div class="space-y-2 pt-1">
+                <div class="text-xs font-semibold text-slate-400">核心代际演进脉络 (${compEvents.length} 个关键里程碑)：</div>
+                <div class="relative pl-4 border-l-2 border-slate-800 space-y-2.5 max-h-80 overflow-y-auto custom-scrollbar pr-1">
+                  ${compEvents.map(ev => `
+                    <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/90 hover:border-slate-600 cursor-pointer transition" data-event-card="${ev.id}">
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="font-bold text-xs text-white">${ev.name}</span>
+                        <span class="font-mono text-[11px] text-slate-400">${ev.date}</span>
+                      </div>
+                      <div class="text-[11px] text-slate-400 mt-0.5">参数: ${ev.params} | 窗口: ${ev.context}</div>
+                      <p class="text-[11px] text-slate-300 mt-1 line-clamp-2">${ev.highlight}</p>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      attachCardListeners(grid);
+    }
+
+    // Render View 4: Analytics & Flagship Table
+    let cadenceChartInstance = null;
+    let contextChartInstance = null;
+
+    function renderAnalytics() {
+      const tbody = document.getElementById('flagship-comparison-tbody');
+      tbody.innerHTML = LATEST_FLAGSHIPS_2026.map(row => {
+        const comp = companyMap[row.companyId];
+        return `
+          <tr class="hover:bg-slate-900/50 transition">
+            <td class="p-3 font-semibold text-white whitespace-nowrap">
+              <span class="inline-flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full" style="background:${comp.color}"></span>
+                ${comp.shortName}
+              </span>
+            </td>
+            <td class="p-3 font-bold text-indigo-300">${row.model}</td>
+            <td class="p-3 font-mono text-xs text-slate-300 whitespace-nowrap">${row.date}</td>
+            <td class="p-3 text-xs text-slate-300">${row.license}</td>
+            <td class="p-3 text-xs text-slate-300">${row.arch}</td>
+            <td class="p-3 font-mono text-xs text-emerald-400 whitespace-nowrap">${row.context}</td>
+            <td class="p-3 text-xs text-slate-300 leading-relaxed max-w-md">${row.focus}</td>
+            <td class="p-3 whitespace-nowrap">
+              <a href="${row.url}" target="_blank" rel="noopener noreferrer" class="text-xs text-indigo-400 hover:text-indigo-300 underline">
+                ${row.sourceLabel} ↗
+              </a>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      if (typeof Chart === 'undefined') return;
+
+      // Chart 1: Release Cadence by Year
+      const years = ['2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026'];
+      const cadenceCtx = document.getElementById('releaseCadenceChart');
+      if (cadenceCtx) {
+        if (cadenceChartInstance) cadenceChartInstance.destroy();
+        const datasets = COMPANIES.map(c => ({
+          label: c.shortName,
+          data: years.map(y => EVENTS.filter(e => e.company === c.id && e.date.startsWith(y)).length),
+          backgroundColor: c.color,
+          borderRadius: 4
+        }));
+        cadenceChartInstance = new Chart(cadenceCtx, {
+          type: 'bar',
+          data: { labels: years, datasets },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { stacked: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.1)' } },
+              y: { stacked: true, ticks: { color: '#94a3b8', stepSize: 2 }, grid: { color: 'rgba(148,163,184,0.1)' } }
+            },
+            plugins: {
+              legend: { labels: { color: '#e2e8f0', boxWidth: 10, font: { size: 11 } } }
+            }
+          }
+        });
+      }
+
+      // Chart 2: Context Window Progression (Log Scale)
+      const ctxWindowCanvas = document.getElementById('contextWindowChart');
+      if (ctxWindowCanvas) {
+        if (contextChartInstance) contextChartInstance.destroy();
+        const milestones = [
+          { label: '2017 Transformer', val: 512 },
+          { label: '2019 GPT-2', val: 1024 },
+          { label: '2020 GPT-3', val: 2048 },
+          { label: '2022 ChatGPT', val: 4096 },
+          { label: '2023.03 GPT-4', val: 32768 },
+          { label: '2023.07 Claude 2', val: 100000 },
+          { label: '2023.11 Claude 2.1', val: 200000 },
+          { label: '2024.02 Gemini 1.5 Pro', val: 2000000 },
+          { label: '2026 各家主力标配 (GPT-6/Gemini 4/Claude 5.5/DeepSeek V4/Qwen 3.8)', val: 1048576 }
+        ];
+        contextChartInstance = new Chart(ctxWindowCanvas, {
+          type: 'line',
+          data: {
+            labels: milestones.map(m => m.label),
+            datasets: [{
+              label: '最大上下文窗口 (Tokens - 对数坐标)',
+              data: milestones.map(m => m.val),
+              borderColor: '#6366f1',
+              backgroundColor: 'rgba(99, 102, 241, 0.2)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 4,
+              pointBackgroundColor: '#a855f7'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(148,163,184,0.1)' } },
+              y: {
+                type: 'logarithmic',
+                ticks: {
+                  color: '#94a3b8',
+                  callback: function(value) {
+                    if ([512, 2048, 8192, 32768, 100000, 200000, 1000000, 2000000].includes(value)) {
+                      return value >= 1000000 ? (value / 1000000) + 'M' : (value >= 1000 ? Math.round(value / 1000) + 'K' : value);
+                    }
+                    return null;
+                  }
+                },
+                grid: { color: 'rgba(148,163,184,0.1)' }
+              }
+            },
+            plugins: {
+              legend: { labels: { color: '#e2e8f0', font: { size: 11 } } }
+            }
+          }
+        });
+      }
+    }
+
+    // Attach click handlers for event cards and +PK buttons
+    function attachCardListeners(root) {
+      root.querySelectorAll('[data-compare-toggle]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.getAttribute('data-compare-toggle');
+          toggleCompareItem(id);
+        });
+      });
+
+      root.querySelectorAll('[data-stop-prop]').forEach(link => {
+        link.addEventListener('click', (e) => e.stopPropagation());
+      });
+
+      root.querySelectorAll('[data-event-card]').forEach(card => {
+        card.addEventListener('click', () => {
+          const id = card.getAttribute('data-event-card');
+          openDetailModal(id);
+        });
+      });
+    }
+
+    function toggleCompareItem(eventId) {
+      const idx = state.compareList.indexOf(eventId);
+      if (idx >= 0) {
+        state.compareList.splice(idx, 1);
+      } else {
+        if (state.compareList.length >= 4) {
+          state.compareList.shift();
+        }
+        state.compareList.push(eventId);
+      }
+      renderAll();
+    }
+
+    function openDetailModal(eventId) {
+      const ev = EVENTS.find(e => e.id === eventId);
+      if (!ev) return;
+      state.activeModalEventId = eventId;
+      const comp = companyMap[ev.company];
+      const inCompare = state.compareList.includes(ev.id);
+
+      document.getElementById('modal-header-content').innerHTML = `
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${comp.badgeClass}">
+            <span class="w-2 h-2 rounded-full" style="background:${comp.color}"></span>
+            ${comp.name}
+          </span>
+          <span class="font-mono text-xs text-slate-400">${ev.date}</span>
+        </div>
+        <h3 class="text-lg font-bold text-white">${ev.name}</h3>
+      `;
+
+      document.getElementById('modal-body-content').innerHTML = `
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
+          <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+            <div class="text-[11px] text-slate-400">参数规模 / 架构</div>
+            <div class="text-xs sm:text-sm font-bold text-white mt-0.5">${ev.params}</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+            <div class="text-[11px] text-slate-400">最大上下文窗口</div>
+            <div class="text-xs sm:text-sm font-bold text-emerald-400 mt-0.5">${ev.context}</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 col-span-2 sm:col-span-1">
+            <div class="text-[11px] text-slate-400">开放策略</div>
+            <div class="mt-1">${getLicenseBadge(ev.license)}</div>
+          </div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-1.5">
+          <div class="text-xs font-semibold text-indigo-300">核心技术突破与行业意义</div>
+          <p class="text-xs sm:text-sm text-slate-200 leading-relaxed">${ev.highlight}</p>
+        </div>
+        <div class="flex flex-wrap gap-1.5 pt-1">
+          ${ev.tags.map(t => `<span class="text-xs px-2 py-0.5 rounded-md bg-slate-800 text-slate-300">${getTagLabel(t)}</span>`).join('')}
+        </div>
+      `;
+
+      const compareBtn = document.getElementById('modal-toggle-compare-btn');
+      compareBtn.textContent = inCompare ? '✓ 已在 PK 对比栏 (点击移除)' : '⚖️ 加入同台 PK 对比';
+      compareBtn.onclick = () => {
+        toggleCompareItem(ev.id);
+        openDetailModal(ev.id);
+      };
+
+      const sourceLink = document.getElementById('modal-source-link');
+      sourceLink.href = ev.url;
+      sourceLink.querySelector('span').textContent = `🔗 来源: ${ev.sourceTitle}`;
+
+      document.getElementById('detail-modal').classList.remove('hidden');
+    }
+
+    function renderCompareModal() {
+      const container = document.getElementById('compare-modal-body');
+      const items = state.compareList.map(id => EVENTS.find(e => e.id === id)).filter(Boolean);
+
+      if (items.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-slate-400">当前未选择任何对比模型。请在泳道图或时间轴中点击任意卡片右上角的 <span class="text-indigo-400 font-semibold">+PK</span> 按钮添加。</div>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <table class="w-full text-left border-collapse text-xs sm:text-sm min-w-[640px]">
+          <thead>
+            <tr class="border-b border-slate-800 bg-slate-950/60">
+              <th class="p-3 w-32 text-slate-400 font-medium">对比维度</th>
+              ${items.map(ev => {
+                const comp = companyMap[ev.company];
+                return `
+                  <th class="p-3 border-l border-slate-800">
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="inline-flex items-center gap-1 text-xs font-semibold" style="color:${comp.color}">
+                        <span class="w-2 h-2 rounded-full" style="background:${comp.color}"></span>
+                        ${comp.shortName}
+                      </span>
+                      <button type="button" data-remove-compare="${ev.id}" class="text-slate-500 hover:text-rose-400 text-xs">移除 ✕</button>
+                    </div>
+                    <div class="text-sm font-bold text-white mt-1">${ev.name}</div>
+                  </th>
+                `;
+              }).join('')}
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/70">
+            <tr>
+              <td class="p-3 text-slate-400 font-medium">发布日期</td>
+              ${items.map(ev => `<td class="p-3 border-l border-slate-800 font-mono text-slate-200">${ev.date}</td>`).join('')}
+            </tr>
+            <tr>
+              <td class="p-3 text-slate-400 font-medium">参数与架构</td>
+              ${items.map(ev => `<td class="p-3 border-l border-slate-800 font-semibold text-white">${ev.params}</td>`).join('')}
+            </tr>
+            <tr>
+              <td class="p-3 text-slate-400 font-medium">上下文窗口</td>
+              ${items.map(ev => `<td class="p-3 border-l border-slate-800 font-mono text-emerald-400 font-semibold">${ev.context}</td>`).join('')}
+            </tr>
+            <tr>
+              <td class="p-3 text-slate-400 font-medium">开源/闭源</td>
+              ${items.map(ev => `<td class="p-3 border-l border-slate-800">${getLicenseBadge(ev.license)}</td>`).join('')}
+            </tr>
+            <tr>
+              <td class="p-3 text-slate-400 font-medium">技术标签</td>
+              ${items.map(ev => `<td class="p-3 border-l border-slate-800"><div class="flex flex-wrap gap-1">${ev.tags.map(t => `<span class="px-1.5 py-0.5 rounded bg-slate-800 text-[11px] text-slate-300">${getTagLabel(t)}</span>`).join('')}</div></td>`).join('')}
+            </tr>
+            <tr>
+              <td class="p-3 text-slate-400 font-medium">核心突破与定位</td>
+              ${items.map(ev => `<td class="p-3 border-l border-slate-800 text-slate-300 leading-relaxed">${ev.highlight}</td>`).join('')}
+            </tr>
+            <tr>
+              <td class="p-3 text-slate-400 font-medium">验证来源</td>
+              ${items.map(ev => `<td class="p-3 border-l border-slate-800"><a href="${ev.url}" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">${ev.sourceTitle} ↗</a></td>`).join('')}
+            </tr>
+          </tbody>
+        </table>
+      `;
+
+      container.querySelectorAll('[data-remove-compare]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          toggleCompareItem(btn.getAttribute('data-remove-compare'));
+          renderCompareModal();
+        });
+      });
+    }
+
+    // Master Render
+    function renderAll() {
+      const filtered = filterEvents();
+      document.getElementById('filter-count-badge').textContent = `显示 ${filtered.length} / ${EVENTS.length} 个里程碑`;
+      document.getElementById('compare-count-pill').textContent = String(state.compareList.length);
+
+      renderCompanyControls();
+
+      // Toggle view containers
+      ['swimlane', 'timeline', 'lineage', 'analytics'].forEach(v => {
+        const el = document.getElementById(`view-${v}`);
+        if (v === state.currentView) {
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
+      });
+
+      // Update active tab styling
+      document.querySelectorAll('.view-tab').forEach(btn => {
+        const v = btn.getAttribute('data-view');
+        if (v === state.currentView) {
+          btn.className = 'view-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all bg-indigo-600 text-white shadow';
+        } else {
+          btn.className = 'view-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all text-slate-400 hover:text-white';
+        }
+      });
+
+      if (state.currentView === 'swimlane') renderSwimlane(filtered);
+      if (state.currentView === 'timeline') renderTimeline(filtered);
+      if (state.currentView === 'lineage') renderLineage();
+      if (state.currentView === 'analytics') renderAnalytics();
+    }
+
+    // Initialize Event Listeners
+    window.addEventListener('DOMContentLoaded', () => {
+      // View Tabs
+      document.querySelectorAll('.view-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.currentView = btn.getAttribute('data-view');
+          renderAll();
+        });
+      });
+
+      // Search Input
+      const searchInput = document.getElementById('search-input');
+      const clearSearchBtn = document.getElementById('clear-search-btn');
+      searchInput.addEventListener('input', (e) => {
+        state.searchQuery = e.target.value;
+        clearSearchBtn.classList.toggle('hidden', !state.searchQuery);
+        renderAll();
+      });
+      clearSearchBtn.addEventListener('click', () => {
+        state.searchQuery = '';
+        searchInput.value = '';
+        clearSearchBtn.classList.add('hidden');
+        renderAll();
+      });
+
+      // Selects
+      document.getElementById('era-select').addEventListener('change', (e) => {
+        state.selectedEra = e.target.value;
+        renderAll();
+      });
+      document.getElementById('license-select').addEventListener('change', (e) => {
+        state.selectedLicense = e.target.value;
+        renderAll();
+      });
+      document.getElementById('tag-select').addEventListener('change', (e) => {
+        state.selectedTag = e.target.value;
+        renderAll();
+      });
+
+      // Swimlane compact toggle
+      document.getElementById('swimlane-compact-toggle').addEventListener('change', (e) => {
+        state.swimlaneFlagshipOnly = e.target.checked;
+        renderAll();
+      });
+
+      // Timeline Sort Order
+      const sortAscBtn = document.getElementById('sort-asc-btn');
+      const sortDescBtn = document.getElementById('sort-desc-btn');
+      sortAscBtn.addEventListener('click', () => {
+        state.timelineOrder = 'asc';
+        sortAscBtn.className = 'px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-medium';
+        sortDescBtn.className = 'px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white text-xs font-medium';
+        renderAll();
+      });
+      sortDescBtn.addEventListener('click', () => {
+        state.timelineOrder = 'desc';
+        sortDescBtn.className = 'px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-medium';
+        sortAscBtn.className = 'px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white text-xs font-medium';
+        renderAll();
+      });
+
+      // Reset Filters
+      document.getElementById('reset-filters-btn').addEventListener('click', () => {
+        state.selectedCompanies = new Set(COMPANIES.map(c => c.id));
+        state.selectedEra = 'all';
+        state.selectedLicense = 'all';
+        state.selectedTag = 'all';
+        state.searchQuery = '';
+        state.swimlaneFlagshipOnly = false;
+        document.getElementById('search-input').value = '';
+        document.getElementById('clear-search-btn').classList.add('hidden');
+        document.getElementById('era-select').value = 'all';
+        document.getElementById('license-select').value = 'all';
+        document.getElementById('tag-select').value = 'all';
+        document.getElementById('swimlane-compact-toggle').checked = false;
+        renderAll();
+      });
+
+      // Modals
+      document.getElementById('close-detail-modal').addEventListener('click', () => {
+        document.getElementById('detail-modal').classList.add('hidden');
+      });
+      document.getElementById('detail-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'detail-modal') {
+          document.getElementById('detail-modal').classList.add('hidden');
+        }
+      });
+
+      document.getElementById('open-compare-btn').addEventListener('click', () => {
+        renderCompareModal();
+        document.getElementById('compare-modal').classList.remove('hidden');
+      });
+      document.getElementById('close-compare-modal').addEventListener('click', () => {
+        document.getElementById('compare-modal').classList.add('hidden');
+      });
+      document.getElementById('compare-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'compare-modal') {
+          document.getElementById('compare-modal').classList.add('hidden');
+        }
+      });
+      document.getElementById('clear-compare-btn').addEventListener('click', () => {
+        state.compareList = [];
+        renderCompareModal();
+        renderAll();
+      });
+
+      renderAll();
+    });
+  </script>
+</body>
+</html>

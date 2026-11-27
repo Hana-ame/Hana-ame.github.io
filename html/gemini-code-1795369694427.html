@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>绿鞋机制 (Greenshoe) 分时买卖盘互动演示</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --border: #334155;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --up: #10b981;      /* 美股绿涨 */
+    --down: #ef4444;    /* 美股红跌 */
+    --gold: #f59e0b;    /* 绿鞋护盘资金 */
+    --accent: #3b82f6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 20px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  header {
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+    margin-bottom: 18px; gap: 12px;
+  }
+  h1 { font-size: 1.35rem; font-weight: 700; }
+  .subtitle { font-size: 0.85rem; color: var(--muted); }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    background: var(--card); color: var(--text); border: 1px solid var(--border);
+    padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 0.9rem;
+    transition: all 0.15s;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .btn.gold { background: rgba(245, 158, 11, 0.15); border-color: var(--gold); color: var(--gold); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px;
+  }
+  .card-title {
+    font-size: 0.95rem; font-weight: 600; margin-bottom: 12px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .price-badge { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .price-up { color: var(--up); }
+  .price-down { color: var(--down); }
+
+  canvas {
+    width: 100%; height: 270px; display: block;
+    background: #0b1220; border-radius: 8px; border: 1px solid #1e293b;
+  }
+
+  .controls {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 12px; gap: 8px; flex-wrap: wrap;
+  }
+  .step-indicator { font-size: 0.85rem; color: var(--muted); }
+
+  .narrative {
+    margin-top: 14px; padding: 12px 14px; border-radius: 8px;
+    background: rgba(59, 130, 246, 0.1); border-left: 4px solid var(--accent);
+    font-size: 0.92rem; min-height: 76px;
+  }
+  .narrative strong { color: #fff; }
+
+  /* 买卖盘条形图 */
+  .order-row { margin-bottom: 12px; }
+  .order-label {
+    display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;
+  }
+  .bar-bg {
+    height: 18px; background: #0b1220; border-radius: 6px; overflow: hidden;
+    display: flex;
+  }
+  .bar-fill { height: 100%; transition: width 0.4s ease; }
+  .bar-buy { background: var(--up); }
+  .bar-greenshoe { background: var(--gold); }
+  .bar-sell { background: var(--down); }
+
+  .legend { display: flex; gap: 12px; font-size: 0.78rem; color: var(--muted); margin-top: 6px; flex-wrap: wrap; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: middle; }
+
+  /* 账本 */
+  .ledger { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .stat {
+    background: #0b1220; padding: 10px 12px; border-radius: 8px; border: 1px solid #1e293b;
+  }
+  .stat-label { font-size: 0.75rem; color: var(--muted); }
+  .stat-val { font-size: 1.05rem; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+  .toggle-wrap {
+    display: flex; align-items: center; gap: 8px; font-size: 0.85rem;
+    background: #0b1220; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border);
+  }
+  .toggle-wrap input { cursor: pointer; accent-color: var(--gold); width: 16px; height: 16px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div>
+      <h1>绿鞋机制 (Greenshoe) 分时买卖盘演示</h1>
+      <div class="subtitle">设定：A公司发行价 $100 | 原计划发 100 股 | 投行超卖 15 股（手握 $1,500 现金，欠 15 股）</div>
+    </div>
+    <div class="tabs">
+      <button class="btn active" id="tabDrop" onclick="switchScenario('drop')">情景一：破发下跌（护盘）</button>
+      <button class="btn" id="tabRise" onclick="switchScenario('rise')">情景二：大涨火爆（行权）</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- 左侧：分时图 + 控制 + 解说 -->
+    <div class="card">
+      <div class="card-title">
+        <span>分时走势图（虚线 = $100 发行价）</span>
+        <div id="priceDisplay" class="price-badge">$100.00</div>
+      </div>
+      <canvas id="chart" width="640" height="270"></canvas>
+
+      <div class="controls">
+        <div style="display:flex; gap:8px;">
+          <button class="btn" id="btnPrev" onclick="step(-1)">上一步</button>
+          <button class="btn active" id="btnNext" onclick="step(1)">下一步</button>
+          <button class="btn gold" id="btnAuto" onclick="toggleAuto()">自动演示</button>
+          <button class="btn" onclick="resetSim()">重置</button>
+        </div>
+        <label class="toggle-wrap" id="gsToggleWrap">
+          <input type="checkbox" id="gsToggle" checked onchange="render()">
+          <span>开启绿鞋护盘</span>
+        </label>
+        <span class="step-indicator" id="stepText">步骤 1 / 6</span>
+      </div>
+
+      <div class="narrative" id="narrativeBox"></div>
+    </div>
+
+    <!-- 右侧：买卖盘对比 + 投行账本 -->
+    <div class="card">
+      <div class="card-title"><span>当前盘口：买盘 vs 卖盘（股数）</span></div>
+
+      <div class="order-row">
+        <div class="order-label">
+          <span>买盘力量（自然买盘 + 绿鞋护盘）</span>
+          <span id="buyTotalText" style="color:var(--up); font-weight:600;">0 股</span>
+        </div>
+        <div class="bar-bg">
+          <div class="bar-fill bar-buy" id="barNaturalBuy" style="width:0%"></div>
+          <div class="bar-fill bar-greenshoe" id="barGsBuy" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="order-row">
+        <div class="order-label">
+          <span>卖盘力量（打新客/获利盘砸盘）</span>
+          <span id="sellTotalText" style="color:var(--down); font-weight:600;">0 股</span>
+        </div>
+        <div class="bar-bg">
+          <div class="bar-fill bar-sell" id="barSell" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="legend">
+        <span><i class="dot" style="background:var(--up)"></i>市场自然买盘</span>
+        <span><i class="dot" style="background:var(--gold)"></i>投行绿鞋买盘</span>
+        <span><i class="dot" style="background:var(--down)"></i>市场抛压卖盘</span>
+      </div>
+
+      <div class="card-title" style="margin-top:20px;"><span>投行 & 公司实时账本</span></div>
+      <div class="ledger">
+        <div class="stat">
+          <div class="stat-label">投行绿鞋现金池</div>
+          <div class="stat-val" id="statCash">$1,500</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">投行空头欠股</div>
+          <div class="stat-val" id="statShort">-15 股</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">投行护盘差价收益</div>
+          <div class="stat-val" id="statProfit">$0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">A公司总募资额</div>
+          <div class="stat-val" id="statRaised">$10,000</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const scenarios = {
+  drop: {
+    // 开启绿鞋的数据
+    withGS: [
+      { time: '09:25', price: 100, natBuy: 0, gsBuy: 0, sell: 0, cash: 1500, short: -15, profit: 0, raised: 10000,
+        text: '<strong>09:25 集合竞价：</strong>上市前已按 $100 卖出 115 股（80股给了买饱的长线机构，35股给了想赚快钱的打新客）。投行手里握着超卖 15 股收来的 <strong>$1,500 现金</strong>，欠 15 股。' },
+      { time: '09:30', price: 102, natBuy: 12, gsBuy: 0, sell: 8, cash: 1500, short: -15, profit: 0, raised: 10000,
+        text: '<strong>09:30 正式开盘：</strong>少量散户追高，股价微涨到 $102。但涨幅远低于打新客预期，盘面开始出现犹豫。' },
+      { time: '09:45', price: 96, natBuy: 6, gsBuy: 0, sell: 20, cash: 1500, short: -15, profit: 0, raised: 10000,
+        text: '<strong>09:45 打新客反水砸盘：</strong>打新客一看涨不动，疯狂甩卖 20 股！长线机构昨天已经买饱了不接盘，场外散户吓得观望，自然买盘只有 6 股。<strong>股价瞬间跌破 $100 发行价，砸到 $96！</strong>' },
+      { time: '10:00', price: 93, natBuy: 4, gsBuy: 8, sell: 15, cash: 756, short: -7, profit: 56, raised: 10000,
+        text: '<strong>10:00 投行启动绿鞋护盘！</strong>眼看还要暴跌，投行拿着 $1,500 现金进场，在 $93 价位直接吃掉 <strong>8 股</strong> 卖盘（花费 $744）。金色买盘出现，跌势明显放缓！' },
+      { time: '10:30', price: 95, natBuy: 8, gsBuy: 7, sell: 10, cash: 91, short: 0, profit: 91, raised: 10000,
+        text: '<strong>10:30 投行继续扫货平仓：</strong>投行在 $95 买走最后 <strong>7 股</strong>（花费 $665），凑齐 15 股还清了空头债务。市场看到有人强力托底，自然买盘开始回流，股价企稳回升。' },
+      { time: '11:00', price: 98, natBuy: 12, gsBuy: 0, sell: 8, cash: 91, short: 0, profit: 91, raised: 10000,
+        text: '<strong>11:00 护盘完成：</strong>投行成功把股价稳在发行价附近，没让它崩盘，自己还白赚了 <strong>$91 差价</strong>。因为没找公司增发，市场上实际流通股缩回 100 股，抛压减轻。' }
+    ],
+    // 关闭绿鞋的数据（对比用）
+    noGS: [
+      { time: '09:25', price: 100, natBuy: 0, gsBuy: 0, sell: 0, cash: 0, short: 0, profit: 0, raised: 11500,
+        text: '<strong>09:25 集合竞价（无绿鞋）：</strong>假设公司直接一口气多发了 15 股（共 115 股），钱直接进了公司口袋，<strong>投行手里没有一分钱护盘资金</strong>。' },
+      { time: '09:30', price: 102, natBuy: 12, gsBuy: 0, sell: 8, cash: 0, short: 0, profit: 0, raised: 11500,
+        text: '<strong>09:30 正式开盘：</strong>少量散户追高，股价微涨到 $102。' },
+      { time: '09:45', price: 95, natBuy: 6, gsBuy: 0, sell: 20, cash: 0, short: 0, profit: 0, raised: 11500,
+        text: '<strong>09:45 打新客砸盘：</strong>20 股卖盘涌出，买盘只有 6 股，股价直接砸穿发行价跌到 $95。' },
+      { time: '10:00', price: 88, natBuy: 3, gsBuy: 0, sell: 18, cash: 0, short: 0, profit: 0, raised: 11500,
+        text: '<strong>10:00 无人托底，恐慌蔓延：</strong>没有投行进场接盘，卖盘继续倾泻。散户看到自由落体根本不敢接飞刀，股价暴跌至 <strong>$88</strong>！' },
+      { time: '10:30', price: 83, natBuy: 2, gsBuy: 0, sell: 15, cash: 0, short: 0, profit: 0, raised: 11500,
+        text: '<strong>10:30 踩踏崩盘：</strong>连原本想拿长线的人都开始止损，115 股全压在市场上没人接，股价砸到 <strong>$83</strong>。' },
+      { time: '11:00', price: 81, natBuy: 5, gsBuy: 0, sell: 10, cash: 0, short: 0, profit: 0, raised: 11500,
+        text: '<strong>11:00 惨烈破发：</strong>对比勾选“开启绿鞋护盘”，你可以明显看到没有那 15 股的蓄水池买盘，破发后有多容易引发踩踏。' }
+    ]
+  },
+  rise: {
+    withGS: [
+      { time: '09:25', price: 100, natBuy: 0, gsBuy: 0, sell: 0, cash: 1500, short: -15, profit: 0, raised: 10000,
+        text: '<strong>09:25 集合竞价：</strong>同样超卖了 15 股，投行手握 <strong>$1,500 现金</strong>，欠 15 股。' },
+      { time: '09:30', price: 108, natBuy: 28, gsBuy: 0, sell: 10, cash: 1500, short: -15, profit: 0, raised: 10000,
+        text: '<strong>09:30 高开暴涨：</strong>市场情绪极度狂热，场外没抢到的资金蜂拥而入（买盘 28 股 vs 卖盘 10 股），股价直接冲到 <strong>$108</strong>！' },
+      { time: '09:45', price: 115, natBuy: 32, gsBuy: 0, sell: 14, cash: 1500, short: -15, profit: 0, raised: 10000,
+        text: '<strong>09:45 持续逼空：</strong>虽然有打新客获利了结，但买盘实在太猛，股价涨到 <strong>$115</strong>。此时投行绝对不会去二级市场买股票还债（那样每股要亏 $15）。' },
+      { time: '10:00', price: 118, natBuy: 25, gsBuy: 0, sell: 18, cash: 1500, short: -15, profit: 0, raised: 10000,
+        text: '<strong>10:00 稳居高位：</strong>股价稳在 $118，远高于 $100 发行价。投行判断短期内不可能破发了。' },
+      { time: '10:30', price: 116, natBuy: 20, gsBuy: 0, sell: 18, cash: 0, short: 0, profit: 0, raised: 11500,
+        text: '<strong>10:30 投行宣布“全额行使绿鞋”！</strong>投行把手里 $1,500 现金直接交给 A 公司，按 <strong>$100 原价</strong> 额外印了 15 股新股还债平仓。A 公司总募资额瞬间从 $10,000 升至 <strong>$11,500</strong>！' },
+      { time: '11:00', price: 117, natBuy: 18, gsBuy: 0, sell: 16, cash: 0, short: 0, profit: 0, raised: 11500,
+        text: '<strong>11:00 尘埃落定（这就是 Anthropic 现在的状态）：</strong>投行没赚股价差价（只赚承销费），公司多融了 15% 的钱。但注意：<strong>投行现金池已归零</strong>，以后万一跌回 $100，就再也没有绿鞋护盘了！' }
+    ]
+  }
+};
+
+let currentScenario = 'drop';
+let currentStep = 0;
+let autoTimer = null;
+
+function getSeries() {
+  if (currentScenario === 'rise') return scenarios.rise.withGS;
+  const useGS = document.getElementById('gsToggle').checked;
+  return useGS ? scenarios.drop.withGS : scenarios.drop.noGS;
+}
+
+function switchScenario(sc) {
+  stopAuto();
+  currentScenario = sc;
+  currentStep = 0;
+  document.getElementById('tabDrop').classList.toggle('active', sc === 'drop');
+  document.getElementById('tabRise').classList.toggle('active', sc === 'rise');
+  document.getElementById('gsToggleWrap').style.display = sc === 'drop' ? 'flex' : 'none';
+  render();
+}
+
+function step(delta) {
+  const series = getSeries();
+  currentStep = Math.max(0, Math.min(series.length - 1, currentStep + delta));
+  render();
+}
+
+function resetSim() {
+  stopAuto();
+  currentStep = 0;
+  render();
+}
+
+function toggleAuto() {
+  if (autoTimer) { stopAuto(); return; }
+  const series = getSeries();
+  if (currentStep >= series.length - 1) currentStep = 0;
+  document.getElementById('btnAuto').textContent = '暂停演示';
+  render();
+  autoTimer = setInterval(() => {
+    if (currentStep < series.length - 1) {
+      currentStep++;
+      render();
+    } else {
+      stopAuto();
+    }
+  }, 1800);
+}
+
+function stopAuto() {
+  if (autoTimer) clearInterval(autoTimer);
+  autoTimer = null;
+  document.getElementById('btnAuto').textContent = '自动演示';
+}
+
+function drawChart(series, stepIdx) {
+  const canvas = document.getElementById('chart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 48, padR = 20, padT = 22, padB = 30;
+  const minP = 75, maxP = 125;
+  const xStep = (W - padL - padR) / (series.length - 1);
+  const yOf = p => padT + (maxP - p) / (maxP - minP) * (H - padT - padB);
+
+  // 网格线 & Y轴刻度
+  ctx.font = '12px sans-serif';
+  ctx.textAlign = 'right';
+  [80, 90, 100, 110, 120].forEach(p => {
+    const y = yOf(p);
+    ctx.strokeStyle = p === 100 ? '#f59e0b' : '#1e293b';
+    ctx.lineWidth = p === 100 ? 1.5 : 1;
+    ctx.setLineDash(p === 100 ? [6, 4] : []);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.fillStyle = p === 100 ? '#f59e0b' : '#64748b';
+    ctx.fillText('$' + p, padL - 8, y + 4);
+  });
+  ctx.setLineDash([]);
+
+  // X轴时间
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#94a3b8';
+  series.forEach((d, i) => {
+    ctx.fillText(d.time, padL + i * xStep, H - 10);
+  });
+
+  // 绘制分时折线
+  const curPrice = series[stepIdx].price;
+  const lineColor = curPrice >= 100 ? '#10b981' : '#ef4444';
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  for (let i = 0; i <= stepIdx; i++) {
+    const x = padL + i * xStep;
+    const y = yOf(series[i].price);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // 数据点 & 绿鞋出手标记
+  for (let i = 0; i <= stepIdx; i++) {
+    const x = padL + i * xStep;
+    const y = yOf(series[i].price);
+    ctx.beginPath();
+    ctx.arc(x, y, i === stepIdx ? 6 : 4, 0, Math.PI * 2);
+    ctx.fillStyle = series[i].gsBuy > 0 ? '#f59e0b' : lineColor;
+    ctx.fill();
+    if (series[i].gsBuy > 0) {
+      ctx.fillStyle = '#f59e0b';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillText('绿鞋护盘', x, y - 12);
+    }
+  }
+}
+
+function render() {
+  const series = getSeries();
+  const d = series[currentStep];
+
+  // 价格显示
+  const pEl = document.getElementById('priceDisplay');
+  const diff = d.price - 100;
+  const sign = diff > 0 ? '+' : '';
+  pEl.textContent = `$${d.price.toFixed(2)} (${sign}${diff}%)`;
+  pEl.className = 'price-badge ' + (diff >= 0 ? 'price-up' : 'price-down');
+
+  // 按钮状态
+  document.getElementById('btnPrev').disabled = currentStep === 0;
+  document.getElementById('btnNext').disabled = currentStep === series.length - 1;
+  document.getElementById('stepText').textContent = `步骤 ${currentStep + 1} / ${series.length}`;
+  document.getElementById('narrativeBox').innerHTML = d.text;
+
+  // 买卖盘条形图（满格按 35 股算）
+  const maxVol = 35;
+  const totalBuy = d.natBuy + d.gsBuy;
+  document.getElementById('buyTotalText').textContent =
+    d.gsBuy > 0 ? `${totalBuy} 股 (含绿鞋 ${d.gsBuy} 股)` : `${totalBuy} 股`;
+  document.getElementById('sellTotalText').textContent = `${d.sell} 股`;
+  document.getElementById('barNaturalBuy').style.width = `${Math.min(100, d.natBuy / maxVol * 100)}%`;
+  document.getElementById('barGsBuy').style.width = `${Math.min(100, d.gsBuy / maxVol * 100)}%`;
+  document.getElementById('barSell').style.width = `${Math.min(100, d.sell / maxVol * 100)}%`;
+
+  // 账本
+  document.getElementById('statCash').textContent = `$${d.cash.toLocaleString()}`;
+  document.getElementById('statShort').textContent = `${d.short} 股`;
+  document.getElementById('statProfit').textContent = `$${d.profit.toLocaleString()}`;
+  document.getElementById('statRaised').textContent = `$${d.raised.toLocaleString()}`;
+
+  drawChart(series, currentStep);
+}
+
+render();
+</script>
+</body>
+</html>

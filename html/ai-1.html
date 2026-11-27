@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>调和分析四大猜想与 AI 证明：交互式可视化图解</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    :root {
+      color-scheme: dark;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background-color: #070b14;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+    .glass-card {
+      background: linear-gradient(145deg, rgba(17, 24, 39, 0.92), rgba(11, 17, 32, 0.95));
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    }
+    .tab-btn {
+      transition: all 0.2s ease;
+    }
+    .tab-btn.active {
+      background: linear-gradient(135deg, #0ea5e9, #6366f1);
+      color: #ffffff;
+      box-shadow: 0 4px 16px rgba(14, 165, 233, 0.35);
+      border-color: transparent;
+    }
+    .chain-node {
+      transition: all 0.25s ease;
+    }
+    .chain-node.active {
+      border-color: #38bdf8;
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.18), rgba(99, 102, 241, 0.18));
+      box-shadow: 0 0 24px rgba(56, 189, 248, 0.24);
+      transform: translateY(-2px);
+    }
+    .chain-node.lit {
+      border-color: #34d399;
+      box-shadow: 0 0 20px rgba(52, 211, 153, 0.28);
+    }
+    .frontier-node {
+      transition: all 0.22s ease;
+    }
+    .frontier-node.active {
+      border-color: #a78bfa;
+      background: rgba(139, 92, 246, 0.18);
+      box-shadow: 0 0 22px rgba(167, 139, 250, 0.28);
+    }
+    input[type="range"] {
+      accent-color: #38bdf8;
+    }
+    canvas {
+      display: block;
+      touch-action: manipulation;
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-sky-500/30 selection:text-sky-100">
+  <!-- Header -->
+  <header class="sticky top-0 z-30 border-b border-slate-800/80 bg-[#070b14]/90 backdrop-blur-md">
+    <div class="mx-auto max-w-6xl px-4 py-3 sm:px-6">
+      <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div class="flex items-center gap-3">
+          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 text-sm font-extrabold text-white shadow-lg shadow-sky-500/20">
+            ∂t
+          </div>
+          <div>
+            <h1 class="text-base font-bold tracking-tight text-white sm:text-lg">
+              局部光滑性猜想与挂谷猜想：交互式图解
+            </h1>
+            <p class="text-xs text-slate-400">
+              读懂 2026 年 10 月 26 日 AI 证明风波与数学家张瑞祥的核心解读
+            </p>
+          </div>
+        </div>
+        <nav class="flex flex-wrap gap-1.5" aria-label="章节导航">
+          <button type="button" data-tab="chain" class="tab-btn active rounded-lg border border-slate-700/70 bg-slate-900/70 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:border-slate-500 hover:text-white">
+            1. 四大猜想链
+          </button>
+          <button type="button" data-tab="pde" class="tab-btn rounded-lg border border-slate-700/70 bg-slate-900/70 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:border-slate-500 hover:text-white">
+            2. 波 vs 热与跨界
+          </button>
+          <button type="button" data-tab="kakeya" class="tab-btn rounded-lg border border-slate-700/70 bg-slate-900/70 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:border-slate-500 hover:text-white">
+            3. 挂谷地球防御
+          </button>
+          <button type="button" data-tab="beyond" class="tab-btn rounded-lg border border-slate-700/70 bg-slate-900/70 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:border-slate-500 hover:text-white">
+            4. Lean 与新手村
+          </button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+    <!-- ==================== TAB 1: FOUR CONJECTURES CHAIN ==================== -->
+    <section id="panel-chain" class="tab-panel space-y-6">
+      <div class="glass-card rounded-2xl p-5 sm:p-6">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div class="space-y-1.5">
+            <div class="inline-flex items-center gap-2 rounded-full border border-sky-500/30 bg-sky-500/10 px-3 py-0.5 text-xs font-medium text-sky-300">
+              <span>2026年10月26日事件核心</span>
+              <span class="text-slate-500">•</span>
+              <span>待数学界独立同行评审</span>
+            </div>
+            <h2 class="text-xl font-bold text-white sm:text-2xl">
+              一举打通调和分析的“多米诺骨牌”
+            </h2>
+            <p class="max-w-3xl text-sm leading-relaxed text-slate-300">
+              调和分析里有一条闻名数十年的经典蕴含链：只要推倒最顶端的<strong class="text-sky-300">局部光滑性猜想</strong>，下面三座大山就会沿既定逻辑接连倒下。张瑞祥（2019 年二维局部光滑性猜想证明者之一）坦言，AI 给出的证明路径与人类已知的所有努力相差甚远，像“天上掉下来一样”。
+            </p>
+          </div>
+          <div class="flex shrink-0 flex-wrap gap-2">
+            <button type="button" id="btn-domino" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-500 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-sky-500/25 transition hover:brightness-110 active:scale-95">
+              <span>▶ 触发多米诺推导</span>
+            </button>
+            <button type="button" id="btn-domino-reset" class="rounded-xl border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-xs font-semibold text-slate-300 transition hover:bg-slate-700 hover:text-white">
+              重置
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Chain + Detail Panel -->
+      <div class="grid grid-cols-1 gap-5 lg:grid-cols-12">
+        <!-- Left: 4 Nodes -->
+        <div class="space-y-2.5 lg:col-span-5">
+          <button type="button" data-chain-idx="0" class="chain-node active w-full rounded-2xl border border-slate-700/80 bg-slate-900/75 p-4 text-left">
+            <div class="flex items-center justify-between">
+              <span class="rounded-md bg-sky-500/20 px-2 py-0.5 text-[11px] font-bold text-sky-300">第 1 环 · 顶端源头</span>
+              <span class="text-[11px] text-slate-400">Sogge, 1991</span>
+            </div>
+            <div class="mt-2 text-base font-bold text-white">局部光滑性猜想 (Local Smoothing)</div>
+            <p class="mt-1 text-xs text-slate-400">波动方程的解在时间上稍作平均，尖锐奇异点就会平滑消散吗？</p>
+          </button>
+
+          <div class="flex justify-center">
+            <div id="arrow-0" class="flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/90 px-3 py-0.5 text-[11px] font-medium text-slate-400 transition-colors">
+              <span>↓ 经典推导：时间局部平均控制球面频率截断</span>
+            </div>
+          </div>
+
+          <button type="button" data-chain-idx="1" class="chain-node w-full rounded-2xl border border-slate-700/80 bg-slate-900/75 p-4 text-left">
+            <div class="flex items-center justify-between">
+              <span class="rounded-md bg-indigo-500/20 px-2 py-0.5 text-[11px] font-bold text-indigo-300">第 2 环 · 傅里叶求和</span>
+              <span class="text-[11px] text-slate-400">高维收敛核心</span>
+            </div>
+            <div class="mt-2 text-base font-bold text-white">博赫纳-里斯平均猜想 (Bochner-Riesz)</div>
+            <p class="mt-1 text-xs text-slate-400">在高维空间把函数拆成正弦波后，按球形半径平滑加总能否稳定收敛？</p>
+          </button>
+
+          <div class="flex justify-center">
+            <div id="arrow-1" class="flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/90 px-3 py-0.5 text-[11px] font-medium text-slate-400 transition-colors">
+              <span>↓ 经典推导：球形求和界直接压制曲面频率限制</span>
+            </div>
+          </div>
+
+          <button type="button" data-chain-idx="2" class="chain-node w-full rounded-2xl border border-slate-700/80 bg-slate-900/75 p-4 text-left">
+            <div class="flex items-center justify-between">
+              <span class="rounded-md bg-violet-500/20 px-2 py-0.5 text-[11px] font-bold text-violet-300">第 3 环 · 弯曲频率</span>
+              <span class="text-[11px] text-slate-400">Stein 提出</span>
+            </div>
+            <div class="mt-2 text-base font-bold text-white">傅里叶限制性猜想 (Fourier Restriction)</div>
+            <p class="mt-1 text-xs text-slate-400">当波的频率被限制在球面或抛物面等弯曲超曲面上，叠加会如何相消？</p>
+          </button>
+
+          <div class="flex justify-center">
+            <div id="arrow-2" class="flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/90 px-3 py-0.5 text-[11px] font-medium text-slate-400 transition-colors">
+              <span>↓ 经典推导：波包对应细管，相消界限制细管重叠</span>
+            </div>
+          </div>
+
+          <button type="button" data-chain-idx="3" class="chain-node w-full rounded-2xl border border-slate-700/80 bg-slate-900/75 p-4 text-left">
+            <div class="flex items-center justify-between">
+              <span class="rounded-md bg-emerald-500/20 px-2 py-0.5 text-[11px] font-bold text-emerald-300">第 4 环 · 几何地基</span>
+              <span class="text-[11px] text-slate-400">全维度 n ≥ 2</span>
+            </div>
+            <div class="mt-2 text-base font-bold text-white">挂谷猜想 (Kakeya Conjecture)</div>
+            <p class="mt-1 text-xs text-slate-400">包含所有方向单位线段的集合，体积可为 0，但维数必须等于全空间维数。</p>
+          </button>
+        </div>
+
+        <!-- Right: Selected Detail Card + Mini Visual -->
+        <div class="glass-card flex flex-col justify-between rounded-2xl p-5 sm:p-6 lg:col-span-7">
+          <div class="space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+              <div>
+                <div id="detail-badge" class="text-xs font-semibold text-sky-400">第 1 环 / 共 4 环</div>
+                <h3 id="detail-title" class="mt-0.5 text-xl font-bold text-white">局部光滑性猜想 (Local Smoothing Conjecture)</h3>
+              </div>
+              <span id="detail-status" class="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-300">
+                2D 已证 (2019) · 高维宣称突破 (2026.10)
+              </span>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div class="rounded-xl border border-slate-800 bg-slate-900/70 p-3.5">
+                <div class="text-xs font-semibold text-sky-300">白话直觉</div>
+                <p id="detail-intuition" class="mt-1.5 text-sm leading-relaxed text-slate-200"></p>
+              </div>
+              <div class="rounded-xl border border-slate-800 bg-slate-900/70 p-3.5">
+                <div class="text-xs font-semibold text-emerald-300">为什么能往下推导？</div>
+                <p id="detail-link" class="mt-1.5 text-sm leading-relaxed text-slate-200"></p>
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-slate-800 bg-slate-950/70 p-3.5">
+              <div class="mb-2 flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-300">概念示意动画（随所选猜想切换）</span>
+                <span id="detail-canvas-label" class="text-[11px] text-slate-400">波动时间平均示意</span>
+              </div>
+              <div class="relative h-44 w-full overflow-hidden rounded-lg border border-slate-800/80 bg-[#050811]">
+                <canvas id="chainPreviewCanvas" class="h-full w-full"></canvas>
+              </div>
+            </div>
+
+            <div class="rounded-xl border border-slate-800/80 bg-slate-900/50 p-3.5">
+              <div class="text-xs font-semibold text-slate-300">历史时间线坐标</div>
+              <p id="detail-history" class="mt-1 text-xs leading-relaxed text-slate-400"></p>
+            </div>
+          </div>
+
+          <div class="mt-5 flex items-center justify-between border-t border-slate-800 pt-4">
+            <span class="text-xs text-slate-400">下一步：直观对比“波”与“热”为何水火不容</span>
+            <button type="button" data-goto-tab="pde" class="rounded-lg bg-slate-800 px-3.5 py-2 text-xs font-semibold text-sky-300 transition hover:bg-slate-700 hover:text-white">
+              进入第 2 章：波 vs 热与跨界 →
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: WAVE VS HEAT & QUATERNION ==================== -->
+    <section id="panel-pde" class="tab-panel hidden space-y-6">
+      <div class="glass-card rounded-2xl p-5 sm:p-6">
+        <h2 class="text-xl font-bold text-white sm:text-2xl">
+          跨界与反直觉：为什么用“热/椭圆方程”解“波动方程”让数学家震惊？
+        </h2>
+        <p class="mt-2 text-sm leading-relaxed text-slate-300">
+          在传统偏微分方程认知里，<strong class="text-amber-300">热方程/椭圆方程</strong>像滴进水里的墨水，会把任何尖锐突变迅速抹平；而<strong class="text-sky-300">波动方程</strong>像雷达波或声波，沿着特定方向高速传播，波前锋利且会在交汇处共振叠加。点击下方任意画布投放脉冲，亲眼对比两者的物理性格！
+        </p>
+
+        <!-- Controls -->
+        <div class="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/80 p-3">
+          <button type="button" id="btn-pde-burst" class="rounded-lg bg-sky-500/20 px-3 py-1.5 text-xs font-semibold text-sky-300 ring-1 ring-sky-500/40 transition hover:bg-sky-500/30">
+            ✦ 发射多方向干涉波包
+          </button>
+          <button type="button" id="btn-pde-toggle" class="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-slate-700">
+            ⏸ 暂停模拟
+          </button>
+          <button type="button" id="btn-pde-clear" class="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:bg-slate-700">
+            清空画布
+          </button>
+          <div class="flex flex-1 items-center gap-2 sm:min-w-[220px]">
+            <label for="slider-smooth" class="whitespace-nowrap text-xs font-medium text-emerald-300">
+              局部时间平均 Δt:
+            </label>
+            <input id="slider-smooth" type="range" min="0" max="18" value="0" class="w-full" />
+            <span id="label-smooth" class="w-12 text-right font-mono text-xs text-emerald-300">0 帧</span>
+          </div>
+        </div>
+
+        <!-- Dual PDE Canvases -->
+        <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div class="rounded-xl border border-amber-500/30 bg-slate-950/90 p-3">
+            <div class="mb-2 flex items-center justify-between">
+              <div>
+                <span class="text-sm font-bold text-amber-300">热方程 / 椭圆扩散 (Heat)</span>
+                <span class="ml-2 font-mono text-[11px] text-slate-400">∂u/∂t = α∇²u</span>
+              </div>
+              <span id="heat-peak" class="rounded bg-amber-500/15 px-2 py-0.5 font-mono text-[11px] text-amber-200">峰值: 0.00</span>
+            </div>
+            <div class="relative h-56 w-full cursor-crosshair overflow-hidden rounded-lg border border-slate-800">
+              <canvas id="heatCanvas" class="h-full w-full"></canvas>
+            </div>
+            <p class="mt-2 text-xs text-slate-400">
+              特征：各向同性均匀扩散，高频锯齿瞬间被“熨平”，能量越散越柔和。
+            </p>
+          </div>
+
+          <div class="rounded-xl border border-sky-500/30 bg-slate-950/90 p-3">
+            <div class="mb-2 flex items-center justify-between">
+              <div>
+                <span class="text-sm font-bold text-sky-300">波动方程 (Wave)</span>
+                <span class="ml-2 font-mono text-[11px] text-slate-400">∂²u/∂t² = c²∇²u</span>
+              </div>
+              <span id="wave-peak" class="rounded bg-sky-500/15 px-2 py-0.5 font-mono text-[11px] text-sky-200">峰值: 0.00</span>
+            </div>
+            <div class="relative h-56 w-full cursor-crosshair overflow-hidden rounded-lg border border-slate-800">
+              <canvas id="waveCanvas" class="h-full w-full"></canvas>
+            </div>
+            <p class="mt-2 text-xs text-slate-400">
+              特征：沿光锥方向传播，尖峰交汇会剧烈放大；拉大上方<strong class="text-emerald-300">时间平均 Δt</strong>，即可直观看见“局部光滑性”效应！
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cross-domain Bridge + Quaternion Interactive Toy -->
+      <div class="grid grid-cols-1 gap-5 lg:grid-cols-12">
+        <!-- Route Comparison -->
+        <div class="glass-card rounded-2xl p-5 lg:col-span-7">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-base font-bold text-white">思维路线对比：人类传统 vs AI 跨界</h3>
+            <div class="inline-flex rounded-lg border border-slate-700 bg-slate-900 p-0.5 text-xs">
+              <button type="button" id="route-human" class="rounded-md px-3 py-1 font-semibold text-slate-300 transition">
+                人类传统路线
+              </button>
+              <button type="button" id="route-ai" class="rounded-md bg-violet-600 px-3 py-1 font-semibold text-white transition">
+                AI 跨界新思想
+              </button>
+            </div>
+          </div>
+
+          <div id="route-content" class="mt-4 space-y-3"></div>
+        </div>
+
+        <!-- Quaternion Interactive Visualizer -->
+        <div class="glass-card rounded-2xl p-5 lg:col-span-5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-violet-300">神秘配件：四元数结构</h3>
+            <span class="font-mono text-[11px] text-slate-400">q = w + xi + yj + zk</span>
+          </div>
+          <p class="mt-1.5 text-xs leading-relaxed text-slate-400">
+            证明中引入了据称不可替代的四元数结构（配合额外时间变量构造守恒流）。拖动滑块体验四元数如何用 4 个分量无死角地编码三维空间与高维对称性：
+          </p>
+          <div class="mt-3 relative h-44 w-full overflow-hidden rounded-xl border border-slate-800 bg-[#050811]">
+            <canvas id="quatCanvas" class="h-full w-full"></canvas>
+          </div>
+          <div class="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+            <label class="flex items-center gap-2">
+              <span class="w-5 font-mono text-sky-300">x:</span>
+              <input id="q-x" type="range" min="-100" max="100" value="35" class="w-full" />
+            </label>
+            <label class="flex items-center gap-2">
+              <span class="w-5 font-mono text-emerald-300">y:</span>
+              <input id="q-y" type="range" min="-100" max="100" value="55" class="w-full" />
+            </label>
+            <label class="flex items-center gap-2">
+              <span class="w-5 font-mono text-amber-300">z:</span>
+              <input id="q-z" type="range" min="-100" max="100" value="20" class="w-full" />
+            </label>
+            <label class="flex items-center gap-2">
+              <span class="w-5 font-mono text-violet-300">θ:</span>
+              <input id="q-angle" type="range" min="0" max="360" value="48" class="w-full" />
+            </label>
+          </div>
+          <div id="quat-readout" class="mt-2.5 rounded-lg bg-slate-900/90 px-3 py-1.5 font-mono text-[11px] text-violet-200">
+            q = 0.91 + 0.21i + 0.33j + 0.12k
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <button type="button" data-goto-tab="kakeya" class="rounded-lg bg-slate-800 px-4 py-2 text-xs font-semibold text-sky-300 transition hover:bg-slate-700 hover:text-white">
+          进入第 3 章：挂谷猜想与地球防御实验室 →
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: KAKEYA SCI-FI LAB ==================== -->
+    <section id="panel-kakeya" class="tab-panel hidden space-y-6">
+      <div class="glass-card rounded-2xl p-5 sm:p-6">
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div class="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-0.5 text-xs font-medium text-emerald-300">
+              挂谷猜想科幻版科普
+            </div>
+            <h2 class="mt-1.5 text-xl font-bold text-white sm:text-2xl">
+              地球防御计划：挖空体积 → 0，为何维数仍不能小于 3？
+            </h2>
+            <p class="mt-1 max-w-3xl text-sm leading-relaxed text-slate-300">
+              假设外星舰队可能从宇宙任意方向袭来，我们必须在地球内部为<strong class="text-white">每一个方向</strong>都挖出一条长 1 米的直线弹道。怎样才能把挖掉的土方（体积/面积）压到最小？切换下方三种挖掘方案亲自测试！
+            </p>
+          </div>
+          <button type="button" id="btn-alien-attack" class="shrink-0 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-rose-500/25 transition hover:brightness-110 active:scale-95">
+            🚀 模拟外星多角度来袭
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-5 lg:grid-cols-12">
+        <!-- Interactive Kakeya Canvas -->
+        <div class="glass-card rounded-2xl p-4 sm:p-5 lg:col-span-7">
+          <div class="mb-3 flex flex-wrap gap-2">
+            <button type="button" data-kmode="disk" class="kmode-btn rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:text-white">
+              方案 A：朴素旋转圆盘
+            </button>
+            <button type="button" data-kmode="deltoid" class="kmode-btn rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:text-white">
+              方案 B：内摆线三尖瓣
+            </button>
+            <button type="button" data-kmode="besicovitch" class="kmode-btn active rounded-lg border border-emerald-500/60 bg-emerald-500/20 px-3 py-1.5 text-xs font-semibold text-emerald-200 transition">
+              方案 C：Besicovitch 切片重叠
+            </button>
+          </div>
+
+          <div class="relative h-72 w-full overflow-hidden rounded-xl border border-slate-800 bg-[#050811] sm:h-80">
+            <canvas id="kakeyaCanvas" class="h-full w-full"></canvas>
+          </div>
+
+          <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div class="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
+              <div class="flex items-center justify-between text-xs">
+                <label for="slider-kdepth" class="font-semibold text-emerald-300">Besicovitch 切片深度 k</label>
+                <span id="label-kdepth" class="font-mono text-emerald-200">k = 4 (16 细条)</span>
+              </div>
+              <input id="slider-kdepth" type="range" min="1" max="6" value="4" class="mt-2 w-full" />
+              <p class="mt-1 text-[11px] text-slate-400">切得越细、平移重叠越狠，总面积/体积越接近 0。</p>
+            </div>
+            <div class="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
+              <div class="flex items-center justify-between text-xs">
+                <label for="slider-kangle" class="font-semibold text-sky-300">手动瞄准弹道方向 θ</label>
+                <span id="label-kangle" class="font-mono text-sky-200">45°</span>
+              </div>
+              <input id="slider-kangle" type="range" min="0" max="180" value="45" class="mt-2 w-full" />
+              <p class="mt-1 text-[11px] text-slate-400">任意角度的 1 米弹道（高亮金线）都完整藏在挖空区内。</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Metrics + Dimension Paradox Explanation -->
+        <div class="space-y-4 lg:col-span-5">
+          <div class="glass-card rounded-2xl p-5">
+            <h3 class="text-sm font-bold text-white">当前挖掘方案实时指标</h3>
+            <div class="mt-3 grid grid-cols-3 gap-2.5 text-center">
+              <div class="rounded-xl border border-slate-800 bg-slate-900/80 p-3">
+                <div class="text-[11px] text-slate-400">防御方向覆盖</div>
+                <div id="metric-coverage" class="mt-1 font-mono text-lg font-extrabold text-sky-300">100%</div>
+              </div>
+              <div class="rounded-xl border border-slate-800 bg-slate-900/80 p-3">
+                <div class="text-[11px] text-slate-400">相对挖空面积</div>
+                <div id="metric-area" class="mt-1 font-mono text-lg font-extrabold text-amber-300">0.14</div>
+              </div>
+              <div class="rounded-xl border border-slate-800 bg-slate-900/80 p-3">
+                <div class="text-[11px] text-slate-400">豪斯多夫维数</div>
+                <div id="metric-dim" class="mt-1 font-mono text-lg font-extrabold text-emerald-300">满维</div>
+              </div>
+            </div>
+            <p id="kmode-desc" class="mt-3 text-xs leading-relaxed text-slate-300"></p>
+          </div>
+
+          <div class="glass-card rounded-2xl p-5 space-y-3">
+            <h3 class="text-sm font-bold text-emerald-300">核心反直觉：体积 = 0 ≠ 维数变小！</h3>
+            <div class="space-y-2 text-xs leading-relaxed text-slate-300">
+              <p>
+                • <strong class="text-white">体积（勒贝格测度）为 0</strong>：通过无限细分并巧妙平移重叠（Perron 树构造），你可以把所有方向的 1 米弹道塞进总土方量任意小、极限为 0 的区域里。
+              </p>
+              <p>
+                • <strong class="text-white">为什么不能只挖一个 2 维曲面？</strong>：一张 2 维平面或曲面只能容纳沿着切面方向的弹道，根本装不下三维空间里所有指向的 1 米直线。
+              </p>
+              <p>
+                • <strong class="text-white">挂谷猜想的论断</strong>：即使被挖空的集合像“极细的尘埃网络”一样没有体积，它在几何复杂度（豪斯多夫维数）上仍牢牢占据满维——在 3D 地球里必须是 <strong class="text-emerald-300">3 维</strong>，在 <em>n</em> 维空间里必须是 <strong class="text-emerald-300"><em>n</em> 维</strong>。
+              </p>
+            </div>
+            <div class="rounded-lg border border-slate-800 bg-slate-900/70 p-2.5 text-[11px] text-slate-400">
+              里程碑：2D 挂谷猜想由 Davies (1971) 证明；3D 挂谷猜想在 2025 年由王虹（Hong Wang）与 Joshua Zahl 攻克；4 维及以上正是此次 AI 证明宣称一并解决的悬案。
+            </div>
+          </div>
+
+          <div class="flex justify-end">
+            <button type="button" data-goto-tab="beyond" class="rounded-lg bg-slate-800 px-4 py-2 text-xs font-semibold text-sky-300 transition hover:bg-slate-700 hover:text-white">
+              进入第 4 章：Lean 反思与“出了新手村” →
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: LEAN & BEYOND STARTER VILLAGE ==================== -->
+    <section id="panel-beyond" class="tab-panel hidden space-y-6">
+      <!-- Part A: Lean Skepticism -->
+      <div class="glass-card rounded-2xl p-5 sm:p-6">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-white sm:text-2xl">
+              对 Lean 形式化验证的冷静态度：为什么“先当它是错的”？
+            </h2>
+            <p class="mt-1 text-sm text-slate-300">
+              即便 AI 的证明通过了 Lean 定理证明器的形式化检查，张瑞祥仍坚持以怀疑态度亲自消化。点击下方三个“隐患开关”，观察形式化验证链条的真实边界：
+            </p>
+          </div>
+        </div>
+
+        <!-- Pipeline Visual -->
+        <div class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-4">
+          <div id="pipe-0" class="rounded-xl border border-sky-500/40 bg-sky-500/10 p-3.5 transition">
+            <div class="text-[11px] font-bold text-sky-300">阶段 1</div>
+            <div class="mt-1 text-sm font-bold text-white">人类数学命题</div>
+            <p class="mt-1 text-xs text-slate-400">局部光滑性猜想的完整分析语义</p>
+          </div>
+          <div id="pipe-1" class="rounded-xl border border-slate-700 bg-slate-900/80 p-3.5 transition">
+            <div class="text-[11px] font-bold text-amber-300">阶段 2 · 风险点</div>
+            <div class="mt-1 text-sm font-bold text-white">命题转译 (Formalization)</div>
+            <p class="mt-1 text-xs text-slate-400">把数学定理翻译成 Lean 类型代码</p>
+          </div>
+          <div id="pipe-2" class="rounded-xl border border-slate-700 bg-slate-900/80 p-3.5 transition">
+            <div class="text-[11px] font-bold text-violet-300">阶段 3 · 风险点</div>
+            <div class="mt-1 text-sm font-bold text-white">Lean 内核校验</div>
+            <p class="mt-1 text-xs text-slate-400">机械检查每一步逻辑推导无误</p>
+          </div>
+          <div id="pipe-3" class="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3.5 transition">
+            <div class="text-[11px] font-bold text-emerald-300">阶段 4 · 终极目标</div>
+            <div class="mt-1 text-sm font-bold text-white">人类理解与应用</div>
+            <p class="mt-1 text-xs text-slate-400">提炼新工具，推动下一代数学问题</p>
+          </div>
+        </div>
+
+        <!-- Interactive Audit Toggles -->
+        <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+          <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-800 bg-slate-900/70 p-3.5 transition hover:border-amber-500/50">
+            <input type="checkbox" id="chk-translate" class="mt-1 h-4 w-4 rounded accent-amber-400" checked />
+            <div>
+              <div class="text-xs font-bold text-amber-300">模拟隐患 1：命题转译偏差</div>
+              <p class="mt-1 text-xs text-slate-400">Lean 只能保证“你写下的代码没错”，但如果把原猜想悄悄弱化了边界条件，绿色通过也毫无意义。</p>
+            </div>
+          </label>
+          <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-800 bg-slate-900/70 p-3.5 transition hover:border-violet-500/50">
+            <input type="checkbox" id="chk-kernel" class="mt-1 h-4 w-4 rounded accent-violet-400" />
+            <div>
+              <div class="text-xs font-bold text-violet-300">模拟隐患 2：验证器内核/公理漏洞</div>
+              <p class="mt-1 text-xs text-slate-400">软件内核本身由人类编写，极极端情况下也可能存在未发现的健全性（soundness）漏洞或隐含公理。</p>
+            </div>
+          </label>
+          <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-800 bg-slate-900/70 p-3.5 transition hover:border-emerald-500/50">
+            <input type="checkbox" id="chk-comprehend" class="mt-1 h-4 w-4 rounded accent-emerald-400" checked />
+            <div>
+              <div class="text-xs font-bold text-emerald-300">模拟隐患 3：只知对错，不懂思想</div>
+              <p class="mt-1 text-xs text-slate-400">单纯输出一个“True”对数学毫无意义；只有人类理解蒙日-安培与四元数为何奏效，才能用它攻克新问题。</p>
+            </div>
+          </label>
+        </div>
+
+        <div id="lean-verdict" class="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs leading-relaxed text-amber-100"></div>
+      </div>
+
+      <!-- Part B: Beyond the Starter Village -->
+      <div class="glass-card rounded-2xl p-5 sm:p-6">
+        <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div class="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-0.5 text-xs font-medium text-violet-300">
+              数学没有终点
+            </div>
+            <h2 class="mt-1.5 text-xl font-bold text-white sm:text-2xl">
+              “出了新手村”：攻克四大猜想之后的新大陆
+            </h2>
+            <p class="mt-1 text-sm text-slate-300">
+              张瑞祥说，好问题解决一个会引出十个新问题。四大猜想只是调和分析的“新手村大门”。点击下方任意未知大陆，探索门后的数学宇宙：
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-12">
+          <!-- Frontier Nodes -->
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-7">
+            <button type="button" data-frontier="0" class="frontier-node active rounded-xl border border-slate-700/80 bg-slate-900/75 p-4 text-left">
+              <div class="text-xs font-bold text-sky-300">新大陆 01</div>
+              <div class="mt-1 text-sm font-bold text-white">弯曲挂谷问题 (Curved Kakeya)</div>
+              <p class="mt-1 text-xs text-slate-400">当 1 米弹道不再是直线，而是随空间弯曲的曲线族与变系数波。</p>
+            </button>
+            <button type="button" data-frontier="1" class="frontier-node rounded-xl border border-slate-700/80 bg-slate-900/75 p-4 text-left">
+              <div class="text-xs font-bold text-emerald-300">新大陆 02</div>
+              <div class="mt-1 text-sm font-bold text-white">Furstenberg 集合问题</div>
+              <p class="mt-1 text-xs text-slate-400">每个方向不必包含整条线段，只需包含一个分形子集，维数下界是多少？</p>
+            </button>
+            <button type="button" data-frontier="2" class="frontier-node rounded-xl border border-slate-700/80 bg-slate-900/75 p-4 text-left">
+              <div class="text-xs font-bold text-amber-300">新大陆 03</div>
+              <div class="mt-1 text-sm font-bold text-white">更一般的傅里叶变换性质</div>
+              <p class="mt-1 text-xs text-slate-400">走出标准球面与欧氏波动方程，走向任意流形与非线性振荡积分。</p>
+            </button>
+            <button type="button" data-frontier="3" class="frontier-node rounded-xl border border-slate-700/80 bg-slate-900/75 p-4 text-left">
+              <div class="text-xs font-bold text-violet-300">新大陆 04</div>
+              <div class="mt-1 text-sm font-bold text-white">对数论与黎曼猜想的启发</div>
+              <p class="mt-1 text-xs text-slate-400">调和分析的波包相消技术如何回馈解析数论中的指数和与零点分布。</p>
+            </button>
+          </div>
+
+          <!-- Frontier Detail -->
+          <div class="rounded-2xl border border-violet-500/30 bg-slate-950/85 p-5 lg:col-span-5 flex flex-col justify-between">
+            <div>
+              <div id="frontier-tag" class="inline-block rounded-md bg-violet-500/20 px-2.5 py-0.5 text-xs font-bold text-violet-300">
+                新大陆 01
+              </div>
+              <h3 id="frontier-title" class="mt-2 text-lg font-bold text-white">弯曲挂谷问题 (Curved Kakeya)</h3>
+              <p id="frontier-body" class="mt-2.5 text-sm leading-relaxed text-slate-300"></p>
+              <div class="mt-4 rounded-xl border border-slate-800 bg-slate-900/80 p-3">
+                <div class="text-[11px] font-semibold text-sky-300">为什么它比“新手村”更难？</div>
+                <p id="frontier-hard" class="mt-1 text-xs leading-relaxed text-slate-400"></p>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-400">
+              “解决一个好问题，不是故事的终结，而是用新工具打开十扇更大的门。”
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mx-auto max-w-6xl px-4 pb-8 pt-2 text-center text-xs text-slate-500">
+    交互式科普可视化 • 基于调和分析经典理论及 2026 年 10 月 26 日局部光滑性猜想进展与张瑞祥评论整理（注：AI 证明目前仍待学术界独立同行评审）
+  </footer>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      // ==================== TAB MANAGEMENT ====================
+      let activeTab = 'chain';
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabPanels = document.querySelectorAll('.tab-panel');
+
+      function switchTab(tabName) {
+        activeTab = tabName;
+        tabBtns.forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.tab === tabName);
+        });
+        tabPanels.forEach(panel => {
+          panel.classList.toggle('hidden', panel.id !== `panel-${tabName}`);
+        });
+        requestAnimationFrame(() => {
+          if (tabName === 'chain') {
+            resizeCanvas(chainCanvas);
+            drawChainPreview(performance.now());
+          } else if (tabName === 'pde') {
+            resizeCanvas(heatCanvas);
+            resizeCanvas(waveCanvas);
+            resizeCanvas(quatCanvas);
+            drawQuaternion();
+          } else if (tabName === 'kakeya') {
+            resizeCanvas(kakeyaCanvas);
+            drawKakeya();
+          }
+        });
+      }
+
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      });
+      document.querySelectorAll('[data-goto-tab]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          switchTab(btn.dataset.gotoTab);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      });
+
+      function resizeCanvas(canvas) {
+        if (!canvas) return;
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      // ==================== TAB 1: 4-CONJECTURE CHAIN ====================
+      const chainData = [
+        {
+          badge: '第 1 环 / 共 4 环 · 顶端源头',
+          title: '局部光滑性猜想 (Local Smoothing Conjecture)',
+          status: '2D 已证 (2019) · 高维宣称突破 (2026.10)',
+          intuition: '向湖面扔石子，波峰在瞬间可能叠得极高；但如果你拿一台快门稍慢的相机拍一段极短时间的平均画面，那些尖锐的“波峰奇异点”就会互相错开并抹平。猜想断言：波动方程的解在时间上局部平均后，会比任意固定时刻额外多出近 1/p 阶光滑度。',
+          link: '它位于整个调和分析蕴含链的最顶端。只要控制住波动方程在局部时间里的平均振幅，通过驻相法与频率分解，就能直接控制高维傅里叶球形求和算子的界，从而推导出博赫纳-里斯平均猜想。',
+          history: '1991 年由 Christopher Sogge 提出。2019 年，Larry Guth、王虹（Hong Wang）与张瑞祥（Ruixiang Zhang）彻底证明了二维情形。2026 年 10 月 26 日，OpenAI 发布 59 页预印本与 Lean 形式化代码，宣称解决了所有维度 n ≥ 2（允许任意小 ε 损失），目前正接受数学界独立审查。',
+          canvasLabel: '示意：瞬时尖锐波峰 vs 时间局部平均后的平滑包络'
+        },
+        {
+          badge: '第 2 环 / 共 4 环 · 傅里叶求和',
+          title: '博赫纳-里斯平均猜想 (Bochner-Riesz Conjecture)',
+          status: '高维长期悬案 · 由局部光滑性直接推出',
+          intuition: '一维函数拆成正弦波后很容易拼回原样，但在二维及更高维空间，如果你按“圆形或球形半径”截断高频信号，边缘会产生剧烈震荡（类似图像锐化过度出现的振铃伪影）。博赫纳-里斯平均在球壳边缘加了平滑权重，猜想刻画了多平滑才足以保证重构稳定收敛。',
+          link: '从几何上看，博赫纳-里斯算子把频率集中在球面附近薄壳上；当权重参数趋向临界值时，它的有界性直接蕴含了“把傅里叶变换限制在单位球面上”的估计，也就是下一环——傅里叶限制性猜想。',
+          history: '1970 年代 Carleson 与 Sjölin 解决了二维情形，但三维及以上数十年来进展极其艰难，一直是检验高维调和分析工具威力的核心试金石。',
+          canvasLabel: '示意：频率空间中的球形光滑截断权重 (1 - |ξ|²)^δ'
+        },
+        {
+          badge: '第 3 环 / 共 4 环 · 弯曲频率',
+          title: '傅里叶限制性猜想 (Fourier Restriction Conjecture)',
+          status: '2D 已证 · 3D 及以上长期开放',
+          intuition: '如果一个波的所有频率成分都落在一条直线上，波包会整齐排成一列不断叠加；但如果频率落在“弯曲”的球面或抛物面上，不同方向的波会因为曲率而剧烈相消。猜想精确量化了这种由“曲率”带来的相消红利到底有多强。',
+          link: '每个局部频率小块在物理空间对应一根又长又细的“波包细管”。如果这些指向不同方向的细管能在空间里大量重叠，波就会叠加爆炸；因此，限制性猜想成立，就迫使不同方向的细管不能过度重叠——直接推出挂谷猜想！',
+          history: '由调和分析大师 Elias Stein 提出。二维情形已由 Fefferman 与 Zygmund 解决，高维情形催生了双线性方法、多项式分割与 Bourgain–Demeter 解耦定理等一整代核心工具。',
+          canvasLabel: '示意：弯曲球面上的频率点 → 物理空间里指向各异的波包细管'
+        },
+        {
+          badge: '第 4 环 / 共 4 环 · 几何地基',
+          title: '挂谷猜想（全维度）(Kakeya Conjecture)',
+          status: '2D (1971) · 3D (2025) · n ≥ 4 曾长期开放',
+          intuition: '在 n 维空间里建造一个集合，要求它包含指向每一个方向的 1 米长线段（像地球内部全方向防空弹道）。虽然它的总体积可以压缩到 0，但挂谷猜想指出，它的豪斯多夫维数绝不能低于 n 维——不能压缩成低维曲面。',
+          link: '它是整座猜想高塔的几何地基。一旦挂谷猜想在某个维度被证伪，上面的限制性猜想、博赫纳-里斯猜想和局部光滑性猜想就会全线崩塌；反之，顶端的局部光滑性一旦被攻克，全维度挂谷猜想也随之尘埃落定。',
+          history: '1971 年 Roy Davies 证明了二维情形；2025 年王虹（Hong Wang）与 Joshua Zahl 轰动性地攻克了三维挂谷猜想；四维及以上此前一直悬而未决。',
+          canvasLabel: '示意：各方向单位线段（弹道）在空间中的交叠结构'
+        }
+      ];
+
+      let activeChainIdx = 0;
+      let dominoTimer = null;
+      const chainNodes = document.querySelectorAll('.chain-node');
+      const chainCanvas = document.getElementById('chainPreviewCanvas');
+
+      function selectChain(idx) {
+        activeChainIdx = idx;
+        const d = chainData[idx];
+        chainNodes.forEach((n, i) => {
+          n.classList.toggle('active', i === idx);
+        });
+        document.getElementById('detail-badge').textContent = d.badge;
+        document.getElementById('detail-title').textContent = d.title;
+        document.getElementById('detail-status').textContent = d.status;
+        document.getElementById('detail-intuition').textContent = d.intuition;
+        document.getElementById('detail-link').textContent = d.link;
+        document.getElementById('detail-history').textContent = d.history;
+        document.getElementById('detail-canvas-label').textContent = d.canvasLabel;
+      }
+
+      chainNodes.forEach(node => {
+        node.addEventListener('click', () => {
+          if (dominoTimer) {
+            clearInterval(dominoTimer);
+            dominoTimer = null;
+          }
+          selectChain(Number(node.dataset.chainIdx));
+        });
+      });
+
+      function resetDomino() {
+        if (dominoTimer) {
+          clearInterval(dominoTimer);
+          dominoTimer = null;
+        }
+        chainNodes.forEach(n => n.classList.remove('lit'));
+        [0, 1, 2].forEach(i => {
+          const arrow = document.getElementById(`arrow-${i}`);
+          arrow.classList.remove('border-emerald-500/60', 'bg-emerald-500/15', 'text-emerald-300');
+          arrow.classList.add('border-slate-800', 'bg-slate-900/90', 'text-slate-400');
+        });
+        selectChain(0);
+      }
+
+      document.getElementById('btn-domino-reset').addEventListener('click', resetDomino);
+      document.getElementById('btn-domino').addEventListener('click', () => {
+        resetDomino();
+        let step = 0;
+        chainNodes[0].classList.add('lit');
+        selectChain(0);
+        dominoTimer = setInterval(() => {
+          step++;
+          if (step > 3) {
+            clearInterval(dominoTimer);
+            dominoTimer = null;
+            return;
+          }
+          const arrow = document.getElementById(`arrow-${step - 1}`);
+          arrow.classList.remove('border-slate-800', 'bg-slate-900/90', 'text-slate-400');
+          arrow.classList.add('border-emerald-500/60', 'bg-emerald-500/15', 'text-emerald-300');
+          chainNodes[step].classList.add('lit');
+          selectChain(step);
+        }, 950);
+      });
+
+      function drawChainPreview(t) {
+        if (!chainCanvas) return;
+        const rect = chainCanvas.getBoundingClientRect();
+        if (rect.width === 0) return;
+        const ctx = chainCanvas.getContext('2d');
+        const w = rect.width;
+        const h = rect.height;
+        ctx.clearRect(0, 0, w, h);
+        const time = t * 0.002;
+
+        if (activeChainIdx === 0) {
+          // Local smoothing: spiky instant wave vs smoothed time-average
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.85)';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          for (let x = 0; x <= w; x += 2) {
+            const u = (x / w) * Math.PI * 6;
+            const y = h * 0.52 - Math.sin(u - time * 2.2) * 26 - Math.sin(u * 3.1 + time * 4.5) * 18 - Math.cos(u * 5.7 - time * 6) * 10;
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+
+          ctx.strokeStyle = '#34d399';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          for (let x = 0; x <= w; x += 2) {
+            const u = (x / w) * Math.PI * 6;
+            const y = h * 0.52 - Math.sin(u - time * 2.2) * 20;
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+
+          ctx.fillStyle = '#38bdf8';
+          ctx.font = '11px Inter, sans-serif';
+          ctx.fillText('瞬时波：剧烈尖刺', 12, 20);
+          ctx.fillStyle = '#34d399';
+          ctx.fillText('时间局部平均：明显变光滑', 12, 36);
+        } else if (activeChainIdx === 1) {
+          // Bochner-Riesz radial smooth cutoff rings
+          const cx = w * 0.5;
+          const cy = h * 0.52;
+          const maxR = Math.min(w, h) * 0.42;
+          for (let i = 10; i >= 1; i--) {
+            const r = (i / 10) * maxR;
+            const weight = Math.pow(Math.max(0, 1 - (r / maxR) * (r / maxR)), 0.85 + 0.35 * Math.sin(time));
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(129, 140, 248, ${0.12 + weight * 0.35})`;
+            ctx.fill();
+            ctx.strokeStyle = `rgba(165, 180, 252, ${0.15 + weight * 0.5})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+          ctx.fillStyle = '#c7d2fe';
+          ctx.font = '11px Inter, sans-serif';
+          ctx.fillText('频率球壳平滑衰减权重', 12, 20);
+        } else if (activeChainIdx === 2) {
+          // Fourier Restriction: curved arc emitting wave-packet tubes
+          const cx = w * 0.28;
+          const cy = h * 0.52;
+          const r = Math.min(w, h) * 0.34;
+          ctx.strokeStyle = '#a78bfa';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, -Math.PI * 0.42, Math.PI * 0.42);
+          ctx.stroke();
+
+          for (let i = -3; i <= 3; i++) {
+            const ang = i * 0.22;
+            const px = cx + Math.cos(ang) * r;
+            const py = cy + Math.sin(ang) * r;
+            const len = w * 0.44;
+            const shift = (Math.sin(time + i) * 6);
+            ctx.strokeStyle = `hsla(${250 + i * 14}, 85%, 70%, 0.55)`;
+            ctx.lineWidth = 7;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(px + 8, py + shift);
+            ctx.lineTo(px + 8 + Math.cos(ang) * len, py + shift + Math.sin(ang) * len);
+            ctx.stroke();
+          }
+          ctx.fillStyle = '#ddd6fe';
+          ctx.font = '11px Inter, sans-serif';
+          ctx.fillText('弯曲曲面频率 → 不同方向波包细管相消', 12, 20);
+        } else {
+          // Kakeya needles in all directions
+          const cx = w * 0.5;
+          const cy = h * 0.52;
+          const len = Math.min(w, h) * 0.72;
+          const count = 24;
+          for (let i = 0; i < count; i++) {
+            const ang = (i / count) * Math.PI;
+            const ox = Math.cos(ang * 3 + time * 0.7) * 18;
+            const oy = Math.sin(ang * 2 + time * 0.7) * 12;
+            ctx.strokeStyle = `hsla(${155 + (i / count) * 45}, 80%, 60%, 0.48)`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(cx + ox - Math.cos(ang) * len * 0.5, cy + oy - Math.sin(ang) * len * 0.5);
+            ctx.lineTo(cx + ox + Math.cos(ang) * len * 0.5, cy + oy + Math.sin(ang) * len * 0.5);
+            ctx.stroke();
+          }
+          ctx.fillStyle = '#6ee7b7';
+          ctx.font = '11px Inter, sans-serif';
+          ctx.fillText('所有方向的单位线段（挂谷针集合）', 12, 20);
+        }
+      }
+
+      // ==================== TAB 2: WAVE VS HEAT PDE & QUATERNION ====================
+      const heatCanvas = document.getElementById('heatCanvas');
+      const waveCanvas = document.getElementById('waveCanvas');
+      const quatCanvas = document.getElementById('quatCanvas');
+
+      const GRID = 64;
+      let heat = new Float32Array(GRID * GRID);
+      let heatNext = new Float32Array(GRID * GRID);
+      let wavePrev = new Float32Array(GRID * GRID);
+      let waveCurr = new Float32Array(GRID * GRID);
+      let waveNext = new Float32Array(GRID * GRID);
+      let waveHistory = [];
+      let pdeRunning = true;
+      let smoothWindow = 0;
+
+      function idx(x, y) {
+        return y * GRID + x;
+      }
+
+      function injectPulse(nx, ny, strength = 1.6) {
+        const cx = Math.floor(nx * GRID);
+        const cy = Math.floor(ny * GRID);
+        const radius = 3;
+        for (let dy = -radius; dy <= radius; dy++) {
+          for (let dx = -radius; dx <= radius; dx++) {
+            const x = cx + dx;
+            const y = cy + dy;
+            if (x > 1 && x < GRID - 2 && y > 1 && y < GRID - 2) {
+              const d2 = dx * dx + dy * dy;
+              const val = strength * Math.exp(-d2 / 2.2);
+              heat[idx(x, y)] += val;
+              waveCurr[idx(x, y)] += val;
+            }
+          }
+        }
+      }
+
+      function seedMultiBurst() {
+        injectPulse(0.28, 0.35, 1.5);
+        injectPulse(0.72, 0.38, 1.5);
+        injectPulse(0.50, 0.72, 1.5);
+      }
+
+      function clearPDE() {
+        heat.fill(0);
+        heatNext.fill(0);
+        wavePrev.fill(0);
+        waveCurr.fill(0);
+        waveNext.fill(0);
+        waveHistory = [];
+      }
+
+      function stepPDE() {
+        // Heat step
+        const alpha = 0.22;
+        for (let y = 1; y < GRID - 1; y++) {
+          for (let x = 1; x < GRID - 1; x++) {
+            const i = idx(x, y);
+            const lap = heat[i - 1] + heat[i + 1] + heat[i - GRID] + heat[i + GRID] - 4 * heat[i];
+            heatNext[i] = (heat[i] + alpha * lap) * 0.996;
+          }
+        }
+        [heat, heatNext] = [heatNext, heat];
+
+        // Wave step
+        const c2 = 0.22;
+        for (let y = 1; y < GRID - 1; y++) {
+          for (let x = 1; x < GRID - 1; x++) {
+            const i = idx(x, y);
+            const lap = waveCurr[i - 1] + waveCurr[i + 1] + waveCurr[i - GRID] + waveCurr[i + GRID] - 4 * waveCurr[i];
+            waveNext[i] = (2 * waveCurr[i] - wavePrev[i] + c2 * lap) * 0.996;
+          }
+        }
+        const temp = wavePrev;
+        wavePrev = waveCurr;
+        waveCurr = waveNext;
+        waveNext = temp;
+
+        waveHistory.push(new Float32Array(waveCurr));
+        if (waveHistory.length > 20) waveHistory.shift();
+      }
+
+      function renderPDE() {
+        if (!heatCanvas || !waveCanvas) return;
+        const hRect = heatCanvas.getBoundingClientRect();
+        const wRect = waveCanvas.getBoundingClientRect();
+        if (hRect.width === 0 || wRect.width === 0) return;
+
+        const hCtx = heatCanvas.getContext('2d');
+        const wCtx = waveCanvas.getContext('2d');
+        const cellW = hRect.width / GRID;
+        const cellH = hRect.height / GRID;
+
+        let maxHeat = 0;
+        let maxWave = 0;
+
+        hCtx.fillStyle = '#050811';
+        hCtx.fillRect(0, 0, hRect.width, hRect.height);
+        wCtx.fillStyle = '#050811';
+        wCtx.fillRect(0, 0, wRect.width, wRect.height);
+
+        const countAvg = Math.max(1, Math.min(smoothWindow + 1, waveHistory.length));
+        const startHist = waveHistory.length - countAvg;
+
+        for (let y = 0; y < GRID; y++) {
+          for (let x = 0; x < GRID; x++) {
+            const i = idx(x, y);
+            const hv = heat[i];
+            if (Math.abs(hv) > maxHeat) maxHeat = Math.abs(hv);
+            if (hv > 0.015) {
+              const inten = Math.min(1, hv * 0.95);
+              hCtx.fillStyle = `rgba(245, 158, 11, ${inten})`;
+              hCtx.fillRect(x * cellW, y * cellH, cellW + 0.6, cellH + 0.6);
+            }
+
+            let wv = 0;
+            if (waveHistory.length > 0) {
+              for (let k = startHist; k < waveHistory.length; k++) {
+                wv += waveHistory[k][i];
+              }
+              wv /= countAvg;
+            } else {
+              wv = waveCurr[i];
+            }
+            if (Math.abs(wv) > maxWave) maxWave = Math.abs(wv);
+            if (Math.abs(wv) > 0.015) {
+              const inten = Math.min(1, Math.abs(wv) * 1.15);
+              wCtx.fillStyle = wv >= 0 ? `rgba(56, 189, 248, ${inten})` : `rgba(167, 139, 250, ${inten})`;
+              wCtx.fillRect(x * cellW, y * cellH, cellW + 0.6, cellH + 0.6);
+            }
+          }
+        }
+
+        document.getElementById('heat-peak').textContent = `峰值: ${maxHeat.toFixed(2)}`;
+        document.getElementById('wave-peak').textContent = `峰值: ${maxWave.toFixed(2)}`;
+      }
+
+      function attachClickInject(canvas) {
+        canvas.addEventListener('pointerdown', (e) => {
+          const rect = canvas.getBoundingClientRect();
+          const nx = (e.clientX - rect.left) / rect.width;
+          const ny = (e.clientY - rect.top) / rect.height;
+          injectPulse(nx, ny, 1.8);
+        });
+      }
+      attachClickInject(heatCanvas);
+      attachClickInject(waveCanvas);
+
+      document.getElementById('btn-pde-burst').addEventListener('click', seedMultiBurst);
+      document.getElementById('btn-pde-clear').addEventListener('click', clearPDE);
+      document.getElementById('btn-pde-toggle').addEventListener('click', (e) => {
+        pdeRunning = !pdeRunning;
+        e.currentTarget.textContent = pdeRunning ? '⏸ 暂停模拟' : '▶ 继续模拟';
+      });
+      document.getElementById('slider-smooth').addEventListener('input', (e) => {
+        smoothWindow = Number(e.target.value);
+        document.getElementById('label-smooth').textContent = `${smoothWindow} 帧`;
+      });
+
+      // Route comparison toggle
+      const routeHumanBtn = document.getElementById('route-human');
+      const routeAiBtn = document.getElementById('route-ai');
+      const routeContent = document.getElementById('route-content');
+
+      function setRouteView(mode) {
+        const isAi = mode === 'ai';
+        routeAiBtn.className = isAi
+          ? 'rounded-md bg-violet-600 px-3 py-1 font-semibold text-white transition'
+          : 'rounded-md px-3 py-1 font-semibold text-slate-300 transition hover:text-white';
+        routeHumanBtn.className = !isAi
+          ? 'rounded-md bg-sky-600 px-3 py-1 font-semibold text-white transition'
+          : 'rounded-md px-3 py-1 font-semibold text-slate-300 transition hover:text-white';
+
+        if (isAi) {
+          routeContent.innerHTML = `
+            <div class="rounded-xl border border-violet-500/30 bg-violet-500/10 p-3.5 text-xs leading-relaxed text-slate-200">
+              <div class="font-bold text-violet-300">1. 跨界借用椭圆 / 热方程工具</div>
+              <p class="mt-1">不再硬扛波动方程的几何重叠，而是引入带额外时间变量的辅助偏微分方程，借助<strong class="text-white">蒙日-安培方程（Monge-Ampère equation）</strong>的几何凸性与扩散估计来构造正定的守恒流。</p>
+            </div>
+            <div class="rounded-xl border border-sky-500/30 bg-sky-500/10 p-3.5 text-xs leading-relaxed text-slate-200">
+              <div class="font-bold text-sky-300">2. 引入不可替代的四元数代数结构</div>
+              <p class="mt-1">为了把空间梯度与额外时间变量严丝合缝地耦合进正定恒等式，证明中引入了出人意料的<strong class="text-white">四元数结构</strong>，一步锁定单一频带上的临界局部光滑估计。</p>
+            </div>
+            <div class="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs leading-relaxed text-slate-200">
+              <div class="font-bold text-amber-300">3. 为什么让专家直呼“天上掉下来”？</div>
+              <p class="mt-1">它几乎完全绕开了人类过去 30 年苦心搭建的组合几何与波包分解框架，像在两个原本不相通的数学星球之间直接凿出了一道虫洞。</p>
+            </div>
+          `;
+        } else {
+          routeContent.innerHTML = `
+            <div class="rounded-xl border border-slate-700 bg-slate-900/80 p-3.5 text-xs leading-relaxed text-slate-200">
+              <div class="font-bold text-sky-300">1. 波包分解与角扇区切分</div>
+              <p class="mt-1">自 Thomas Wolff 以来，人类主要把波拆解为指向不同方向的细长波包，再研究这些细管在时空中的交叠规律。</p>
+            </div>
+            <div class="rounded-xl border border-slate-700 bg-slate-900/80 p-3.5 text-xs leading-relaxed text-slate-200">
+              <div class="font-bold text-sky-300">2. 解耦定理 (Decoupling) 与多项式分割</div>
+              <p class="mt-1">Bourgain–Demeter 解耦定理与 Guth–Wang–Zhang (2019) 用精细的诱导尺度与代数几何分割，才艰难攻下 2D 局部光滑性。</p>
+            </div>
+            <div class="rounded-xl border border-slate-700 bg-slate-900/80 p-3.5 text-xs leading-relaxed text-slate-200">
+              <div class="font-bold text-slate-300">3. 高维瓶颈</div>
+              <p class="mt-1">到了 3 维及更高维，细管与高维子空间的嵌套组合复杂度呈指数爆炸，传统路线极难一步直达全维度。</p>
+            </div>
+          `;
+        }
+      }
+      routeHumanBtn.addEventListener('click', () => setRouteView('human'));
+      routeAiBtn.addEventListener('click', () => setRouteView('ai'));
+      setRouteView('ai');
+
+      // Quaternion interactive 3D wireframe
+      const qxEl = document.getElementById('q-x');
+      const qyEl = document.getElementById('q-y');
+      const qzEl = document.getElementById('q-z');
+      const qaEl = document.getElementById('q-angle');
+
+      const cubeVerts = [
+        [-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
+        [-1, -1, 1],  [1, -1, 1],  [1, 1, 1],  [-1, 1, 1]
+      ];
+      const cubeEdges = [
+        [0,1],[1,2],[2,3],[3,0],
+        [4,5],[5,6],[6,7],[7,4],
+        [0,4],[1,5],[2,6],[3,7]
+      ];
+
+      function rotateByQuat(v, q) {
+        const [w, x, y, z] = q;
+        const [vx, vy, vz] = v;
+        const tx = 2 * (y * vz - z * vy);
+        const ty = 2 * (z * vx - x * vz);
+        const tz = 2 * (x * vy - y * vx);
+        return [
+          vx + w * tx + (y * tz - z * ty),
+          vy + w * ty + (z * tx - x * tz),
+          vz + w * tz + (x * ty - y * tx)
+        ];
+      }
+
+      function drawQuaternion() {
+        if (!quatCanvas) return;
+        const rect = quatCanvas.getBoundingClientRect();
+        if (rect.width === 0) return;
+        const ctx = quatCanvas.getContext('2d');
+        const w = rect.width;
+        const h = rect.height;
+        ctx.clearRect(0, 0, w, h);
+
+        let ax = Number(qxEl.value) / 100;
+        let ay = Number(qyEl.value) / 100;
+        let az = Number(qzEl.value) / 100;
+        const norm = Math.hypot(ax, ay, az) || 1;
+        ax /= norm; ay /= norm; az /= norm;
+        const rad = (Number(qaEl.value) * Math.PI) / 180;
+        const qw = Math.cos(rad / 2);
+        const s = Math.sin(rad / 2);
+        const q = [qw, ax * s, ay * s, az * s];
+
+        document.getElementById('quat-readout').textContent =
+          `q = ${q[0].toFixed(2)} ${q[1] >= 0 ? '+' : ''}${q[1].toFixed(2)}i ${q[2] >= 0 ? '+' : ''}${q[2].toFixed(2)}j ${q[3] >= 0 ? '+' : ''}${q[3].toFixed(2)}k  (|q|=1)`;
+
+        const cx = w * 0.5;
+        const cy = h * 0.5;
+        const scale = Math.min(w, h) * 0.27;
+
+        const proj = cubeVerts.map(v => {
+          const r = rotateByQuat(v, q);
+          const persp = 3.6 / (3.6 - r[2] * 0.65);
+          return [cx + r[0] * scale * persp, cy - r[1] * scale * persp, r[2]];
+        });
+
+        // Draw rotation axis
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.55)';
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(cx - ax * scale * 1.45, cy + ay * scale * 1.45);
+        ctx.lineTo(cx + ax * scale * 1.45, cy - ay * scale * 1.45);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Draw cube edges
+        cubeEdges.forEach(([a, b]) => {
+          const depth = (proj[a][2] + proj[b][2]) * 0.5;
+          ctx.strokeStyle = depth > 0 ? 'rgba(167, 139, 250, 0.95)' : 'rgba(56, 189, 248, 0.45)';
+          ctx.lineWidth = depth > 0 ? 2.2 : 1.3;
+          ctx.beginPath();
+          ctx.moveTo(proj[a][0], proj[a][1]);
+          ctx.lineTo(proj[b][0], proj[b][1]);
+          ctx.stroke();
+        });
+
+        // Draw vertices
+        proj.forEach(p => {
+          ctx.fillStyle = p[2] > 0 ? '#c4b5fd' : '#38bdf8';
+          ctx.beginPath();
+          ctx.arc(p[0], p[1], p[2] > 0 ? 3.5 : 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+      [qxEl, qyEl, qzEl, qaEl].forEach(el => el.addEventListener('input', drawQuaternion));
+
+      // ==================== TAB 3: KAKEYA SCI-FI LAB ====================
+      const kakeyaCanvas = document.getElementById('kakeyaCanvas');
+      let kakeyaMode = 'besicovitch';
+      let kakeyaDepth = 4;
+      let kakeyaAngleDeg = 45;
+      let alienBeams = [];
+
+      const kmodeBtns = document.querySelectorAll('.kmode-btn');
+      const kdepthSlider = document.getElementById('slider-kdepth');
+      const kangleSlider = document.getElementById('slider-kangle');
+
+      function updateKakeyaUI() {
+        kmodeBtns.forEach(b => {
+          const active = b.dataset.kmode === kakeyaMode;
+          b.className = active
+            ? 'kmode-btn active rounded-lg border border-emerald-500/60 bg-emerald-500/20 px-3 py-1.5 text-xs font-semibold text-emerald-200 transition'
+            : 'kmode-btn rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:text-white';
+        });
+
+        const slices = Math.pow(2, kakeyaDepth);
+        document.getElementById('label-kdepth').textContent = `k = ${kakeyaDepth} (${slices} 细条)`;
+        document.getElementById('label-kangle').textContent = `${kakeyaAngleDeg}°`;
+        kdepthSlider.disabled = kakeyaMode !== 'besicovitch';
+
+        const areaEl = document.getElementById('metric-area');
+        const descEl = document.getElementById('kmode-desc');
+        if (kakeyaMode === 'disk') {
+          areaEl.textContent = '0.785';
+          descEl.textContent = '最直观的做法：把 1 米长的炮管绕中心旋转 180°，扫出一个直径 1 米的圆盘（面积 π/4 ≈ 0.785）。安全但土方浪费极大。';
+        } else if (kakeyaMode === 'deltoid') {
+          areaEl.textContent = '0.393';
+          descEl.textContent = '更聪明的滑动：让 1 米长的炮管沿着“三尖瓣内摆线”内壁滑动旋转，挖空面积直接砍半（π/8 ≈ 0.393），依然覆盖全部 360° 方向！';
+        } else {
+          // Perron tree / Besicovitch overlap shrinks approximately O(1 / log(2^k)) or geometric demo
+          const estArea = (0.65 / (1 + kakeyaDepth * 0.85)).toFixed(3);
+          areaEl.textContent = estArea;
+          descEl.textContent = `Besicovitch 切片重叠（Perron 树思想）：把扇形切成 ${slices} 根极细的楔形并水平平移重叠。随着 k → ∞，挖空总面积/体积趋近于 0，但豪斯多夫维数依然死死锁定在满维！`;
+        }
+        drawKakeya();
+      }
+
+      kmodeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          kakeyaMode = btn.dataset.kmode;
+          updateKakeyaUI();
+        });
+      });
+      kdepthSlider.addEventListener('input', (e) => {
+        kakeyaDepth = Number(e.target.value);
+        updateKakeyaUI();
+      });
+      kangleSlider.addEventListener('input', (e) => {
+        kakeyaAngleDeg = Number(e.target.value);
+        updateKakeyaUI();
+      });
+
+      document.getElementById('btn-alien-attack').addEventListener('click', () => {
+        const randAng = Math.floor(Math.random() * 180);
+        kakeyaAngleDeg = randAng;
+        kangleSlider.value = String(randAng);
+        alienBeams.push({
+          angle: (randAng * Math.PI) / 180,
+          life: 1.0
+        });
+        updateKakeyaUI();
+      });
+
+      function drawKakeya() {
+        if (!kakeyaCanvas) return;
+        const rect = kakeyaCanvas.getBoundingClientRect();
+        if (rect.width === 0) return;
+        const ctx = kakeyaCanvas.getContext('2d');
+        const w = rect.width;
+        const h = rect.height;
+        ctx.clearRect(0, 0, w, h);
+
+        const cx = w * 0.5;
+        const cy = h * 0.52;
+        const unitLen = Math.min(w, h) * 0.62;
+        const R = unitLen * 0.5;
+
+        // Subtle Earth circle backdrop
+        ctx.beginPath();
+        ctx.arc(cx, cy, R * 1.24, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(14, 165, 233, 0.05)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.22)';
+        ctx.setLineDash([5, 5]);
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.65)';
+        ctx.font = '11px Inter, sans-serif';
+        ctx.fillText('地球截面（外圈为外星来袭方向）', 12, 20);
+
+        const theta = (kakeyaAngleDeg * Math.PI) / 180;
+
+        if (kakeyaMode === 'disk') {
+          ctx.beginPath();
+          ctx.arc(cx, cy, R, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.18)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Active 1m cannon needle
+          drawNeedle(ctx, cx - Math.cos(theta) * R, cy - Math.sin(theta) * R, cx + Math.cos(theta) * R, cy + Math.sin(theta) * R);
+        } else if (kakeyaMode === 'deltoid') {
+          // Deltoid parametric curve: x = a*(2 cos t + cos 2t), y = a*(2 sin t - sin 2t)
+          // Chord length inside deltoid is 4a = unitLen => a = unitLen / 4
+          const a = unitLen / 4;
+          ctx.beginPath();
+          for (let i = 0; i <= 240; i++) {
+            const t = (i / 240) * Math.PI * 2;
+            const x = cx + a * (2 * Math.cos(t) + Math.cos(2 * t));
+            const y = cy + a * (2 * Math.sin(t) - Math.sin(2 * t));
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(167, 139, 250, 0.2)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(167, 139, 250, 0.85)';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Tangent segment of length 4a at angle theta: midpoint moves on circle of radius a
+          const mx = cx + a * Math.cos(-2 * theta);
+          const my = cy + a * Math.sin(-2 * theta);
+          drawNeedle(ctx, mx - Math.cos(theta) * R, my - Math.sin(theta) * R, mx + Math.cos(theta) * R, my + Math.sin(theta) * R);
+        } else {
+          // Besicovitch / Perron Tree overlapping thin wedges covering all angles
+          const slices = Math.pow(2, kakeyaDepth);
+          const spread = R * (0.85 / Math.pow(1.42, kakeyaDepth - 1));
+          const activeSlice = Math.min(slices - 1, Math.floor((kakeyaAngleDeg / 180) * slices));
+
+          for (let i = 0; i < slices; i++) {
+            const a1 = (i / slices) * Math.PI;
+            const a2 = ((i + 1) / slices) * Math.PI;
+            const midA = (a1 + a2) * 0.5;
+            // Slide each thin wedge toward the center cluster so they overlap maximally
+            const groupOffset = ((i % 2 === 0 ? -1 : 1) * spread * 0.45) + Math.sin(i * 1.7) * spread * 0.35;
+            const ox = cx + groupOffset * Math.cos(midA + Math.PI / 2);
+            const oy = cy + groupOffset * Math.sin(midA + Math.PI / 2);
+
+            ctx.beginPath();
+            ctx.moveTo(ox - Math.cos(a1) * R, oy - Math.sin(a1) * R);
+            ctx.lineTo(ox + Math.cos(a1) * R, oy + Math.sin(a1) * R);
+            ctx.lineTo(ox + Math.cos(a2) * R, oy + Math.sin(a2) * R);
+            ctx.lineTo(ox - Math.cos(a2) * R, oy - Math.sin(a2) * R);
+            ctx.closePath();
+            ctx.fillStyle = i === activeSlice ? 'rgba(245, 158, 11, 0.32)' : 'rgba(52, 211, 153, 0.16)';
+            ctx.fill();
+            ctx.strokeStyle = i === activeSlice ? 'rgba(251, 191, 36, 0.9)' : 'rgba(52, 211, 153, 0.42)';
+            ctx.lineWidth = i === activeSlice ? 1.5 : 0.8;
+            ctx.stroke();
+
+            if (i === activeSlice) {
+              drawNeedle(ctx, ox - Math.cos(theta) * R, oy - Math.sin(theta) * R, ox + Math.cos(theta) * R, oy + Math.sin(theta) * R);
+            }
+          }
+        }
+
+        // Alien beams animation
+        for (let i = alienBeams.length - 1; i >= 0; i--) {
+          const b = alienBeams[i];
+          const outer = R * 1.42;
+          ctx.strokeStyle = `rgba(244, 63, 94, ${b.life})`;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(cx + Math.cos(b.angle) * outer, cy + Math.sin(b.angle) * outer);
+          ctx.lineTo(cx + Math.cos(b.angle) * (R * 1.05), cy + Math.sin(b.angle) * (R * 1.05));
+          ctx.stroke();
+
+          ctx.fillStyle = `rgba(251, 113, 133, ${b.life})`;
+          ctx.beginPath();
+          ctx.arc(cx + Math.cos(b.angle) * (R * 1.05), cy + Math.sin(b.angle) * (R * 1.05), 6 * b.life, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = `rgba(253, 224, 71, ${b.life})`;
+          ctx.font = 'bold 11px Inter, sans-serif';
+          ctx.fillText('已拦截!', cx + Math.cos(b.angle) * (R * 1.15) - 18, cy + Math.sin(b.angle) * (R * 1.15));
+
+          b.life -= 0.018;
+          if (b.life <= 0) alienBeams.splice(i, 1);
+        }
+      }
+
+      function drawNeedle(ctx, x1, y1, x2, y2) {
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 3.2;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(x1, y1, 3.5, 0, Math.PI * 2);
+        ctx.arc(x2, y2, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // ==================== TAB 4: LEAN AUDIT & FRONTIER MAP ====================
+      const chkTranslate = document.getElementById('chk-translate');
+      const chkKernel = document.getElementById('chk-kernel');
+      const chkComprehend = document.getElementById('chk-comprehend');
+      const leanVerdict = document.getElementById('lean-verdict');
+
+      function updateLeanAudit() {
+        const t = chkTranslate.checked;
+        const k = chkKernel.checked;
+        const c = chkComprehend.checked;
+
+        document.getElementById('pipe-1').className = t
+          ? 'rounded-xl border border-amber-500/70 bg-amber-500/15 p-3.5 transition'
+          : 'rounded-xl border border-slate-700 bg-slate-900/80 p-3.5 transition';
+        document.getElementById('pipe-2').className = k
+          ? 'rounded-xl border border-rose-500/70 bg-rose-500/15 p-3.5 transition'
+          : 'rounded-xl border border-slate-700 bg-slate-900/80 p-3.5 transition';
+        document.getElementById('pipe-3').className = c
+          ? 'rounded-xl border border-emerald-500/70 bg-emerald-500/15 p-3.5 transition'
+          : 'rounded-xl border border-slate-700 bg-slate-900/80 p-3.5 transition';
+
+        const issues = [];
+        if (t) issues.push('【转译核查】必须逐行人工审查 Lean 中对局部光滑性猜想的定义，确认没有遗漏参数范围或隐含弱化条件。');
+        if (k) issues.push('【内核审查】即便形式化内核极其可靠，对里程碑式定理仍需独立检验其依赖公理与验证环境是否纯净。');
+        if (c) issues.push('【数学本质】Lean 只能给出“对/错”的二元标签，但数学的价值在于人类理解“蒙日-安培 + 四元数”为何有效，并将其提炼为可复用的理论武器。');
+
+        if (issues.length === 0) {
+          leanVerdict.className = 'mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs leading-relaxed text-emerald-100';
+          leanVerdict.textContent = '当转译完全等价、内核无瑕、且人类数学家彻底消化了其中的核心思想后，这个证明才真正成为人类数学大厦的新基石。';
+        } else {
+          leanVerdict.className = 'mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs leading-relaxed text-amber-100';
+          leanVerdict.innerHTML = `<div class="font-bold text-amber-300 mb-1">张瑞祥“先当它是错的”审查结论：</div>` + issues.map(s => `<div class="mt-1">• ${s}</div>`).join('');
+        }
+      }
+      [chkTranslate, chkKernel, chkComprehend].forEach(el => el.addEventListener('change', updateLeanAudit));
+      updateLeanAudit();
+
+      const frontierData = [
+        {
+          tag: '新大陆 01',
+          title: '弯曲挂谷问题 (Curved Kakeya)',
+          body: '欧几里得空间里的光线和弹道是笔直的，但在弯曲时空或非均匀介质中，波沿测地线或曲线传播。弯曲挂谷问题研究：当集合包含所有方向的“弯曲细管”时，维数与重叠性质会发生怎样的质变？',
+          hard: '失去平移对称性与欧氏直线结构后，此次 AI 针对欧氏波动方程构造的辅助方程与四元数守恒流未必直接适用，需要发展真正几何不变的新工具。'
+        },
+        {
+          tag: '新大陆 02',
+          title: 'Furstenberg 集合问题 (Furstenberg Sets)',
+          body: '挂谷问题要求每个方向有一整条 1 米线段（1 维满线段）；Furstenberg 集合把条件放宽——每个方向上只需包含一个维数为 s (0 < s ≤ 1) 的“分形碎片”，问整个集合的最小维数是多少？',
+          hard: '它把挂谷猜想嵌入到了更广阔的几何测度论与分形投影理论中，与高维关联几何（Incidence Geometry）紧密相连。'
+        },
+        {
+          tag: '新大陆 03',
+          title: '更一般的傅里叶变换与振荡积分性质',
+          body: '经典的限制性与局部光滑性只聚焦于最规则的球面、锥面和抛物面。走出新手村后，数学家要面对一般相位函数的振荡积分算子（如 Hörmander 型振荡积分）与变系数偏微分方程。',
+          hard: '一般相位函数可能出现退化曲率与复杂奇点，需要把 AI 证明里展现的“椭圆/凸几何跨界思想”抽象成普适的算子理论。'
+        },
+        {
+          tag: '新大陆 04',
+          title: '对数论与黎曼猜想的深层启发',
+          body: '调和分析与解析数论历来同源：傅里叶解耦定理曾直接攻克数论中悬而未决的 Vinogradov 中值定理。对波动与振荡相消的更深理解，会直接强化数论中处理指数和（Exponential Sums）的威力。',
+          hard: '黎曼 ζ 函数的临界带零点分布本质上也是高度复杂的振荡相消问题；任何全新的相消估计机制，都可能为数论带来意想不到的突破口。'
+        }
+      ];
+
+      const frontierBtns = document.querySelectorAll('.frontier-node');
+      function selectFrontier(i) {
+        const d = frontierData[i];
+        frontierBtns.forEach((b, idx) => b.classList.toggle('active', idx === i));
+        document.getElementById('frontier-tag').textContent = d.tag;
+        document.getElementById('frontier-title').textContent = d.title;
+        document.getElementById('frontier-body').textContent = d.body;
+        document.getElementById('frontier-hard').textContent = d.hard;
+      }
+      frontierBtns.forEach(btn => {
+        btn.addEventListener('click', () => selectFrontier(Number(btn.dataset.frontier)));
+      });
+      selectFrontier(0);
+
+      // ==================== MAIN ANIMATION LOOP ====================
+      let rafId = null;
+      function loop(t) {
+        if (activeTab === 'chain') {
+          drawChainPreview(t);
+        } else if (activeTab === 'pde') {
+          if (pdeRunning) {
+            stepPDE();
+          }
+          renderPDE();
+        } else if (activeTab === 'kakeya' && alienBeams.length > 0) {
+          drawKakeya();
+        }
+        rafId = requestAnimationFrame(loop);
+      }
+
+      window.addEventListener('resize', () => {
+        resizeCanvas(chainCanvas);
+        resizeCanvas(heatCanvas);
+        resizeCanvas(waveCanvas);
+        resizeCanvas(quatCanvas);
+        resizeCanvas(kakeyaCanvas);
+        if (activeTab === 'pde') drawQuaternion();
+        if (activeTab === 'kakeya') drawKakeya();
+      });
+
+      // Init state
+      selectChain(0);
+      seedMultiBurst();
+      updateKakeyaUI();
+      resizeCanvas(chainCanvas);
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(loop);
+    });
+  </script>
+</body>
+</html>

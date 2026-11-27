@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Synopsys EDA 工具全集实战教程（黑底夜间版）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* Utilitarian · Dark-Mode Technical Handbook · compact answer-first hero · section order: hero + env/license -> 9-stage cross-tool SVG -> VCS/Verdi/DVE sim & debug -> DC/PT/Formality/SpyGlass signoff -> full-bleed 4 open-and-inspect playbooks -> task-to-command index & troubleshooting tables · Space Grotesk + Plus Jakarta Sans + JetBrains Mono · dark terminal slate (#0E1117) + luminous sky (#38BDF8/#7DD3FC) + emerald (#34D399) · 0px radius · emphasis moment: 6-tool stack strip · signature element: full-bleed elevated obsidian playbook band · chart: 9-stage RTL-to-signoff SVG flow */
+:root {
+  --paper: #0E1117;
+  --band: #161B26;
+  --ink: #F8FAFC;
+  --ink2: #CBD5E1;
+  --mute: #94A3B8;
+  --hair: #263042;
+  --accent: #38BDF8;
+  --accent-text: #7DD3FC;
+  --accent-2: #34D399;
+  --accent-2-text: #6EE7B7;
+  --warn: #FBBF24;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 16px;
+  line-height: 1.66;
+  -webkit-font-smoothing: antialiased;
+}
+main {
+  padding: 64px clamp(24px, 10.4vw, 112px) 92px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 24px;
+}
+.span-12 { grid-column: 1 / -1; }
+.span-8  { grid-column: span 8; }
+.span-7  { grid-column: span 7; }
+.span-6  { grid-column: span 6; }
+.span-5  { grid-column: span 5; }
+.span-4  { grid-column: span 4; }
+.measure { max-width: 68ch; }
+.sec { margin-top: 66px; }
+.rule-top { border-top: 1px solid var(--hair); padding-top: 28px; }
+
+h1 {
+  font-family: "Space Grotesk", "PingFang SC", sans-serif;
+  font-size: clamp(36px, 4.3vw, 52px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  margin: 0 0 18px;
+  text-wrap: balance;
+  color: var(--ink);
+}
+.deck {
+  font-size: 18px;
+  line-height: 1.56;
+  color: var(--ink2);
+  max-width: 66ch;
+  margin: 0 0 28px;
+}
+h2 {
+  font-family: "Space Grotesk", "PingFang SC", sans-serif;
+  font-size: clamp(24px, 2.4vw, 31px);
+  font-weight: 700;
+  line-height: 1.24;
+  letter-spacing: -0.02em;
+  margin: 0 0 16px;
+  color: var(--ink);
+}
+h3 {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 0 0 8px;
+  color: var(--ink);
+}
+p { margin: 0 0 14px; color: var(--ink2); }
+strong { color: var(--ink); font-weight: 600; }
+
+code {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  color: var(--accent-text);
+  background: #1B2333;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+pre {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #E2E8F0;
+  background: #090C12;
+  border-left: 2px solid var(--accent);
+  padding: 15px 18px;
+  margin: 12px 0 18px;
+  overflow-x: auto;
+}
+pre code { background: transparent; color: inherit; padding: 0; font-size: 13px; }
+.kw { color: #7DD3FC; }
+.cm { color: #94A3B8; font-style: italic; }
+
+.hero-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+  border-top: 2px solid var(--accent);
+  border-bottom: 1px solid var(--hair);
+  padding: 22px 0;
+  margin-top: 8px;
+}
+.stat-val {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(22px, 2.4vw, 30px);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.stat-val.sky { color: var(--accent-text); }
+.stat-val.em  { color: var(--accent-2-text); }
+.stat-sub {
+  font-size: 13px;
+  color: var(--mute);
+  margin-top: 6px;
+  line-height: 1.42;
+}
+
+.col-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  margin-top: 20px;
+}
+.two-col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px;
+  margin-top: 18px;
+}
+.col-item {
+  border-top: 1px solid var(--hair);
+  padding-top: 14px;
+}
+.tip {
+  border-left: 3px solid var(--accent-2);
+  padding-left: 14px;
+  margin: 14px 0 18px;
+  color: var(--ink2);
+  font-size: 15px;
+}
+.warn-note {
+  border-left: 3px solid var(--warn);
+  padding-left: 14px;
+  margin: 14px 0 18px;
+  color: var(--ink2);
+  font-size: 15px;
+}
+.num-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  counter-reset: step;
+}
+.num-list li {
+  position: relative;
+  padding: 11px 0 11px 32px;
+  border-top: 1px solid var(--hair);
+  color: var(--ink2);
+}
+.num-list li::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 12px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-text);
+}
+
+/* Single Full-Bleed Band */
+.band {
+  margin: 66px calc(-1 * clamp(24px, 10.4vw, 112px)) 0;
+  padding: 52px clamp(24px, 10.4vw, 112px);
+  background: var(--band);
+  border-top: 1px solid var(--hair);
+  border-bottom: 1px solid var(--hair);
+}
+.band .col-item { border-top-color: #334155; }
+
+/* Open Tables (max 3) */
+.tbl-wrap { overflow-x: auto; margin-top: 16px; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+th, td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--hair);
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-text);
+  border-bottom: 2px solid #3B4A63;
+  white-space: nowrap;
+}
+td.mono { font-family: "JetBrains Mono", monospace; font-size: 13px; white-space: nowrap; color: var(--ink); }
+
+figure { margin: 24px 0 0; padding: 0; }
+.fig-title {
+  font-family: "Space Grotesk", "PingFang SC", sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 10px;
+}
+figcaption {
+  font-size: 13px;
+  color: var(--mute);
+  margin-top: 10px;
+}
+blockquote {
+  margin: 46px 0 0;
+  padding: 18px 0 18px 22px;
+  border-left: 3px solid var(--accent);
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--ink);
+  max-width: 60ch;
+}
+@media (max-width: 860px) {
+  .hero-strip, .col-strip, .two-col { grid-template-columns: 1fr; }
+  .span-8, .span-7, .span-6, .span-5, .span-4 { grid-column: 1 / -1; }
+}
+</style>
+</head>
+<body>
+<main>
+
+  <!-- Answer-First Dark Hero -->
+  <header>
+    <h1>一套命令打通全流程：Synopsys 六大 EDA 工具实战与避坑手册</h1>
+    <p class="deck">
+      本手册面向 <code>lzc@192.168.108.128</code> 实机环境，把 <strong>VCS/DVE/URG</strong>、<strong>Verdi</strong>、<strong>DC/Design Vision</strong>、<strong>PrimeTime</strong>、<strong>Formality</strong> 与 <strong>SpyGlass</strong> 的启动方式、脚本模板、图形调试和一线踩坑经验按任务串成闭环。核心原则：先切 <code>bash</code> 设好 <code>PATH/LICENSE</code>，GUI 认准 <code>DISPLAY=:0.0</code> 或 <code>ssh -X -C</code>，大产物一律跑在 <code>/dev/shm</code>。
+    </p>
+    <div class="hero-strip">
+      <div>
+        <div class="stat-val sky">6 大工具链</div>
+        <div class="stat-sub">VCS mx2017 · Verdi O-2018 · DC/PT/FM K-2015 · SpyGlass L-2016</div>
+      </div>
+      <div>
+        <div class="stat-val em">27007@lzc</div>
+        <div class="stat-sub">统一 License 端口；GUI 与综合均占 feature，先 <code>lmstat</code> 再开跑</div>
+      </div>
+      <div>
+        <div class="stat-val">DISPLAY=:0.0</div>
+        <div class="stat-sub">远端本地屏/VNC 零延迟；跨网用 <code>ssh -X -C -c aes128-gcm</code></div>
+      </div>
+      <div>
+        <div class="stat-val">/dev/shm</div>
+        <div class="stat-sub">16 GB tmpfs 隔离综合与大波形，跑完归档 <code>report/</code> 后立即清理</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Section 0: Shared Environment, Graphics & License -->
+  <section class="sec rule-top">
+    <div class="grid">
+      <div class="span-5">
+        <h2>启动任何工具前：先一次配齐环境、图形与 License</h2>
+        <p>
+          远端默认 shell 是 <code>csh</code>，直接粘贴 <code>export</code> 会报错——务必先敲 <code>bash</code> 或在本地写成 <code>.sh</code> 脚本后 <code>scp</code> 上去执行。只要把下面这段放进工程共用初始化脚本，六大工具就能无缝互调。
+        </p>
+        <div class="tip">
+          <strong>实战经验：</strong>多人或后台跑 DC 时，GUI 打不开常常不是 X11 坏了，而是 License 被占满。先跑 <code>lmstat -c 27007@lzc</code> 看剩余席位，再决定开 <code>design_vision</code> 或 <code>verdi</code>。
+        </div>
+      </div>
+      <div class="span-7">
+        <pre><code><span class="cm"># 1) 一次性导出六大工具环境（bash）</span>
+export SNPSLMD_LICENSE_FILE=27007@lzc
+export VCS_HOME=/tools/synopsys/vcs/mx2017
+export NOVAS_HOME=/tools/synopsys/Verdi_O-2018.09-SP2
+export PATH=/tools/synopsys/syn_vK-2015.06/bin:/tools/synopsys/pt_vK-2015.06/bin:\
+/tools/synopsys/fm_vK-2015.06-SP4/bin:$VCS_HOME/bin:$NOVAS_HOME/bin:\
+/tools/synopsys/sypglass/SpyGlass-L2016.06/SPYGLASS_HOME/bin:$PATH
+
+<span class="cm"># 2) 探活版本 + 检查 License + 验证图形通道</span>
+dc_shell -version | head -1 &amp;&amp; vcs -ID | head -1
+lmstat -c 27007@lzc
+echo "DISPLAY=$DISPLAY" &amp;&amp; xclock &amp;</code></pre>
+      </div>
+    </div>
+
+    <!-- Inline SVG Visual: 9-Stage Cross-Tool Flow -->
+    <figure>
+      <div class="fig-title">改完一版 RTL 后：从静态检查到时序签核的九步跨工具闭环</div>
+      <svg viewBox="0 0 720 390" width="100%" role="img" aria-label="9-stage cross-tool RTL to signoff workflow">
+        <!-- Row 1: Front-end Verify -->
+        <text x="16" y="28" font-family="JetBrains Mono, monospace" font-size="13" fill="#7DD3FC" font-weight="600">阶段 A · 前端检查、仿真与波形定位</text>
+
+        <rect x="16" y="42" width="148" height="72" rx="4" fill="#161B26" stroke="#38BDF8" stroke-width="1.5"/>
+        <text x="90" y="68" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif" font-size="14" font-weight="700" fill="#F8FAFC">1. 编辑 RTL</text>
+        <text x="90" y="92" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#94A3B8">VS Code SSH</text>
+
+        <line x1="164" y1="78" x2="194" y2="78" stroke="#38BDF8" stroke-width="2"/>
+        <polygon points="194,73 202,78 194,83" fill="#38BDF8"/>
+
+        <rect x="202" y="42" width="148" height="72" rx="4" fill="#161B26" stroke="#475569" stroke-width="1.5"/>
+        <text x="276" y="68" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif" font-size="14" font-weight="700" fill="#F8FAFC">2. SpyGlass Lint</text>
+        <text x="276" y="92" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#94A3B8">lint_rtl / cdc</text>
+
+        <line x1="350" y1="78" x2="380" y2="78" stroke="#38BDF8" stroke-width="2"/>
+        <polygon points="380,73 388,78 380,83" fill="#38BDF8"/>
+
+        <rect x="388" y="42" width="148" height="72" rx="4" fill="#161B26" stroke="#38BDF8" stroke-width="1.5"/>
+        <text x="462" y="68" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif" font-size="14" font-weight="700" fill="#F8FAFC">3. VCS + UVM</text>
+        <text x="462" y="92" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#7DD3FC">simv / urg cov</text>
+
+        <line x1="536" y1="78" x2="566" y2="78" stroke="#38BDF8" stroke-width="2"/>
+        <polygon points="566,73 574,78 566,83" fill="#38BDF8"/>
+
+        <rect x="574" y="42" width="130" height="72" rx="4" fill="#161B26" stroke="#34D399" stroke-width="1.5"/>
+        <text x="639" y="68" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif" font-size="14" font-weight="700" fill="#F8FAFC">4. Verdi / DVE</text>
+        <text x="639" y="92" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#6EE7B7">tb.fsdb / vpd</text>
+
+        <!-- Down connector -->
+        <line x1="639" y1="114" x2="639" y2="148" stroke="#34D399" stroke-width="2"/>
+        <line x1="639" y1="148" x2="90" y2="148" stroke="#34D399" stroke-width="2"/>
+        <line x1="90" y1="148" x2="90" y2="178" stroke="#34D399" stroke-width="2"/>
+        <polygon points="85,178 90,186 95,178" fill="#34D399"/>
+
+        <!-- Row 2: Synthesis, STA, Formality -->
+        <text x="16" y="172" font-family="JetBrains Mono, monospace" font-size="13" fill="#6EE7B7" font-weight="600">阶段 B · 14nm 综合、时序签核与等价归档（工作目录在 /dev/shm）</text>
+
+        <rect x="16" y="186" width="154" height="76" rx="4" fill="#161B26" stroke="#34D399" stroke-width="1.5"/>
+        <text x="93" y="212" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif" font-size="14" font-weight="700" fill="#F8FAFC">5. DC 综合</text>
+        <text x="93" y="234" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#6EE7B7">~25 min · 4 核</text>
+        <text x="93" y="252" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#94A3B8">导出 .v/.sdc/.sdf</text>
+
+        <line x1="170" y1="224" x2="198" y2="224" stroke="#34D399" stroke-width="2"/>
+        <polygon points="198,219 206,224 198,229" fill="#34D399"/>
+
+        <rect x="206" y="186" width="158" height="76" rx="4" fill="#161B26" stroke="#34D399" stroke-width="1.5"/>
+        <text x="285" y="212" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif" font-size="14" font-weight="700" fill="#F8FAFC">6. PrimeTime STA</text>
+        <text x="285" y="234" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#6EE7B7">~3 min · 含清黑盒</text>
+        <text x="285" y="252" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#94A3B8">**async_default**</text>
+
+        <line x1="364" y1="224" x2="392" y2="224" stroke="#34D399" stroke-width="2"/>
+        <polygon points="392,219 400,224 392,229" fill="#34D399"/>
+
+        <rect x="400" y="186" width="142" height="76" rx="4" fill="#161B26" stroke="#475569" stroke-width="1.5"/>
+        <text x="471" y="212" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif" font-size="14" font-weight="700" fill="#F8FAFC">7. Formality</text>
+        <text x="471" y="234" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#94A3B8">RTL ≡ 网表</text>
+        <text x="471" y="252" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#94A3B8">match + verify</text>
+
+        <line x1="542" y1="224" x2="570" y2="224" stroke="#34D399" stroke-width="2"/>
+        <polygon points="570,219 578,224 570,229" fill="#34D399"/>
+
+        <rect x="578" y="186" width="126" height="76" rx="4" fill="#161B26" stroke="#FBBF24" stroke-width="1.5"/>
+        <text x="641" y="212" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif" font-size="14" font-weight="700" fill="#F8FAFC">8–9. 归档清理</text>
+        <text x="641" y="234" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#FBBF24">~/work/date/</text>
+        <text x="641" y="252" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" fill="#94A3B8">rm -rf /dev/shm</text>
+
+        <!-- Bottom handoff note -->
+        <line x1="16" y1="296" x2="704" y2="296" stroke="#263042" stroke-width="1"/>
+        <text x="16" y="324" font-family="Plus Jakarta Sans, sans-serif" font-size="14" fill="#CBD5E1">关键交接产物：VCS 需带 <tspan font-family="JetBrains Mono, monospace" fill="#7DD3FC">-P novas.tab pli.a</tspan> 才出 FSDB；DC K-2015 不支持 <tspan font-family="JetBrains Mono, monospace" fill="#FBBF24">write_db</tspan>，只交 <tspan font-family="JetBrains Mono, monospace" fill="#6EE7B7">.v/.sdc/.sdf</tspan>。</text>
+        <text x="16" y="352" font-family="Plus Jakarta Sans, sans-serif" font-size="14" fill="#94A3B8">并发约束：最多同时跑 2 个 4 核 DC；VCS 编译为单线程，可与 DC 安全并行。</text>
+      </svg>
+      <figcaption>来源：本工程跨工具标准工作流（§7），适用于任何 RTL 改版或约束迭代后的完整回归。</figcaption>
+    </figure>
+  </section>
+
+  <!-- Section 1 & 2: VCS, UCLI, URG, Verdi & DVE -->
+  <section class="sec rule-top">
+    <h2>前端仿真、覆盖率与波形调试：VCS + Verdi / DVE 实战要点</h2>
+    <p class="measure">
+      仿真阶段最容易踩的坑集中在两点：一是拿错旧目录里的 <code>simv</code> 导致新 plusarg 完全不生效；二是忘记限制 FSDB 转储层次，跑 1,000 帧直接把磁盘写爆几十 GB。
+    </p>
+
+    <div class="two-col">
+      <div>
+        <h3>VCS 编译、UCLI 交互与 URG 覆盖率</h3>
+        <pre><code><span class="cm"># 编译（含 UVM 1.2 + Verdi FSDB 接口 + DVE 调试）</span>
+vcs -full64 -sverilog -lca -timescale=1ns/1ps +v2k +lint=none \
+  +incdir+./src -f uvm/filelist.f uvm/top_tb.sv case_t4.sv \
+  -P $NOVAS_HOME/share/PLI/VCS/LINUX64/novas.tab \
+     $NOVAS_HOME/share/PLI/VCS/LINUX64/pli.a \
+  -debug_all -notice -ntb_opts uvm-1.2 -CFLAGS -DVCS \
+  +define+CASE_LOOP_NUMBER=1 -top top_tb -l vcompile.log
+
+<span class="cm"># 覆盖率采集与多 run 合并</span>
+vcs ... -cm line+cond+fsm+tgl+branch -cm_dir simv.vdb
+./simv ... -cm line+cond+fsm+tgl+branch -cm_dir simv.vdb
+urg -dir simv.vdb1 -dir simv.vdb2 -dbname merged.vdb -report cov</code></pre>
+        <div class="tip">
+          <strong>UCLI 速查经验：</strong>想快速抓某个内部寄存器值又不想开重型 GUI，直接 <code>./simv -ucli</code>，敲 <code>stop -time 500ns</code> → <code>run</code> → <code>show -value top_tb.dut_tx.dlr_snd_inst.dlr_rqu_inst.rq_rdaddr</code>，十秒出结果。
+        </div>
+      </div>
+
+      <div>
+        <h3>Verdi（FSDB）与 DVE（VPD）高效看波</h3>
+        <pre><code><span class="cm"># Verdi：设计层次 + 波形联动，或直接恢复信号组 .rc</span>
+verdi -dbdir simv.daidir -ssf tb.fsdb &amp;
+verdi -rc my.rc &amp;
+
+<span class="cm"># DVE：本机实测必须加 -full64，否则报目录无效</span>
+dve -full64 -vpd vcdplus.vpd &amp;
+dve -full64 -cov -dir simv.vdb &amp;</code></pre>
+        <p>
+          在 TB 里加转储时，务必用 <code>$fsdbDumpvars(1, top_tb);</code> 限制层级（或配合 <code>$fsdbDumpon / $fsdbDumpoff</code> 只在出错窗口开波），否则千帧回归会瞬间产生几十 GB 的 FSDB。进入 nWave 后记住五个高频键：<code>g</code> 选信号、<code>Ctrl+F</code> 搜信号、<code>f</code> 缩放到全局、<code>z/Z</code> 放大缩小、右键 <code>Trace Driver</code> 顺藤摸瓜追驱动源，调完立刻 <code>File → Save Signal</code> 存成 <code>.rc</code> 下次复用。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3, 4, 5, 6: DC, PrimeTime, Formality, SpyGlass -->
+  <section class="sec rule-top">
+    <h2>综合、时序签核、等价验证与 Lint：把每个工具用在刀刃上</h2>
+    <p class="measure">
+      后端前端交界处的四个工具分工极其明确：<strong>DC</strong> 负责把 RTL 映射到 14nm 门级网表并做主时钟收敛；<strong>PrimeTime</strong> 负责真正的静态时序签核与 <code>**async_default**</code> 复位恢复分析；<strong>Formality</strong> 验证网表功能与 RTL 等价；<strong>SpyGlass</strong> 提前拦截不可综合代码和静态 CDC 隐患。
+    </p>
+
+    <div class="col-strip">
+      <div class="col-item">
+        <h3>DC / Design Vision（综合）</h3>
+        <p>本工程先将所有 RTL 合并为单编译单元 <code>_dlr_top_merged.sv</code> 让宏全局可见，再 <code>link</code> + 读 SDC + 两阶段 <code>compile_ultra -gate_clock</code>。批处理用 <code>dc_shell -64bit -f run.tcl</code>；需要下钻看原理图与高占比子块（如 RQU 占 65.6% 面积）时开 <code>design_vision &amp;</code>。</p>
+        <div class="warn-note">
+          <strong>K-2015.06 三条硬限制：</strong>不导 <code>.db</code>（<code>UID-530</code>，只导 <code>.v/.sdc/.sdf</code>）；不报 <code>async_default</code>（<code>UID-423</code>）；<code>set_max_fanout</code> 不收 net（<code>UID-119</code>）。
+        </div>
+      </div>
+
+      <div class="col-item">
+        <h3>PrimeTime（签核与复位恢复）</h3>
+        <p><code>link_path</code> 必须挂 <code>*</code> 加 14nm 工艺库 <code>.db</code>。读入综合网表前，若遇到 <code>RDBUS/CLKCROSSBUS/CLKCROSSDFF</code> 参数化黑盒位宽冲突，先按模块删掉这 96 个实例并在 <code>endmodule</code> 前逐根写标量 <code>assign &lt;net&gt; = 0;</code>（PT 不认花括号 <code>assign {a,b}=0;</code>）。随后用 <code>report_timing -group {**async_default**}</code> 即可直接看到真实的 CLKBUF 复位树链。</p>
+      </div>
+
+      <div class="col-item">
+        <h3>Formality 与 SpyGlass</h3>
+        <p><strong>Formality</strong>（<code>fm_shell</code> / <code>formality &amp;</code>）在换库或改约束后做 RTL（<code>-container r</code>）与网表（<code>-container i</code>）的 <code>match</code> + <code>verify</code>；若网表含参数化黑盒，需先 <code>set_black_box</code> 或补行为模型。<strong>SpyGlass</strong> 用 <code>spyglass -project my.prj -batch -goals lint_rtl</code> 批量扫语法与可综合性，并可用 <code>cdc_verify</code> 对仿真 CDC 做静态交叉印证。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Full-Bleed Band: 4 Open-and-Inspect Playbooks -->
+  <section class="band">
+    <h2>本项目四张“打开就看”高频操作卡与归档脚本</h2>
+    <p class="measure">
+      日常复核论文图表或定位回归问题时，90% 的操作都落在这四个固定入口。直接照抄命令即可，不用重新翻手册。
+    </p>
+
+    <div class="two-col">
+      <div class="col-item">
+        <h3>卡片 1 · Design Vision 看综合面积与关键路径</h3>
+        <p>启动 <code>design_vision &amp;</code> → <code>File → Read Design</code> 读入 <code>~/dlr_release/syn_base/_dlr_top_merged.sv</code> 与 14nm 库 → <code>Link Design</code> → <code>Read Constraints</code> 挂 <code>DLR_TOP.sdc</code> → 分别执行 <code>Report Timing (pcs_clk)</code> 与 <code>Report Area</code>，双击 Hierarchy 树即可下钻原理图。</p>
+      </div>
+      <div class="col-item">
+        <h3>卡片 2 · PrimeTime GUI 看异步复位 recovery</h3>
+        <p>启动 <code>pt_shell -gui</code>，在 Console 里 <code>read_verilog /dev/shm/dlr_1123/netlist_clean3.v</code>、<code>link_design</code>、<code>source DLR_TOP.sdc</code>、<code>update_timing -full</code>；菜单选 <code>Timing → Report Timing</code>，Group 选 <code>async_default</code>，Slack 阈值填 <code>1.5</code>，双击最差路径直接进 Schematic。</p>
+      </div>
+      <div class="col-item">
+        <h3>卡片 3 · Verdi 定位 NACK 同拍回退波形</h3>
+        <p>TB 加 <code>$fsdbDumpvars(1, top_tb)</code> 后用带 <code>-P novas.tab pli.a</code> 的命令重编 VCS，跑 1,000 帧（<code>p=0.01, B=32</code>）生成 <code>tb.fsdb</code>，<code>verdi -ssf tb.fsdb &amp;</code> 打开后拉出 <code>dlr_rqu_inst</code> 下的 <code>valid_nack / rq_rdaddr / rq_wraddr</code> 验证同拍回退。</p>
+      </div>
+      <div class="col-item">
+        <h3>卡片 4 · 覆盖率查看与自动收数归档</h3>
+        <p>跑完覆盖率直接 <code>urg -dir simv.vdb -report cov &amp;&amp; dve -full64 -cov -dir simv.vdb &amp;</code>；本地收数统一 <code>scp -r lzc@192.168.108.128:/dev/shm/&lt;work&gt;/DLR_TOP/report ./runs/$(date +%m%d)_&lt;tag&gt;</code>，再用 Python 正则批量汇总所有 <code>qor.rep</code> 的 Critical Path Slack。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Table 1: Task -> Tool -> Entry Command Index -->
+  <section class="sec">
+    <h2>一页纸“任务 → 工具 → 命令入口”速查索引</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>工程任务</th><th>选用工具</th><th>标准命令入口</th><th>一线关键注意点</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>编译与 UVM 回归</td><td class="mono">vcs / simv</td><td><code>vcs -full64 -sverilog -ntb_opts uvm-1.2 ...</code></td><td>要出 FSDB 必须挂 <code>-P novas.tab pli.a</code></td></tr>
+          <tr><td>跑单点 / 扫掠用例</td><td class="mono">simv</td><td><code>./simv +UVM_TESTNAME=my_case +pcs_ber_p=...</code></td><td>核对 <code>simv</code> 构建时间，必加 <code>+case_watchdog_ns</code></td></tr>
+          <tr><td>命令行交互单步</td><td class="mono">UCLI</td><td><code>./simv -ucli</code></td><td><code>stop -time</code> + <code>show -value</code> 查内部信号极快</td></tr>
+          <tr><td>覆盖率报告与合并</td><td class="mono">urg / dve</td><td><code>urg -dir simv.vdb -format both -report cov</code></td><td>图形查看必须 <code>dve -full64 -cov -dir simv.vdb</code></td></tr>
+          <tr><td>波形与驱动追踪</td><td class="mono">verdi / dve</td><td><code>verdi -dbdir simv.daidir -ssf tb.fsdb &amp;</code></td><td>控制 <code>$fsdbDumpvars</code> 深度防写爆磁盘；存 <code>.rc</code></td></tr>
+          <tr><td>14nm 批处理综合</td><td class="mono">dc_shell</td><td><code>dc_shell -64bit -f run_full_flow.tcl &gt; run.log 2&gt;&amp;1</code></td><td>工作区放 <code>/dev/shm</code>，最多 2 个 4 核 DC 并行</td></tr>
+          <tr><td>综合原理图/层次</td><td class="mono">design_vision</td><td><code>design_vision &amp;</code>（或 shell 内 <code>start_gui</code>）</td><td>Console 用 <code>select_object [get_cells ...]</code> 高亮</td></tr>
+          <tr><td>静态时序与复位恢复</td><td class="mono">pt_shell</td><td><code>pt_shell -f pt.tcl</code> / <code>pt_shell -gui</code></td><td>先清理 96 个参数化黑盒；查 <code>{**async_default**}</code></td></tr>
+          <tr><td>RTL vs 网表等价</td><td class="mono">fm_shell</td><td><code>fm_shell</code>（<code>match</code> → <code>verify</code>）</td><td>含黑盒时先 <code>set_black_box</code> 或补行为模型</td></tr>
+          <tr><td>RTL Lint / 静态 CDC</td><td class="mono">spyglass</td><td><code>spyglass -project my.prj -batch -goals lint_rtl</code></td><td>本机未装 nLint，统一用 SpyGlass</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Table 2: Master Troubleshooting Matrix -->
+  <section class="sec rule-top">
+    <h2>全工具高频排错总表（按现场症状直接查解）</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>现场症状 / 报错</th><th>所属工具</th><th>根因与直接解法</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>cannot open display</code></td><td class="mono">全部 GUI</td><td>远端桌面设 <code>export DISPLAY=:0.0</code>；Windows 本地起 MobaXterm/VcXsrv 后 <code>ssh -X</code></td></tr>
+          <tr><td>远程 GUI 拖动卡顿</td><td class="mono">全部 GUI</td><td>改用压缩加密参数 <code>ssh -X -C -c aes128-gcm</code>，或直接走 VNC/本地桌面</td></tr>
+          <tr><td>License checkout 失败</td><td class="mono">全部工具</td><td><code>lmstat -a -c 27007@lzc</code> 查占用者，确认 <code>SNPSLMD_LICENSE_FILE=27007@lzc</code></td></tr>
+          <tr><td><code>Width of port i_bus inconsistent</code></td><td class="mono">PT / FM</td><td>DC 网表残留参数化黑盒；删实例并在模块末尾逐根 <code>assign &lt;net&gt; = 0;</code></td></tr>
+          <tr><td><code>Invalid path group async_default</code></td><td class="mono">DC</td><td>DC K-2015 不支持该组且会产出 592 B 假成功报告；改用 PT <code>**async_default**</code></td></tr>
+          <tr><td><code>write -format db</code> / <code>UID-530</code></td><td class="mono">DC</td><td>K-2015 已不支持导 DB；改用 <code>.v/.sdc/.sdf</code>（GUI 存档可试 <code>.ddc</code>）</td></tr>
+          <tr><td>Verdi 打开无波形 / 无 fsdb</td><td class="mono">Verdi / VCS</td><td>检查编译是否漏加 <code>-P novas.tab pli.a</code> 以及 TB 是否有 <code>$fsdbDumpfile</code></td></tr>
+          <tr><td><code>dve</code> 报 <code>is not valid directory</code></td><td class="mono">DVE</td><td>64 位产物必须显式加 <code>-full64</code> 参数启动 DVE</td></tr>
+          <tr><td>仿真超时或无输出</td><td class="mono">VCS</td><td>加 <code>+case_watchdog_ns</code> 防死锁，核对 <code>run.log</code> 尾部是否有 <code>UVM_ERROR :</code> 汇总</td></tr>
+          <tr><td>进程莫名被杀 / 磁盘写满</td><td class="mono">全部工具</td><td>立刻把工作目录迁到 <code>/dev/shm</code>，并清理历史 <code>*.vdb / *.daidir / *.fsdb</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <blockquote>
+      把工具用稳的秘诀不在背几百条开关，而在建立固定肌肉记忆：进 <code>bash</code>、查 <code>lmstat</code>、工作放 <code>/dev/shm</code>、波形控深度、综合与签核各司其职、跑完立刻归档并清空 tmpfs。
+    </blockquote>
+  </section>
+
+</main>
+</body>
+</html>

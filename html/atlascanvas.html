@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AtlasCanvas 深度评测：与主流创作蓝图工具对比及商用路径分析</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+/* Tier 3 Utilitarian · Technical & Commercial Evaluation · answer-first compact hero · verdict -> positioning scatter & competitive matrix -> technical highlights -> engineering gaps -> readiness bar chart & commercial paths -> sources · Space Grotesk + Noto Sans SC + JetBrains Mono · crisp white (#FFFFFF) + cobalt (#1D4ED8) + emerald (#047857) · 0px radius · emphasis verdict band · 2x2 positioning scatter + horizontal readiness bars */
+
+:root {
+  --paper: #FFFFFF;
+  --band: #F4F6F9;
+  --ink: #0F172A;
+  --ink2: #334155;
+  --mute: #475569;
+  --hair: #CBD5E1;
+  --accent: #2563EB;
+  --accent-text: #1E40AF;
+  --accent-2: #059669;
+  --accent-2-text: #065F46;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+  font-size: 16px;
+  line-height: 1.72;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  width: 100%;
+  padding: 64px clamp(24px, 10.4vw, 112px) 92px;
+}
+
+.grid-12 {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: 24px;
+  row-gap: 24px;
+}
+
+.col-full { grid-column: 1 / -1; }
+.col-left-4 { grid-column: 1 / span 4; }
+.col-right-8 { grid-column: 5 / -1; }
+.col-left-5 { grid-column: 1 / span 5; }
+.col-right-7 { grid-column: 6 / -1; }
+.col-indent { grid-column: 2 / span 10; }
+
+.measure {
+  max-width: 68ch;
+}
+
+/* Typography */
+h1 {
+  margin: 0 0 18px;
+  font-family: 'Space Grotesk', 'Noto Sans SC', sans-serif;
+  font-size: clamp(36px, 4.4vw, 52px);
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  color: var(--ink);
+}
+
+.deck {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.65;
+  color: var(--ink2);
+  max-width: 64ch;
+}
+
+h2 {
+  margin: 0 0 18px;
+  font-family: 'Space Grotesk', 'Noto Sans SC', sans-serif;
+  font-size: clamp(24px, 2.4vw, 30px);
+  font-weight: 700;
+  line-height: 1.28;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ink);
+}
+
+p {
+  margin: 0 0 16px;
+  color: var(--ink2);
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+a {
+  color: var(--accent-text);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--ink);
+}
+
+strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  font-size: 13px;
+}
+
+/* Sections */
+.sec {
+  margin-top: 68px;
+  padding-top: 28px;
+  border-top: 1px solid var(--hair);
+}
+
+.sec-no-rule {
+  margin-top: 64px;
+}
+
+/* Answer-first Hero Verdict Strip */
+.hero-verdict {
+  margin-top: 32px;
+  padding: 24px 0;
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--hair);
+}
+
+.verdict-num {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(44px, 5vw, 64px);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: var(--accent-text);
+  white-space: nowrap;
+}
+
+.verdict-sub {
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--mute);
+}
+
+.verdict-copy {
+  font-size: 17px;
+  line-height: 1.68;
+  color: var(--ink);
+}
+
+/* Open Multi-Column Strip */
+.strip-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  margin-top: 24px;
+}
+
+.strip-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px;
+  margin-top: 20px;
+}
+
+.strip-item {
+  padding-top: 16px;
+  border-top: 1px solid var(--hair);
+}
+
+.strip-metric {
+  font-family: 'Space Grotesk', 'JetBrains Mono', monospace;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ink);
+  margin-bottom: 6px;
+  white-space: nowrap;
+}
+
+.strip-accent {
+  color: var(--accent-text);
+}
+
+.strip-green {
+  color: var(--accent-2-text);
+}
+
+/* Full-bleed band (max 1) */
+.full-band {
+  margin: 68px calc(-1 * clamp(24px, 10.4vw, 112px)) 0;
+  padding: 52px clamp(24px, 10.4vw, 112px);
+  background: var(--band);
+  border-top: 1px solid var(--hair);
+  border-bottom: 1px solid var(--hair);
+}
+
+/* Open Tables (max 3) */
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+
+th {
+  text-align: left;
+  padding: 12px 14px 12px 0;
+  border-bottom: 2px solid var(--ink);
+  font-family: 'JetBrains Mono', 'Noto Sans SC', monospace;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+td {
+  padding: 13px 14px 13px 0;
+  border-bottom: 1px solid var(--hair);
+  vertical-align: top;
+  color: var(--ink2);
+}
+
+tr.row-highlight td {
+  color: var(--ink);
+  font-weight: 500;
+  border-bottom: 2px solid var(--accent-text);
+}
+
+.num-cell {
+  white-space: nowrap;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+}
+
+/* Figures & Charts */
+figure {
+  margin: 28px 0 0;
+  padding: 0;
+}
+
+.fig-title {
+  margin: 0 0 14px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ink);
+}
+
+figcaption {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--mute);
+}
+
+/* Clean lists */
+ul.clean-list, ol.clean-list {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+ul.clean-list li {
+  position: relative;
+  padding-left: 18px;
+  margin-bottom: 12px;
+  color: var(--ink2);
+}
+
+ul.clean-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 11px;
+  width: 6px;
+  height: 6px;
+  background: var(--accent-text);
+}
+
+ol.source-list {
+  margin: 16px 0 0;
+  padding-left: 22px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--ink2);
+}
+
+ol.source-list li {
+  margin-bottom: 8px;
+}
+
+/* Pull Quote */
+.pull-quote {
+  margin: 56px 0 0;
+  padding: 24px 0 24px 24px;
+  border-left: 3px solid var(--accent-text);
+  font-size: clamp(22px, 2.4vw, 28px);
+  font-weight: 500;
+  line-height: 1.48;
+  color: var(--ink);
+  max-width: 44ch;
+}
+
+@media (max-width: 900px) {
+  .col-left-4, .col-right-8, .col-left-5, .col-right-7, .col-indent {
+    grid-column: 1 / -1;
+  }
+  .strip-3, .strip-2 {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body>
+<main class="page">
+
+  <!-- Answer-First Hero -->
+  <header class="grid-12">
+    <div class="col-full">
+      <h1>AtlasCanvas 不是下一个白板应用，而是一套面向 B 端大场景的可编程画布引擎底座</h1>
+      <p class="deck">
+        基于对项目全部 23,959 行 TypeScript 源码与 51 项单元测试的深度代码审计（评估时间：2026 年 11 月），对照 Miro、Excalidraw、ComfyUI、React Flow 与 tldraw SDK 剖析其架构亮点、工程短板与三条现实商用路径。
+      </p>
+    </div>
+
+    <div class="col-full hero-verdict">
+      <div class="grid-12">
+        <div class="col-left-4">
+          <div class="verdict-num">B2B / SDK</div>
+          <div class="verdict-sub">最佳商用定位 · 不建议直面 C 端白板红海</div>
+        </div>
+        <div class="col-right-8 verdict-copy">
+          <strong>核心结论：</strong>AtlasCanvas 在<strong>空间分区调度（512×512 Chunk + 离屏瓦片 LRU）</strong>、<strong>画布内后端驱动交互</strong>与<strong>生产级脚本/代理安全沙箱</strong>上远超一般原型项目，极具工程可取之处；但它目前缺乏富媒体编辑、强类型 DAG 数据流端口与多人 CRDT 协同，<strong>不能直接作为 C 端创作工具变现</strong>，而最适合切入<strong>垂直行业超大场景空间控制台</strong>或<strong>私有化无限画布 SDK</strong>。
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Section 1: Ecosystem Positioning & Comparison -->
+  <section class="sec">
+    <div class="grid-12">
+      <div class="col-full">
+        <h2>与现有创作蓝图工具相比，它卡在“游戏地图调度”与“应用蓝图”的交叉缝隙</h2>
+        <p class="measure">
+          市面上的“创作蓝图与无限画布工具”实际上分化为三大阵营：面向终端用户的<strong>协作白板与视觉笔记</strong>（如 <a href="https://miro.com/whiteboard/" target="_blank" rel="noopener noreferrer">Miro</a>、<a href="https://plus.excalidraw.com/" target="_blank" rel="noopener noreferrer">Excalidraw</a>、<a href="https://fabric.so/comparison/milanote-vs-heptabase" target="_blank" rel="noopener noreferrer">Heptabase 与 Milanote</a>）、面向生成式管线的<strong>AI 节点工作流</strong>（如 <a href="https://comfy.org/" target="_blank" rel="noopener noreferrer">ComfyUI</a>、<a href="https://medium.com/design-bootcamp/stop-tab-switching-the-ai-workflow-revolution-thats-quietly-changing-everything-82fd8dfe08ff" target="_blank" rel="noopener noreferrer">Freepik Spaces</a>），以及面向研发团队的<strong>底层画布引擎 SDK</strong>（如 <a href="https://tldraw.dev/" target="_blank" rel="noopener noreferrer">tldraw SDK</a>、<a href="https://reactflow.dev/" target="_blank" rel="noopener noreferrer">React Flow / xyflow</a>）。AtlasCanvas 的真正对标对象不是 Miro，而是第三类底层引擎，并在空间分区加载与内置安全执行层上做出了明显差异化。
+        </p>
+      </div>
+
+      <div class="col-full">
+        <figure>
+          <div class="fig-title">AtlasCanvas 在“空间分区调度”与“后端交互执行”双维度上避开了白板红海</div>
+          <svg viewBox="0 0 680 420" width="100%" role="img" aria-label="主流创作蓝图与画布工具二维定位图">
+            <!-- Background quadrants -->
+            <rect x="78" y="28" width="286" height="164" fill="#F8FAFC" />
+            <rect x="364" y="28" width="286" height="164" fill="#EFF6FF" />
+            <rect x="78" y="192" width="286" height="164" fill="#FFFFFF" />
+            <rect x="364" y="192" width="286" height="164" fill="#F8FAFC" />
+
+            <!-- Quadrant divider lines -->
+            <line x1="364" y1="28" x2="364" y2="356" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4 4" />
+            <line x1="78" y1="192" x2="650" y2="192" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="4 4" />
+
+            <!-- Axes -->
+            <line x1="78" y1="356" x2="650" y2="356" stroke="#0F172A" stroke-width="1.5" />
+            <line x1="78" y1="28" x2="78" y2="356" stroke="#0F172A" stroke-width="1.5" />
+
+            <!-- Quadrant subtle annotations -->
+            <text x="92" y="48" font-size="13" fill="#475569">单文档强编排（算子 / 工作流）</text>
+            <text x="636" y="48" font-size="13" fill="#1E40AF" text-anchor="end" font-weight="700">超大空间 + 可编程应用区</text>
+            <text x="92" y="342" font-size="13" fill="#475569">视觉思考与协作白板</text>
+            <text x="636" y="342" font-size="13" fill="#475569" text-anchor="end">通用无限画布引擎</text>
+
+            <!-- Axis Titles -->
+            <text x="364" y="396" font-size="13.5" fill="#0F172A" text-anchor="middle" font-weight="500">空间规模与调度能力（单文档全量加载 → Chunk 分区流式调度）</text>
+            <text x="24" y="192" font-size="13.5" fill="#0F172A" text-anchor="middle" font-weight="500" transform="rotate(-90 24 192)">可编程与后端执行深度（静态展示 → 动作与脚本执行）</text>
+
+            <!-- Points: Whiteboards & Visual Notes -->
+            <circle cx="155" cy="306" r="6" fill="#64748B" />
+            <text x="167" y="311" font-size="13.5" fill="#334155">Milanote / Heptabase</text>
+
+            <circle cx="215" cy="272" r="6" fill="#64748B" />
+            <text x="227" y="277" font-size="13.5" fill="#334155">Obsidian Canvas</text>
+
+            <circle cx="255" cy="240" r="6" fill="#64748B" />
+            <text x="267" y="245" font-size="13.5" fill="#334155">Excalidraw</text>
+
+            <circle cx="315" cy="212" r="6" fill="#64748B" />
+            <text x="303" y="216" font-size="13.5" fill="#334155" text-anchor="end">Miro / FigJam</text>
+
+            <!-- Points: Workflow / Node Editors -->
+            <circle cx="185" cy="96" r="6.5" fill="#059669" />
+            <text x="197" y="101" font-size="13.5" fill="#065F46" font-weight="500">ComfyUI</text>
+
+            <circle cx="235" cy="134" r="6" fill="#059669" />
+            <text x="247" y="139" font-size="13.5" fill="#065F46">Freepik Spaces / Runway</text>
+
+            <circle cx="330" cy="120" r="6.5" fill="#059669" />
+            <text x="342" y="125" font-size="13.5" fill="#065F46" font-weight="500">React Flow (xyflow)</text>
+
+            <!-- Points: Canvas SDKs -->
+            <circle cx="445" cy="222" r="6.5" fill="#0F172A" />
+            <text x="457" y="227" font-size="13.5" fill="#0F172A" font-weight="500">tldraw SDK</text>
+
+            <!-- Point: AtlasCanvas (Hero Focal) -->
+            <circle cx="565" cy="108" r="10" fill="#2563EB" />
+            <circle cx="565" cy="108" r="4" fill="#FFFFFF" />
+            <text x="550" y="92" font-size="15" fill="#1E40AF" font-weight="700" text-anchor="end">AtlasCanvas</text>
+            <text x="550" y="128" font-size="13" fill="#1E40AF" text-anchor="end">512px Chunk + 安全动作引擎</text>
+          </svg>
+          <figcaption>注：基于各工具公开架构文档与 AtlasCanvas 源码实测定位；横轴反映超大规模实体的分区加载与离屏缓存能力，纵轴反映画布内直接执行逻辑、变量联动与后端 API 编排的深度。</figcaption>
+        </figure>
+      </div>
+
+      <div class="col-full table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>产品 / 框架</th>
+              <th>核心定位</th>
+              <th>渲染与空间调度</th>
+              <th>交互与执行模型</th>
+              <th>商用授权 / 定价基准</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="row-highlight">
+              <td><strong>AtlasCanvas</strong>（本项目）</td>
+              <td>通用无限画布引擎底座</td>
+              <td>纯 TS Canvas 2D；512×512 Chunk 空间哈希 + 离屏瓦片 LRU + 视口流式拉取</td>
+              <td>世界坐标内嵌按钮、声明式动作链、Web Worker 脚本沙箱、双维度变量存储</td>
+              <td class="num-cell">自有代码（待定商业模式）</td>
+            </tr>
+            <tr>
+              <td><a href="https://tldraw.dev/pricing" target="_blank" rel="noopener noreferrer">tldraw SDK</a></td>
+              <td>React 无限画布开发 SDK</td>
+              <td>React + HTML/SVG 混合渲染，视口裁剪与高度成熟的图形/协同引擎</td>
+              <td>自定义 Shape 与工具状态机，适合二次开发白板/AI 画布</td>
+              <td class="num-cell"><a href="https://finance.biggo.com/news/202509190115_tldraw_SDK_4.0_Licensing_Debate" target="_blank" rel="noopener noreferrer">$6,000/年/团队</a>（4.0 生产授权）</td>
+            </tr>
+            <tr>
+              <td><a href="https://reactflow.dev/" target="_blank" rel="noopener noreferrer">React Flow (xyflow)</a></td>
+              <td>节点式工作流 UI 库</td>
+              <td>基于 DOM/SVG 渲染节点与贝塞尔连线；超大规模节点受限于 DOM 性能</td>
+              <td>强类型句柄（Handle）连接与事件回调，生态极其丰富</td>
+              <td class="num-cell">核心 <a href="https://github.com/xyflow/xyflow/discussions/3397" target="_blank" rel="noopener noreferrer">MIT 免费商用</a>；Pro 订阅支持</td>
+            </tr>
+            <tr>
+              <td><a href="https://comfy.org/" target="_blank" rel="noopener noreferrer">ComfyUI</a></td>
+              <td>AI 视觉生成节点蓝图</td>
+              <td>LiteGraph Canvas 2D 节点图；单工作流文件全量加载</td>
+              <td>严密 DAG 数据流编排，<a href="https://comfy.org/" target="_blank" rel="noopener noreferrer">60,000+ 社区节点</a>，工作流可嵌入 PNG 元数据</td>
+              <td class="num-cell">开源免费 + Comfy Cloud 算力</td>
+            </tr>
+            <tr>
+              <td><a href="https://miro.com/pricing/" target="_blank" rel="noopener noreferrer">Miro</a> / <a href="https://plus.excalidraw.com/pricing" target="_blank" rel="noopener noreferrer">Excalidraw+</a></td>
+              <td>团队协作白板 SaaS</td>
+              <td>Canvas/WebGL 高性能单画布；无面向开发者的空间分区流式 API</td>
+              <td>强在多人实时光标、模板库与白板批注，不支持画布内安全编程</td>
+              <td class="num-cell">Miro <a href="https://www.sfdify.com/blog/miro-pricing" target="_blank" rel="noopener noreferrer">$8–$20/人/月</a>；Excalidraw+ <a href="https://drawdy.io/pricing/excalidraw" target="_blank" rel="noopener noreferrer">$6/人/月</a></td>
+            </tr>
+            <tr>
+              <td><a href="https://fabric.so/comparison/heptabase-vs-obsidian" target="_blank" rel="noopener noreferrer">Heptabase</a> / <a href="https://www.spotsaas.com/compare/heptabase-vs-milanote" target="_blank" rel="noopener noreferrer">Milanote</a></td>
+              <td>个人/创意视觉蓝图笔记</td>
+              <td>卡片式无限白板，偏文档与灵感情绪板组织</td>
+              <td>双向链接、富文本卡片、图片/PDF 批注，无后端动作执行</td>
+              <td class="num-cell">Heptabase $8.99/月；Milanote $9.99/月</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: Standout Technical Merits -->
+  <section class="sec">
+    <div class="grid-12">
+      <div class="col-left-4">
+        <h2>四个最值得保留的架构设计亮点</h2>
+        <p>
+          与市面上常见的“套壳白板 Demo”不同，AtlasCanvas 的代码库在底层调度、交互范式与安全防御上展现出极高的一致性与工程克制。
+        </p>
+      </div>
+      <div class="col-right-8">
+        <div class="strip-2" style="margin-top: 0;">
+          <div class="strip-item" style="border-top: none; padding-top: 0;">
+            <h3>1. 地图级的空间哈希 Chunk 调度</h3>
+            <p>
+              核心引擎（<span class="mono">chunkManager.ts</span> 与 <span class="mono">chunkTileCache.ts</span>）将无限画布切分为 <span class="mono">512×512</span> 离散分区，原生支持正负坐标映射、跨分区实体追踪、视锥剔除与 128 块离屏瓦片 LRU 缓存。平移数千实体时仅需执行可见分区级别的 <span class="mono">drawImage</span> 拷贝；当缩放低于 <span class="mono">0.35×</span> 全景时自动抑制边缘流式拉取，避免请求风暴。还独创了类似 Excel 的行列标尺与最多 400 格的多区选块（<span class="mono">chunkSelection.ts</span>）及 URL Hash 精确跃迁（<span class="mono">/#chunk=4,-2&amp;zoom=1.25</span>）。
+            </p>
+          </div>
+          <div class="strip-item" style="border-top: none; padding-top: 0;">
+            <h3>2. “所见即操作”的世界空间控件</h3>
+            <p>
+              渲染内核完全不依赖 React DOM 叠层，而是采用 Immediate-Mode Canvas 2D 绘制所有控件、按钮与系统工作台，并在每帧注册世界坐标 AABB 热区（<span class="mono">worldControls</span>）。含交互按钮的控件会自动脱离静态瓦片进入实时交互层，确保在漫游模式下“看到就能点”。同时实现了视觉等大字号换算（<span class="mono">worldFontSize ← base / zoom</span>）与宏观视图标题保留算法，解决了传统无限画布“缩远就看不清字”的痛点。
+            </p>
+          </div>
+          <div class="strip-item">
+            <h3>3. 后端驱动的控件与双维度变量存储</h3>
+            <p>
+              控件（<span class="mono">RectEntity</span>）支持纯后端 JSON 下发按钮排版、9 类声明式动作与多步 <span class="mono">sequence</span> 流水线。更具巧思的是 <span class="mono">SpatialVariableStore</span>：动作产生的运行时变量既挂载于单个实体（<span class="mono">entity.vars</span>），也按整数分区坐标 <span class="mono">(cx, cy)</span> 聚合索引，并支持 <span class="mono">{{chunk(cx,cy).vars.*}}</span> 跨区模板插值——相当于在画布上内置了一个“空间共享黑板”。
+            </p>
+          </div>
+          <div class="strip-item">
+            <h3>4. 罕见的生产级安全沙箱与 SSRF 防护</h3>
+            <p>
+              这是该项目最令人意外的加分项：用户自定义按钮脚本并非在主线程直接 <span class="mono">eval</span>，而是经过静态安全审计后运行于<strong>隔离的临时 Web Worker</strong>（零 DOM/Cookie/Storage 权限、5 秒 CPU 超时强杀）；导入外部 JSON 时默认锁定脚本并弹出 <span class="mono">ScriptTrustModal</span> 逐条审计；服务端 <span class="mono">server.ts</span> 的 <span class="mono">/api/proxy</span> 具备 DNS 重绑定校验、内网与云元数据 IP（<span class="mono">169.254.169.254</span>）拦截、禁止 3xx 跳转与密钥白名单注入，大幅降低了企业安全验收阻力。
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Full-Bleed Band: Engineering Gaps & Reality Check -->
+  <section class="full-band">
+    <div class="grid-12">
+      <div class="col-full">
+        <h2>距离真正可交付的“创作蓝图产品”，还缺四块关键拼图</h2>
+        <p class="measure">
+          代码审计同样暴露了它作为“早期引擎原型”的清晰边界：在底层调度和安全护城河之外，面向终端创作者与生产级协同的核心能力目前仍处于缺位或单体耦合状态。
+        </p>
+      </div>
+
+      <div class="col-full strip-3">
+        <div class="strip-item">
+          <div class="strip-metric">缺富媒体与 DAG 端口</div>
+          <p>
+            当前实体仅限矩形、文本、锚点、折线、普通连线与面板 6 种。连线（<span class="mono">ConnectorEntity</span>）只是视觉关系线，没有输入/输出类型端口（Port）与上游触发下游的拓扑调度，也不支持图片/视频/音频/Markdown 预览节点，无法直接替代 ComfyUI 或 Milanote。
+          </p>
+        </div>
+        <div class="strip-item">
+          <div class="strip-metric">缺多人协同与真实后端</div>
+          <p>
+            同步层（<span class="mono">compatLayer.ts</span>）定义了清晰的 5 个 REST 接口，但仓库内仅实现了基于 <span class="mono">localStorage</span> 和 <span class="mono">BroadcastChannel</span> 的本地 Mock 后端；缺乏 CRDT（如 Yjs）并发冲突合并、在线协作光标以及带空间索引（PostGIS / R-Tree）的真实服务端持久化。
+          </p>
+        </div>
+        <div class="strip-item">
+          <div class="strip-metric">核心单体过重（5,061 行）</div>
+          <p>
+            <span class="mono">engine.ts</span> 达 5,061 行、<span class="mono">canvas2DRenderer.ts</span> 超过 100 KB，交互状态机、工具逻辑与业务分支高度集中。纯 Canvas 2D 自绘在复杂中文输入法（IME）、跨块文本选区复制与无障碍阅读（A11y）上的长期维护成本也会显著高于混合渲染架构。
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: Commercial Readiness & Viability -->
+  <section class="sec-no-rule">
+    <div class="grid-12">
+      <div class="col-full">
+        <h2>商用潜力评估：底层底座已过及格线，但变现必须绕开 C 端通用白板</h2>
+        <p class="measure">
+          综合代码质量、安全底座与市场竞争格局，AtlasCanvas 具备明确的商用可行性，前提是<strong>放弃“做给个人创作者用的免费白板”这一红海幻想</strong>，转而将其“纯 TS 零框架依赖 + 超大空间分区 + 后端驱动安全交互”的技术长板卖给对性能、可控性和内网部署有硬性要求的 B 端客户或开发者。
+        </p>
+      </div>
+
+      <div class="col-full">
+        <figure>
+          <div class="fig-title">渲染调度与安全防线已达准生产水准，协同与富媒体能力是主要商用短板</div>
+          <svg viewBox="0 0 680 390" width="100%" role="img" aria-label="AtlasCanvas 商用就绪度六维评估条形图">
+            <!-- Vertical Gridlines (0 to 10 scale: x=200 is 0, x=600 is 10, 40px per unit) -->
+            <line x1="200" y1="24" x2="200" y2="336" stroke="#0F172A" stroke-width="1.2" />
+            <line x1="280" y1="24" x2="280" y2="336" stroke="#E2E8F0" stroke-width="1" />
+            <line x1="360" y1="24" x2="360" y2="336" stroke="#E2E8F0" stroke-width="1" />
+            <line x1="440" y1="24" x2="440" y2="336" stroke="#E2E8F0" stroke-width="1" />
+            <line x1="520" y1="24" x2="520" y2="336" stroke="#E2E8F0" stroke-width="1" />
+            <line x1="600" y1="24" x2="600" y2="336" stroke="#E2E8F0" stroke-width="1" />
+
+            <!-- X Axis Labels -->
+            <text x="200" y="362" font-size="13" fill="#475569" text-anchor="middle">0</text>
+            <text x="280" y="362" font-size="13" fill="#475569" text-anchor="middle">2</text>
+            <text x="360" y="362" font-size="13" fill="#475569" text-anchor="middle">4</text>
+            <text x="440" y="362" font-size="13" fill="#475569" text-anchor="middle">6</text>
+            <text x="520" y="362" font-size="13" fill="#475569" text-anchor="middle">8</text>
+            <text x="600" y="362" font-size="13" fill="#475569" text-anchor="middle">10</text>
+            <text x="400" y="384" font-size="13" fill="#475569" text-anchor="middle">工程就绪度评分（满分 10 分，7 分以上为可直接进入商业交付基线）</text>
+
+            <!-- Threshold line at 7.0 (x = 480) -->
+            <line x1="480" y1="20" x2="480" y2="336" stroke="#059669" stroke-width="1.5" stroke-dasharray="5 4" />
+            <text x="486" y="34" font-size="12.5" fill="#065F46" font-weight="500">商业交付基线 (7.0)</text>
+
+            <!-- Row 1: 8.5 -->
+            <text x="188" y="68" font-size="14" fill="#0F172A" text-anchor="end" font-weight="500">空间分区与渲染内核</text>
+            <rect x="200" y="50" width="340" height="26" fill="#2563EB" />
+            <text x="550" y="68" font-size="14" fill="#1E40AF" font-weight="700">8.5</text>
+
+            <!-- Row 2: 8.5 -->
+            <text x="188" y="120" font-size="14" fill="#0F172A" text-anchor="end" font-weight="500">脚本沙箱与代理安全</text>
+            <rect x="200" y="102" width="340" height="26" fill="#2563EB" />
+            <text x="550" y="120" font-size="14" fill="#1E40AF" font-weight="700">8.5</text>
+
+            <!-- Row 3: 8.0 -->
+            <text x="188" y="172" font-size="14" fill="#0F172A" text-anchor="end" font-weight="500">后端协议与变量联动</text>
+            <rect x="200" y="154" width="320" height="26" fill="#2563EB" />
+            <text x="530" y="172" font-size="14" fill="#1E40AF" font-weight="700">8.0</text>
+
+            <!-- Row 4: 5.0 -->
+            <text x="188" y="224" font-size="14" fill="#0F172A" text-anchor="end" font-weight="500">模块拆分与插件生态</text>
+            <rect x="200" y="206" width="200" height="26" fill="#64748B" />
+            <text x="410" y="224" font-size="14" fill="#334155" font-weight="700">5.0</text>
+
+            <!-- Row 5: 3.5 -->
+            <text x="188" y="276" font-size="14" fill="#0F172A" text-anchor="end" font-weight="500">富媒体与 DAG 数据流</text>
+            <rect x="200" y="258" width="140" height="26" fill="#94A3B8" />
+            <text x="350" y="276" font-size="14" fill="#475569" font-weight="700">3.5</text>
+
+            <!-- Row 6: 3.0 -->
+            <text x="188" y="328" font-size="14" fill="#0F172A" text-anchor="end" font-weight="500">多人协同 (CRDT) 与持久化</text>
+            <rect x="200" y="310" width="120" height="26" fill="#94A3B8" />
+            <text x="330" y="328" font-size="14" fill="#475569" font-weight="700">3.0</text>
+          </svg>
+          <figcaption>注：依据代码结构、单元测试覆盖（51 项）、安全审计记录（walkthrough.md）及商业交付必备能力综合评估（定性工程评分）。</figcaption>
+        </figure>
+      </div>
+
+      <div class="col-full table-wrap" style="margin-top: 36px;">
+        <table>
+          <thead>
+            <tr>
+              <th>商用路径</th>
+              <th>目标客户与核心场景</th>
+              <th>变现模式参考</th>
+              <th>必补工程项</th>
+              <th>推荐优先级</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>路径 A：垂直行业大场景空间操作台</strong></td>
+              <td>游戏世界观/关卡策划大地图、工业数字孪生/物联网拓扑台、大型微服务运维编排台</td>
+              <td>B2B 私有化授权 + 行业定制交付（客单价高、对 C 端颜值要求低于性能与内网安全）</td>
+              <td>PostgreSQL 空间索引后端、RBAC 权限与审计日志、领域专用实体模板</td>
+              <td class="num-cell" style="color: var(--accent-2-text); font-weight: 700;">高（最快变现）</td>
+            </tr>
+            <tr>
+              <td><strong>路径 B：自主可控无限画布 SDK</strong></td>
+              <td>需要嵌入无限画布但难以承受 <a href="https://finance.biggo.com/news/202509190115_tldraw_SDK_4.0_Licensing_Debate" target="_blank" rel="noopener noreferrer">tldraw $6,000/年</a> 授权或受限于 DOM 性能的研发团队</td>
+              <td>Open-Core（核心 MIT 开源 + 企业级 Chunk 后端/协同/商业支持订阅，参考 <a href="https://reactflow.dev/pro" target="_blank" rel="noopener noreferrer">React Flow Pro</a>）</td>
+              <td>拆分 <span class="mono">engine.ts</span> 单体、发布标准 npm 包、完善英文/中文 API 文档与插件钩子</td>
+              <td class="num-cell" style="color: var(--accent-text); font-weight: 700;">中高（中长期壁垒）</td>
+            </tr>
+            <tr>
+              <td><strong>路径 C：嵌入式 AI Agent 蓝图工作台</strong></td>
+              <td>企业内部 AI 编排平台、垂类 AIGC 工具商（复用现有安全代理与动作链）</td>
+              <td>按席位 SaaS 或 OEM 组件授权（避免与 ComfyUI 拼通用算子数量）</td>
+              <td>强类型输入/输出端口、异步流式输出渲染块、图片/音视频多媒体节点</td>
+              <td class="num-cell" style="color: var(--mute); font-weight: 700;">中（需补 DAG 能力）</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="col-full">
+        <blockquote class="pull-quote">
+          与其把 AtlasCanvas 包装成“又一个画画和贴便利贴的创作工具”，不如把它定位为“能直接调度后端接口的二维空间操作系统”——这才是现有白板和节点工具都没有彻底做透的生态位。
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: Actionable Next Steps -->
+  <section class="sec">
+    <div class="grid-12">
+      <div class="col-left-4">
+        <h2>若计划推进商用，建议按三步走验证</h2>
+      </div>
+      <div class="col-right-8 measure">
+        <ul class="clean-list" style="margin-top: 0;">
+          <li><strong>先重构解耦再对外开放（2–4 周）：</strong>将 5,061 行的 <span class="mono">engine.ts</span> 按“相机与视口 / 交互状态机 / 动作执行器 / 同步桥接”拆分为独立模块，把 5 个 REST 接口配齐一套基于 PostgreSQL + PostGIS（或 SQLite R-Tree）的最小参考后端，让外部团队 10 分钟就能跑通真实持久化。</li>
+          <li><strong>补齐最小创作闭环（4–6 周）：</strong>如果瞄准创作蓝图或 AI 工作流场景，优先增加<strong>图片/媒体节点</strong>与<strong>带类型校验的端口连线（Port-to-Port）</strong>，把现有“点击按钮改变量”升级为“上游节点输出自动驱动下游节点”。</li>
+          <li><strong>选定单一垂直标杆场景验证付费：</strong>切忌在没有付费客户前盲目堆砌多人 CRDT 或上百种白板图形；先用“10,000+ 节点流畅漫游 + 节点内安全调用内部 API”这一不可替代优势，切入一个具体的游戏策划、运维拓扑或企业 AI 控制台客户做 PoC 签约。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sources -->
+  <section class="sec">
+    <div class="grid-12">
+      <div class="col-full">
+        <h2>参考来源</h2>
+        <ol class="source-list">
+          <li>AtlasCanvas 项目源码与文档审计：<span class="mono">docs/USAGE_GUIDE.md</span>、<span class="mono">requirements/absolute-requirements.md</span>、<span class="mono">server.ts</span>、<span class="mono">src/framework/*</span> 及安全验证报告 <span class="mono">walkthrough.md</span>。</li>
+          <li>tldraw SDK 官方定价与授权说明：<a href="https://tldraw.dev/pricing" target="_blank" rel="noopener noreferrer">tldraw: Infinite Canvas SDK for React - Pricing and licensing</a> 及 4.0 授权变更分析 <a href="https://finance.biggo.com/news/202509190115_tldraw_SDK_4.0_Licensing_Debate" target="_blank" rel="noopener noreferrer">tldraw SDK 4.0 Licensing Changes (BigGo Finance)</a>。</li>
+          <li>React Flow / xyflow 开源与商业模式：<a href="https://reactflow.dev/pro" target="_blank" rel="noopener noreferrer">React Flow Pro</a> 及官方 MIT 商用说明 <a href="https://github.com/xyflow/xyflow/discussions/3397" target="_blank" rel="noopener noreferrer">xyflow GitHub Discussion #3397</a>。</li>
+          <li>ComfyUI 节点工作流与生态规模：<a href="https://comfy.org/" target="_blank" rel="noopener noreferrer">Comfy - Professional Control of Visual AI</a> 与 <a href="https://chasejarvis.com/blog/what-the-heck-is-comfyui-and-is-right-for-creative-pros/" target="_blank" rel="noopener noreferrer">What the heck is ComfyUI? (Chase Jarvis)</a>。</li>
+          <li>AI 节点创作画布趋势：<a href="https://medium.com/design-bootcamp/stop-tab-switching-the-ai-workflow-revolution-thats-quietly-changing-everything-82fd8dfe08ff" target="_blank" rel="noopener noreferrer">Stop Tab-Switching: Freepik Spaces &amp; Figma Weave (Medium)</a> 与 <a href="https://medium.com/@fadimantium/2026-the-year-of-the-node-based-editor-941f0f15d467" target="_blank" rel="noopener noreferrer">2026: The Year of the Node-Based Editor</a>。</li>
+          <li>Miro、Excalidraw+、Heptabase、Milanote 与 Obsidian 2026 定价与对比：<a href="https://miro.com/pricing/" target="_blank" rel="noopener noreferrer">Miro Pricing</a>、<a href="https://www.sfdify.com/blog/miro-pricing" target="_blank" rel="noopener noreferrer">Miro Pricing 2026 (SFDIFY)</a>、<a href="https://plus.excalidraw.com/pricing" target="_blank" rel="noopener noreferrer">Excalidraw+ Pricing</a>、<a href="https://drawdy.io/pricing/excalidraw" target="_blank" rel="noopener noreferrer">Excalidraw+ Pricing Explained (Drawdy)</a>、<a href="https://fabric.so/comparison/heptabase-vs-obsidian" target="_blank" rel="noopener noreferrer">Heptabase vs Obsidian (Fabric.so)</a>、<a href="https://www.spotsaas.com/compare/heptabase-vs-milanote" target="_blank" rel="noopener noreferrer">Heptabase vs Milanote (Spotsaas)</a>。</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

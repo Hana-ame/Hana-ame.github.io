@@ -1,0 +1,2394 @@
+<!DOCTYPE html>
+<!-- saved from url=(0059)file:///D:/WorkPlace/peerdrive/doc/architecture-editor.html -->
+<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peerdrive 模块与逻辑关系（示例） · 架构编辑器</title>
+<style>
+  :root{
+    --canvas:#f8fafc; --panel:#ffffff; --border:#e2e8f0; --border-strong:#cbd5e1;
+    --text:#0f172a; --muted:#64748b; --muted-2:#94a3b8;
+    --accent:#2563eb; --accent-strong:#1d4ed8; --accent-soft:#eff6ff;
+    --danger:#dc2626; --danger-soft:#fef2f2;
+    --warn:#b45309; --warn-soft:#fffbeb;
+    --ok:#16a34a; --ok-soft:#f0fdf4;
+    --shadow:0 4px 16px rgba(15,23,42,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;display:flex;flex-direction:column;overflow:hidden;background:var(--canvas);color:var(--text);
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;font-size:13px;-webkit-font-smoothing:antialiased}
+  button,input,select,textarea{font:inherit;color:inherit}
+  button{cursor:pointer}
+  :focus-visible{outline:2px solid #93c5fd;outline-offset:1px}
+
+  /* ---------- 顶栏 ---------- */
+  header{display:flex;align-items:center;gap:12px;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--border);z-index:10;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:10px;min-width:250px}
+  .brand .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;display:grid;place-items:center;font-size:15px;font-weight:700;box-shadow:0 2px 6px rgba(37,99,235,.35);flex:0 0 auto}
+  .brand h1{font-size:14px;margin:0;line-height:1.2;display:flex;align-items:center;gap:6px}
+  .brand .tag{font-size:10px;color:var(--muted);border:1px solid var(--border);border-radius:4px;padding:0 4px;font-weight:500;letter-spacing:.02em}
+  .project-name{border:1px solid transparent;background:transparent;padding:1px 3px;margin:1px -3px;font-size:11.5px;color:var(--muted);border-radius:4px;width:250px;max-width:40vw}
+  .project-name:hover{background:#f1f5f9;border-color:var(--border)}
+  .project-name:focus{outline:none;background:#fff;border-color:#93c5fd;color:var(--text);box-shadow:0 0 0 3px var(--accent-soft)}
+  .toolbar{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+  .tgroup{display:flex;align-items:center;gap:2px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:2px}
+  .btn{border:1px solid transparent;background:transparent;border-radius:6px;padding:4px 9px;font-size:12px;color:var(--text);display:inline-flex;align-items:center;gap:4px;line-height:1.25;white-space:nowrap}
+  .btn:hover{background:#fff;border-color:var(--border);box-shadow:0 1px 2px rgba(15,23,42,.06)}
+  .btn:disabled{opacity:.35;cursor:default;background:transparent;border-color:transparent;box-shadow:none}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.primary:hover{background:var(--accent-strong);border-color:var(--accent-strong)}
+  .btn .ico{font-size:13px;line-height:1;min-width:12px;text-align:center}
+  .zoom-group{display:flex;align-items:center;border:1px solid var(--border);border-radius:8px;background:#f8fafc;padding:2px}
+  .zoom-group .btn{width:26px;justify-content:center;padding:4px 0}
+  #zoomPct{min-width:42px;text-align:center;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;user-select:none}
+  .toggle{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted);user-select:none;white-space:nowrap;padding:0 2px}
+  .toggle input{accent-color:var(--accent);margin:0}
+  @media (max-width:1180px){ .btn .t{display:none} .btn{padding:4px 7px} .brand{min-width:200px} }
+
+  /* ---------- 画布 ---------- */
+  main{flex:1;display:flex;min-height:0;position:relative}
+  #canvasWrap{position:relative;flex:1;min-width:0;overflow:hidden;background:var(--canvas)}
+  #canvasWrap.panning{cursor:grabbing}
+  svg#canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+  #canvasWrap.panning svg#canvas{cursor:grabbing}
+
+  /* 连线 */
+  .edge{fill:none;stroke-width:2;stroke-linecap:round;transition:opacity .12s ease,stroke-width .12s ease;pointer-events:none}
+  .edge.code{stroke-dasharray:10 6}
+  .edge.data{stroke-dasharray:3 9}
+  .edge.net{stroke-dasharray:14 8}
+  body.flow .edge.code{animation:flowCode 1.4s linear infinite}
+  body.flow .edge.data{animation:flowData 1s linear infinite}
+  body.flow .edge.net{animation:flowNet 1.2s linear infinite}
+  @keyframes flowCode{to{stroke-dashoffset:-16}}
+  @keyframes flowData{to{stroke-dashoffset:-12}}
+  @keyframes flowNet{to{stroke-dashoffset:-22}}
+  @media (prefers-reduced-motion: reduce){.edge{animation:none!important}}
+  .edge-hit{fill:none;stroke:transparent;stroke-width:16;pointer-events:stroke;cursor:pointer}
+  .edge.dim{opacity:.09}
+  .edge.hl{stroke-width:3;opacity:1}
+  .edge.sel{stroke-width:3.2;opacity:1;filter:drop-shadow(0 0 3px rgba(37,99,235,.45))}
+  .edge-label{font-size:10.5px;fill:#475569;text-anchor:middle;paint-order:stroke;stroke:var(--canvas);stroke-width:4px;stroke-linejoin:round;pointer-events:none;user-select:none;opacity:0;transition:opacity .12s}
+  .edge-label.show{opacity:1}
+  .edge-label.sel{font-weight:700;fill:var(--text)}
+  .edge-preview{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:5 5;pointer-events:none;opacity:.9}
+
+  /* 节点 */
+  .node{cursor:grab}
+  .node.dragging{cursor:grabbing}
+  .node circle.body{stroke:#fff;stroke-width:2;transition:filter .12s}
+  .node:hover circle.body{filter:brightness(1.07)}
+  .node .halo{fill:transparent;pointer-events:none}
+  .node .sel-ring{fill:none;stroke:var(--text);stroke-width:1.4;stroke-dasharray:3 3;opacity:0;pointer-events:none}
+  .node.selected .sel-ring{opacity:.85}
+  .node .node-label{font-size:11.5px;fill:var(--text);text-anchor:middle;paint-order:stroke;stroke:var(--canvas);stroke-width:4px;stroke-linejoin:round;pointer-events:none;user-select:none}
+  .node.dim{opacity:.16}
+  .node.dim .node-label{opacity:.5}
+  .node.hl .halo{fill:rgba(37,99,235,.08)}
+  .node.drop-target circle.body{stroke:var(--accent);stroke-width:3;filter:drop-shadow(0 0 7px rgba(37,99,235,.55))}
+  .node .port{fill:#fff;stroke-width:2;opacity:0;pointer-events:none;transition:opacity .1s;cursor:crosshair}
+  .node:hover .port,.node.selected .port{opacity:1;pointer-events:all}
+  .node .port:hover{fill:var(--accent-soft)}
+  .warn-badge{pointer-events:none}
+  .warn-badge circle{fill:var(--danger);stroke:#fff;stroke-width:1.5}
+  .warn-badge text{fill:#fff;font-size:8px;font-weight:700;text-anchor:middle;dominant-baseline:central}
+
+  /* ---------- 属性面板 ---------- */
+  #inspector{width:344px;flex:0 0 344px;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;min-height:0;z-index:2}
+  .insp-head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);font-weight:600;font-size:12.5px;flex:0 0 auto}
+  .insp-head .kind-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:var(--muted-2)}
+  .insp-body{flex:1;overflow:auto;padding:14px}
+  .field{margin-bottom:12px}
+  .field .cap{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--muted);font-weight:600;margin-bottom:5px;letter-spacing:.04em}
+  .field .req{color:var(--danger);font-weight:700}
+  .field input[type=text],.field select,.field textarea{width:100%;border:1px solid var(--border);border-radius:7px;padding:7px 9px;font-size:12.5px;background:#fff;transition:border-color .1s,box-shadow .1s}
+  .field input[type=text]:focus,.field select:focus,.field textarea:focus{outline:none;border-color:#93c5fd;box-shadow:0 0 0 3px var(--accent-soft)}
+  .field textarea{resize:vertical;min-height:88px;line-height:1.6;font-family:inherit}
+  .field .hint{font-size:10.5px;color:var(--muted-2);margin-top:5px;line-height:1.5}
+  .field .count{float:right;font-weight:400;color:var(--muted-2);font-size:10px;font-variant-numeric:tabular-nums}
+  .field.bad textarea{border-color:#fca5a5;background:#fffafa}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .endpoints{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:8px}
+  .node-chip{border:1px solid var(--border);background:#fff;border-radius:999px;padding:3px 9px;font-size:11.5px;display:inline-flex;align-items:center;gap:5px;max-width:100%}
+  .node-chip:hover{border-color:#93c5fd;background:var(--accent-soft)}
+  .node-chip .dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+  .arrow{color:var(--muted-2)}
+  .insp-actions{display:flex;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+  .insp-actions .btn{flex:1;justify-content:center;border:1px solid var(--border);background:#fff}
+  .insp-actions .btn.danger{color:var(--danger);border-color:#fecaca;background:var(--danger-soft)}
+  .insp-actions .btn.danger:hover{background:#fee2e2;border-color:#fca5a5}
+  .conn-section h4{margin:16px 0 5px;font-size:10px;color:var(--muted);letter-spacing:.06em;font-weight:700}
+  .conn-list{display:flex;flex-direction:column;gap:2px}
+  .conn{display:flex;align-items:center;gap:6px;border:none;background:transparent;border-radius:6px;padding:5px 6px;text-align:left;font-size:11.5px;color:#334155;width:100%}
+  .conn:hover{background:#f1f5f9}
+  .conn .arrow{width:12px;flex:0 0 12px;text-align:center}
+  .conn .lbl{color:var(--muted);margin-left:auto;max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .empty-state{padding:14px 2px;text-align:center;color:var(--muted)}
+  .empty-state .big{font-size:34px;color:#cbd5e1;margin-bottom:6px;line-height:1}
+  .empty-state h3{font-size:13px;color:var(--text);margin:0 0 6px}
+  .empty-state p{font-size:11.5px;line-height:1.7;margin:0 0 14px}
+  .tips{text-align:left;font-size:11.5px;line-height:1.85;color:var(--muted);background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin:0}
+  .tips b{color:var(--text);font-weight:600}
+  .tips code{background:#eef2f7;border-radius:3px;padding:0 3px;color:#475569}
+  .mini-stats{display:flex;gap:8px;margin:14px 0 4px}
+  .mini-stat{flex:1;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:8px 4px;text-align:center}
+  .mini-stat b{display:block;font-size:16px;color:var(--text);line-height:1.2}
+  .mini-stat span{font-size:10px;color:var(--muted)}
+
+  /* ---------- 图例 ---------- */
+  #legend{position:absolute;left:12px;top:12px;width:226px;max-height:calc(100% - 24px);overflow:auto;background:rgba(255,255,255,.95);backdrop-filter:blur(4px);border:1px solid var(--border);border-radius:10px;padding:8px 11px;font-size:11px;box-shadow:var(--shadow);z-index:3;user-select:none}
+  #legend .lg-title{font-weight:700;font-size:11px;color:var(--text);display:flex;justify-content:space-between;align-items:center;gap:6px}
+  #legend .lg-title button{border:none;background:transparent;color:var(--muted-2);font-size:13px;padding:0 2px;line-height:1;cursor:pointer}
+  #legend.collapsed{width:auto;padding:5px 9px}
+  #legend.collapsed .lg-title{gap:8px}
+  #legend.collapsed .lg-body{display:none}
+  .lg-cols{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
+  #legend .sec{margin-top:7px;padding-top:6px;border-top:1px solid var(--border);color:var(--muted);font-weight:700;font-size:10px;letter-spacing:.05em}
+  .lg-row{display:flex;align-items:center;gap:6px;line-height:1.75;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lg-row .dot{width:9px;height:9px;border-radius:50%;flex:0 0 9px}
+  .lg-row .line{width:22px;height:0;border-top:2px solid;flex:0 0 22px}
+  .lg-row .line.dash{border-top-style:dashed}
+  #legend .hint-line{font-size:10px;color:var(--muted-2);line-height:1.6;margin-top:6px;white-space:normal}
+  #legend .lg-toggle{display:flex;align-items:center;gap:5px;margin-top:8px;color:var(--muted);font-size:10.5px}
+
+  /* ---------- 提示 / Toast / 弹窗 ---------- */
+  #tooltip{position:fixed;display:none;max-width:380px;background:rgba(15,23,42,.96);color:#f8fafc;border-radius:9px;padding:10px 12px;font-size:11.5px;line-height:1.65;pointer-events:none;z-index:50;box-shadow:0 10px 30px rgba(15,23,42,.3)}
+  #tooltip .tt-title{font-weight:700;font-size:12.5px;color:#fff;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  #tooltip .tt-chip{font-size:10px;font-weight:500;color:#e2e8f0;background:rgba(255,255,255,.15);border-radius:4px;padding:1px 5px}
+  #tooltip .tt-desc{margin-top:6px;color:#e2e8f0;white-space:pre-wrap;word-break:break-word}
+  #tooltip .tt-meta{margin-top:7px;padding-top:6px;border-top:1px solid rgba(255,255,255,.15);color:#94a3b8;font-size:10.5px}
+  #toast{position:fixed;left:50%;bottom:48px;transform:translateX(-50%) translateY(10px);background:#0f172a;color:#f8fafc;padding:9px 16px;border-radius:999px;font-size:12px;box-shadow:0 8px 24px rgba(15,23,42,.28);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:80;max-width:80vw;text-align:center;line-height:1.5}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.warn{background:var(--warn)}
+  #toast.err{background:#b91c1c}
+  #modalOverlay{position:fixed;inset:0;background:rgba(15,23,42,.42);display:flex;align-items:center;justify-content:center;z-index:70;padding:24px}
+  #modalOverlay[hidden]{display:none}
+  .modal{background:#fff;border-radius:14px;width:min(540px,94vw);max-height:82vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(15,23,42,.3)}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--border);flex:0 0 auto}
+  .modal-head h2{margin:0;font-size:14px}
+  .modal-close{border:none;background:transparent;font-size:18px;color:var(--muted);border-radius:6px;width:28px;height:28px;line-height:1}
+  .modal-close:hover{background:#f1f5f9}
+  .modal-body{padding:16px 18px;overflow:auto;font-size:12.5px;line-height:1.75}
+  .modal-body h3{font-size:12px;margin:14px 0 6px;color:var(--text)}
+  .modal-body h3:first-child{margin-top:0}
+  .modal-body p{margin:0 0 9px}
+  .modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--border);flex:0 0 auto}
+  .modal-foot:empty{display:none}
+  .missing-list{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 14px}
+  .chip-btn{border:1px solid var(--border);background:#fff;border-radius:999px;padding:3px 10px;font-size:11.5px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chip-btn:hover{border-color:#93c5fd;background:var(--accent-soft)}
+  .chip-btn.red{border-color:#fecaca;color:#b91c1c;background:var(--danger-soft)}
+  .check-ok{display:flex;gap:8px;align-items:center;background:var(--ok-soft);border:1px solid #bbf7d0;color:#166534;border-radius:8px;padding:10px 12px;margin-bottom:12px}
+  .check-stat{font-size:12px;color:var(--muted);margin-bottom:10px}
+  .check-stat b{color:var(--text)}
+  .kbd-grid{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;align-items:center}
+  .kbd-grid kbd{justify-self:start}
+  .kbd-grid span{color:var(--muted)}
+  kbd{font-family:inherit;font-size:10.5px;border:1px solid var(--border);border-bottom-width:2px;border-radius:4px;padding:1px 5px;background:#f8fafc;color:#475569;white-space:nowrap}
+
+  /* ---------- 状态栏 ---------- */
+  .statusbar{display:flex;align-items:center;gap:14px;padding:5px 14px;background:var(--panel);border-top:1px solid var(--border);font-size:11px;color:var(--muted);flex-wrap:wrap;flex:0 0 auto;min-height:30px}
+  .statusbar b{color:var(--text);font-weight:600}
+  .statusbar .sep{color:#cbd5e1;margin:0 4px}
+  #statCompleteness{border:1px solid transparent;background:transparent;border-radius:5px;padding:2px 6px;font-size:11px;color:var(--muted)}
+  #statCompleteness:hover{background:#f1f5f9;border-color:var(--border)}
+  #statCompleteness.missing{color:var(--warn);background:var(--warn-soft);border-color:#fde68a}
+  .statusbar .spacer{flex:1}
+  .statusbar .keys{color:var(--muted-2)}
+  .statusbar .keys .sep{margin:0 6px}
+</style>
+</head>
+<body class="flow">
+<header>
+  <div class="brand">
+    <div class="mark">◈</div>
+    <div>
+      <h1>架构编辑器 <span class="tag">HTML · 拖拽连线</span></h1>
+      <input id="projectName" class="project-name" value="未命名架构" spellcheck="false" aria-label="架构图名称">
+    </div>
+    <span id="saveState">已自动保存 · 22:25:42</span>
+  </div>
+  <div class="toolbar">
+    <div class="tgroup">
+      <button class="btn" id="btnUndo" title="撤销 (Ctrl+Z)"><span class="ico">↺</span><span class="t">撤销</span></button>
+      <button class="btn" id="btnRedo" title="重做 (Ctrl+Shift+Z)" disabled=""><span class="ico">↻</span><span class="t">重做</span></button>
+    </div>
+    <button class="btn primary" id="btnAddNode" title="新增节点 (N)"><span class="ico">＋</span><span class="t">节点</span></button>
+    <button class="btn" id="btnLayout" title="按依赖关系分层整理布局"><span class="ico">⌗</span><span class="t">整理</span></button>
+    <button class="btn" id="btnFit" title="缩放以显示全部节点"><span class="ico">⤢</span><span class="t">适应</span></button>
+    <div class="zoom-group">
+      <button class="btn" id="btnZoomOut" title="缩小">−</button>
+      <span id="zoomPct">79%</span>
+      <button class="btn" id="btnZoomIn" title="放大">＋</button>
+    </div>
+    <label class="toggle" title="始终显示所有连线标签"><input type="checkbox" id="toggleLabels"> 边标签</label>
+    <button class="btn" id="btnCheck" title="检查节点描述 / 连线规范是否齐全"><span class="ico">✓</span><span class="t">检查</span></button>
+    <div class="tgroup">
+      <button class="btn" id="btnExport" title="导出 JSON"><span class="ico">⇩</span><span class="t">导出</span></button>
+      <button class="btn" id="btnImport" title="导入 JSON"><span class="ico">⇧</span><span class="t">导入</span></button>
+      <button class="btn" id="btnMenu" title="更多操作与帮助">⋯</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="canvasWrap" class="">
+    <svg id="canvas" xmlns="http://www.w3.org/2000/svg" role="application" aria-label="架构图画布">
+      <defs id="defs"><pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse" patternTransform="translate(14.003634445293187,115.89249329161032) scale(0.7926879689450063)"><circle cx="1.2" cy="1.2" r="1.1" fill="#cbd5e1"></circle></pattern><marker id="arr-code" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#64748b"></path></marker><marker id="arr-data" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#0ea5e9"></path></marker><marker id="arr-p_http" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#0ea5e9"></path></marker><marker id="arr-p_ws" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#14b8a6"></path></marker><marker id="arr-p_grpc" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#ec4899"></path></marker><marker id="arr-p_peerjs" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#8b5cf6"></path></marker><marker id="arr-p_dht" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#f59e0b"></path></marker><marker id="arr-p_mqtt" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#0891b2"></path></marker><marker id="arr-p_other" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#64748b"></path></marker></defs>
+      <rect id="bg" x="0" y="0" width="100%" height="100%" fill="url(#grid)"></rect>
+      <g id="world" transform="translate(14.003634445293187,115.89249329161032) scale(0.7926879689450063)">
+        <g id="gEdges"><path class="edge-hit" d="M 698.31 674.35 Q 760.34 560.36 864.62 483.13"></path><path class="edge code" marker-end="url(#arr-code)" d="M 698.31 674.35 Q 760.34 560.36 864.62 483.13" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 702.84 679.48 Q 822.09 532.04 1003.75 477.60"></path><path class="edge code" marker-end="url(#arr-code)" d="M 702.84 679.48 Q 822.09 532.04 1003.75 477.60" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 704.75 682.84 Q 925.22 578.41 1145.69 473.99"></path><path class="edge code" marker-end="url(#arr-code)" d="M 704.75 682.84 Q 925.22 578.41 1145.69 473.99" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 759.00 462.00 Q 951.00 462.00 1143.00 462.00"></path><path class="edge code" marker-end="url(#arr-code)" d="M 759.00 462.00 Q 951.00 462.00 1143.00 462.00" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 1047.00 462.00 Q 1095.00 462.00 1143.00 462.00"></path><path class="edge code" marker-end="url(#arr-code)" d="M 1047.00 462.00 Q 1095.00 462.00 1143.00 462.00" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 672.19 669.60 Q 638.65 579.39 605.11 489.18"></path><path class="edge code" marker-end="url(#arr-code)" d="M 672.19 669.60 Q 638.65 579.39 605.11 489.18" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 615.45 457.23 Q 861.10 399.91 1106.76 342.59"></path><path class="edge code" marker-end="url(#arr-code)" d="M 615.45 457.23 Q 861.10 399.91 1106.76 342.59" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 1114.00 336.00 Q 1049.00 336.00 984.00 336.00"></path><path class="edge code" marker-end="url(#arr-code)" d="M 1114.00 336.00 Q 1049.00 336.00 984.00 336.00" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 1118.68 322.78 Q 905.96 150.39 693.23 -22.00"></path><path class="edge code" marker-end="url(#arr-code)" d="M 1118.68 322.78 Q 905.96 150.39 693.23 -22.00" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 607.21 444.91 Q 682.68 339.25 758.14 233.60"></path><path class="edge code" marker-end="url(#arr-code)" d="M 607.21 444.91 Q 682.68 339.25 758.14 233.60" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 611.50 449.01 Q 831.86 275.47 1052.22 101.94"></path><path class="edge code" marker-end="url(#arr-code)" d="M 611.50 449.01 Q 831.86 275.47 1052.22 101.94" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 598.17 441.24 Q 632.71 214.65 667.26 -11.95"></path><path class="edge code" marker-end="url(#arr-code)" d="M 598.17 441.24 Q 632.71 214.65 667.26 -11.95" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 934.00 336.00 Q 869.00 336.00 804.00 336.00"></path><path class="edge code" marker-end="url(#arr-code)" d="M 934.00 336.00 Q 869.00 336.00 804.00 336.00" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 775.00 315.00 Q 775.00 277.00 775.00 239.00"></path><path class="edge code" marker-end="url(#arr-code)" d="M 775.00 315.00 Q 775.00 277.00 775.00 239.00" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 766.96 190.60 Q 724.58 88.42 682.20 -13.77"></path><path class="edge code" marker-end="url(#arr-code)" d="M 766.96 190.60 Q 724.58 88.42 682.20 -13.77" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 781.46 190.02 Q 814.96 86.31 848.47 -17.40"></path><path class="edge code" marker-end="url(#arr-code)" d="M 781.46 190.02 Q 814.96 86.31 848.47 -17.40" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 610.08 195.38 Q 723.53 85.41 836.97 -24.56"></path><path class="edge code" marker-end="url(#arr-code)" d="M 610.08 195.38 Q 723.53 85.41 836.97 -24.56" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 595.00 189.00 Q 595.00 151.00 595.00 113.00"></path><path class="edge code" marker-end="url(#arr-code)" d="M 595.00 189.00 Q 595.00 151.00 595.00 113.00" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 973.59 200.24 Q 1071.90 148.63 1170.21 97.02"></path><path class="edge code" marker-end="url(#arr-code)" d="M 973.59 200.24 Q 1071.90 148.63 1170.21 97.02" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 1296.68 218.02 Q 1030.66 334.40 764.65 450.78"></path><path class="edge code" marker-end="url(#arr-code)" d="M 1296.68 218.02 Q 1030.66 334.40 764.65 450.78" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 1296.12 203.39 Q 1138.78 148.32 981.43 93.25"></path><path class="edge code" marker-end="url(#arr-code)" d="M 1296.12 203.39 Q 1138.78 148.32 981.43 93.25" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 754.00 210.00 Q 689.00 210.00 624.00 210.00"></path><path class="edge data" marker-end="url(#arr-data)" d="M 754.00 210.00 Q 689.00 210.00 624.00 210.00" style="stroke: rgb(14, 165, 233);"></path><path class="edge-hit" d="M 796.00 210.00 Q 861.00 210.00 926.00 210.00"></path><path class="edge data" marker-end="url(#arr-data)" d="M 796.00 210.00 Q 861.00 210.00 926.00 210.00" style="stroke: rgb(14, 165, 233);"></path><path class="edge-hit" d="M 976.00 210.00 Q 1041.00 210.00 1106.00 210.00"></path><path class="edge data" marker-end="url(#arr-data)" d="M 976.00 210.00 Q 1041.00 210.00 1106.00 210.00" style="stroke: rgb(14, 165, 233);"></path><path class="edge-hit" d="M 1114.00 210.00 Q 869.00 210.00 624.00 210.00"></path><path class="edge data" marker-end="url(#arr-data)" d="M 1114.00 210.00 Q 869.00 210.00 624.00 210.00" style="stroke: rgb(14, 165, 233);"></path><path class="edge-hit" d="M 1295.00 210.00 Q 1049.50 238.00 804.00 210.00"></path><path class="edge data" marker-end="url(#arr-data)" d="M 1295.00 210.00 Q 1049.50 238.00 804.00 210.00" style="stroke: rgb(14, 165, 233);"></path><path class="edge-hit" d="M 796.00 210.00 Q 1041.50 238.00 1287.00 210.00"></path><path class="edge data" marker-end="url(#arr-data)" d="M 796.00 210.00 Q 1041.50 238.00 1287.00 210.00" style="stroke: rgb(14, 165, 233);"></path><path class="edge-hit" d="M 155.00 316.00 Q 155.00 277.00 155.00 238.00"></path><path class="edge code" marker-end="url(#arr-code)" d="M 155.00 316.00 Q 155.00 277.00 155.00 238.00" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 240.14 567.57 Q 200.81 402.40 161.49 237.24"></path><path class="edge code" marker-end="url(#arr-code)" d="M 240.14 567.57 Q 200.81 402.40 161.49 237.24" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 237.94 568.22 Q 201.18 465.30 164.42 362.37"></path><path class="edge code" marker-end="url(#arr-code)" d="M 237.94 568.22 Q 201.18 465.30 164.42 362.37" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 249.86 567.57 Q 289.19 402.40 328.51 237.24"></path><path class="edge code" marker-end="url(#arr-code)" d="M 249.86 567.57 Q 289.19 402.40 328.51 237.24" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 245.00 567.00 Q 245.00 529.00 245.00 491.00"></path><path class="edge code" marker-end="url(#arr-code)" d="M 245.00 567.00 Q 245.00 529.00 245.00 491.00" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 232.79 444.91 Q 202.03 401.85 171.27 358.78"></path><path class="edge code" marker-end="url(#arr-code)" d="M 232.79 444.91 Q 202.03 401.85 171.27 358.78" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 659.75 679.35 Q 418.95 515.55 178.15 351.75"></path><path class="edge code" marker-end="url(#arr-code)" d="M 659.75 679.35 Q 418.95 515.55 178.15 351.75" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 666.12 672.82 Q 508.71 452.80 351.29 232.77"></path><path class="edge code" marker-end="url(#arr-code)" d="M 666.12 672.82 Q 508.71 452.80 351.29 232.77" style="stroke: rgb(100, 116, 139);"></path><path class="edge-hit" d="M 265.41 592.96 Q 463.42 612.24 648.21 685.94"></path><path class="edge net" marker-end="url(#arr-p_http)" d="M 265.41 592.96 Q 463.42 612.24 648.21 685.94" style="stroke: rgb(14, 165, 233);"></path><path class="edge-hit" d="M 265.41 592.96 Q 450.20 666.66 648.21 685.94"></path><path class="edge net" marker-end="url(#arr-p_ws)" d="M 265.41 592.96 Q 450.20 666.66 648.21 685.94" style="stroke: rgb(20, 184, 166);"></path><path class="edge-hit" d="M 702.84 679.48 Q 853.29 578.54 1003.75 477.60"></path><path class="edge net" marker-end="url(#arr-p_http)" d="M 702.84 679.48 Q 853.29 578.54 1003.75 477.60" style="stroke: rgb(14, 165, 233);"></path><path class="edge-hit" d="M 702.84 679.48 Q 884.49 625.04 1003.75 477.60"></path><path class="edge net" marker-end="url(#arr-p_ws)" d="M 702.84 679.48 Q 884.49 625.04 1003.75 477.60" style="stroke: rgb(20, 184, 166);"></path><path class="edge-hit" d="M 698.31 674.35 Q 802.59 597.11 864.62 483.13"></path><path class="edge net" marker-end="url(#arr-p_dht)" d="M 698.31 674.35 Q 802.59 597.11 864.62 483.13" style="stroke: rgb(245, 158, 11);"></path><path class="edge-hit" d="M 705.66 685.03 Q 997.18 578.33 1288.71 471.62"></path><path class="edge net" marker-end="url(#arr-p_http)" d="M 705.66 685.03 Q 997.18 578.33 1288.71 471.62" style="stroke: rgb(14, 165, 233);"></path><path class="edge-hit" d="M 974.82 203.06 Q 1131.70 148.16 1288.57 93.25"></path><path class="edge net" marker-end="url(#arr-p_http)" d="M 974.82 203.06 Q 1131.70 148.16 1288.57 93.25" style="stroke: rgb(14, 165, 233);"></path><path class="edge-hit" d="M 898.05 448.83 Q 1095.99 275.63 1293.93 102.44"></path><path class="edge net" marker-end="url(#arr-p_dht)" d="M 898.05 448.83 Q 1095.99 275.63 1293.93 102.44" style="stroke: rgb(245, 158, 11);"></path><path class="edge-hit" d="M 701.91 678.19 Q 997.33 452.59 1292.75 226.99"></path><path class="edge net" marker-end="url(#arr-p_peerjs)" d="M 701.91 678.19 Q 997.33 452.59 1292.75 226.99" style="stroke: rgb(139, 92, 246);"></path><path class="edge-hit" d="M 687.53 668.74 Q 709.88 578.95 732.24 489.17"></path><path class="edge code" marker-end="url(#arr-code)" d="M 687.53 668.74 Q 709.88 578.95 732.24 489.17" style="stroke: rgb(100, 116, 139);"></path></g>
+        <g id="gEdgeLabels"><text class="edge-label" x="770.9" y="564.6">require+replace</text><g class="warn-badge" display="none" transform="translate(770.9,580.6)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="837.7" y="550.3">require+replace</text><g class="warn-badge" display="none" transform="translate(837.7,566.3)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="925.2" y="573.4">indirect</text><g class="warn-badge" display="none" transform="translate(925.2,589.4)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="951.0" y="457.0">require</text><g class="warn-badge" display="none" transform="translate(951.0,473.0)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="1095.0" y="457.0">require</text><g class="warn-badge" display="none" transform="translate(1095.0,473.0)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="638.6" y="574.4">cli 调度入口</text><g class="warn-badge" display="none" transform="translate(638.6,590.4)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="861.1" y="394.9">BuildRouter 装配</text><g class="warn-badge" display="none" transform="translate(861.1,410.9)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="1049.0" y="331.0">NewRouter 构建路由</text><g class="warn-badge" display="none" transform="translate(1049.0,347.0)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="906.0" y="145.4">读取配置</text><g class="warn-badge" display="none" transform="translate(906.0,161.4)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="682.7" y="334.3">serve 启动编排</text><g class="warn-badge" display="none" transform="translate(682.7,350.3)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="831.9" y="270.5">托盘注册 (Win)</text><g class="warn-badge" display="none" transform="translate(831.9,286.5)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="632.7" y="209.6">读取配置</text><g class="warn-badge" display="none" transform="translate(632.7,225.6)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="869.0" y="331.0">挂载 + admin 转交</text><g class="warn-badge" display="none" transform="translate(869.0,347.0)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="775.0" y="272.0">业务编排</text><g class="warn-badge" display="none" transform="translate(775.0,288.0)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="724.6" y="83.4">读取配置</text><g class="warn-badge" display="none" transform="translate(724.6,99.4)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="815.0" y="81.3">安全边界</text><g class="warn-badge" display="none" transform="translate(815.0,97.3)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="723.5" y="80.4">边界约束 (概念)</text><g class="warn-badge" display="none" transform="translate(723.5,96.4)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="595.0" y="146.0">数据模型</text><g class="warn-badge" display="none" transform="translate(595.0,162.0)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="1071.9" y="143.6">ECH 源 (接口注入)</text><g class="warn-badge" display="none" transform="translate(1071.9,159.6)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="1030.7" y="329.4">数据面 (WebRTC)</text><g class="warn-badge" display="none" transform="translate(1030.7,345.4)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="1138.8" y="143.3">管理面 (WS)</text><g class="warn-badge" display="none" transform="translate(1138.8,159.3)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="689.0" y="205.0">file_index 读写</text><g class="warn-badge" display="none" transform="translate(689.0,221.0)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="861.0" y="205.0">多源取数</text><g class="warn-badge" display="none" transform="translate(861.0,221.0)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="1041.0" y="205.0">下载管线</text><g class="warn-badge" display="none" transform="translate(1041.0,221.0)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="869.0" y="205.0">注册 index</text><g class="warn-badge" display="none" transform="translate(869.0,221.0)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="1049.5" y="219.0">帧→业务 (Session)</text><g class="warn-badge" display="none" transform="translate(1049.5,235.0)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="1041.5" y="219.0">业务→帧响应</text><g class="warn-badge" display="none" transform="translate(1041.5,235.0)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="155.0" y="272.0">重导出 core</text><g class="warn-badge" display="none" transform="translate(155.0,288.0)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="200.8" y="397.4">import/重导出 core</text><g class="warn-badge" display="none" transform="translate(200.8,413.4)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="201.2" y="460.3">dep</text><g class="warn-badge" display="none" transform="translate(201.2,476.3)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="289.2" y="397.4">dep</text><g class="warn-badge" display="none" transform="translate(289.2,413.4)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="245.0" y="524.0">platform 会话</text><g class="warn-badge" display="none" transform="translate(245.0,540.0)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="202.0" y="396.8">WS 会话 + admin</text><g class="warn-badge" display="none" transform="translate(202.0,412.8)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="419.0" y="510.5">内嵌 panel.html（/panel 托管）</text><g class="warn-badge" display="none" transform="translate(419.0,526.5)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="508.7" y="447.8">内嵌 peerjs.min.js（/peerjs.min.js）</text><g class="warn-badge" display="none" transform="translate(508.7,463.8)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="460.1" y="620.8">管理面 + 文件 API</text><g class="warn-badge" display="none" transform="translate(460.1,636.8)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="453.5" y="648.1">WS 本地会话</text><g class="warn-badge" display="none" transform="translate(453.5,664.1)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="853.3" y="573.5">/discover /status 发现 API</text><g class="warn-badge" display="none" transform="translate(853.3,589.5)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="868.9" y="596.8">/peerjs 信令</text><g class="warn-badge" display="none" transform="translate(868.9,612.8)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="792.0" y="582.9">DHT 节点发现</text><g class="warn-badge" display="none" transform="translate(792.0,598.9)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="997.2" y="573.3">ECH 前置代理</text><g class="warn-badge" display="none" transform="translate(997.2,589.3)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="1131.7" y="143.2">IPFS 网关取数</text><g class="warn-badge" display="none" transform="translate(1131.7,159.2)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="1096.0" y="270.6">BEP 44/51</text><g class="warn-badge" display="none" transform="translate(1096.0,286.6)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="997.3" y="447.6">P2P 数据面</text><g class="warn-badge" display="none" transform="translate(997.3,463.6)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><text class="edge-label" x="709.9" y="574.0">新连线</text><g class="warn-badge" display="" transform="translate(709.9,590.0)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g></g>
+        <g id="gNodes"><g class="node" data-id="server" transform="translate(681.2478951348198,693.9685567220051)"><circle r="32" class="halo"></circle><circle r="29" class="sel-ring"></circle><circle r="23" class="body" fill="#1e3a8a"></circle><text class="node-label" y="43">peerdrive 主二进制</text><g class="warn-badge" display="none" transform="translate(17.94,-17.94)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#1e3a8a" cx="26" cy="0"></circle><circle r="6" class="port" stroke="#1e3a8a" cx="0" cy="26"></circle><circle r="6" class="port" stroke="#1e3a8a" cx="-26" cy="0"></circle><circle r="6" class="port" stroke="#1e3a8a" cx="0" cy="-26"></circle></g><g class="node" data-id="go-peerjs" transform="translate(739,462)"><circle r="26" class="halo"></circle><circle r="23" class="sel-ring"></circle><circle r="17" class="body" fill="#9333ea"></circle><text class="node-label" y="37">go-peerjs</text><g class="warn-badge" display="none" transform="translate(13.26,-13.26)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#9333ea" cx="20" cy="0"></circle><circle r="6" class="port" stroke="#9333ea" cx="0" cy="20"></circle><circle r="6" class="port" stroke="#9333ea" cx="-20" cy="0"></circle><circle r="6" class="port" stroke="#9333ea" cx="0" cy="-20"></circle></g><g class="node" data-id="go-signalframe" transform="translate(1171,462)"><circle r="26" class="halo"></circle><circle r="23" class="sel-ring"></circle><circle r="17" class="body" fill="#9333ea"></circle><text class="node-label" y="37">go-signalframe</text><g class="warn-badge" display="none" transform="translate(13.26,-13.26)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#9333ea" cx="20" cy="0"></circle><circle r="6" class="port" stroke="#9333ea" cx="0" cy="20"></circle><circle r="6" class="port" stroke="#9333ea" cx="-20" cy="0"></circle><circle r="6" class="port" stroke="#9333ea" cx="0" cy="-20"></circle></g><g class="node" data-id="go-peerserver" transform="translate(1027,462)"><circle r="26" class="halo"></circle><circle r="23" class="sel-ring"></circle><circle r="17" class="body" fill="#9333ea"></circle><text class="node-label" y="37">go-peerserver</text><g class="warn-badge" display="none" transform="translate(13.26,-13.26)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#9333ea" cx="20" cy="0"></circle><circle r="6" class="port" stroke="#9333ea" cx="0" cy="20"></circle><circle r="6" class="port" stroke="#9333ea" cx="-20" cy="0"></circle><circle r="6" class="port" stroke="#9333ea" cx="0" cy="-20"></circle></g><g class="node" data-id="go-bt" transform="translate(883,462)"><circle r="26" class="halo"></circle><circle r="23" class="sel-ring"></circle><circle r="17" class="body" fill="#9333ea"></circle><text class="node-label" y="37">go-peerdrive-bt</text><g class="warn-badge" display="none" transform="translate(13.26,-13.26)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#9333ea" cx="20" cy="0"></circle><circle r="6" class="port" stroke="#9333ea" cx="0" cy="20"></circle><circle r="6" class="port" stroke="#9333ea" cx="-20" cy="0"></circle><circle r="6" class="port" stroke="#9333ea" cx="0" cy="-20"></circle></g><g class="node" data-id="cli" transform="translate(595,462)"><circle r="27" class="halo"></circle><circle r="24" class="sel-ring"></circle><circle r="18" class="body" fill="#059669"></circle><text class="node-label" y="38">internal/cli</text><g class="warn-badge" display="none" transform="translate(14.040000000000001,-14.040000000000001)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#059669" cx="21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="21"></circle><circle r="6" class="port" stroke="#059669" cx="-21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="-21"></circle></g><g class="node" data-id="serverapp" transform="translate(1135,336)"><circle r="27" class="halo"></circle><circle r="24" class="sel-ring"></circle><circle r="18" class="body" fill="#059669"></circle><text class="node-label" y="38">internal/serverapp</text><g class="warn-badge" display="none" transform="translate(14.040000000000001,-14.040000000000001)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#059669" cx="21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="21"></circle><circle r="6" class="port" stroke="#059669" cx="-21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="-21"></circle></g><g class="node" data-id="tray" transform="translate(1075,84)"><circle r="27" class="halo"></circle><circle r="24" class="sel-ring"></circle><circle r="18" class="body" fill="#059669"></circle><text class="node-label" y="38">internal/tray</text><g class="warn-badge" display="none" transform="translate(14.040000000000001,-14.040000000000001)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#059669" cx="21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="21"></circle><circle r="6" class="port" stroke="#059669" cx="-21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="-21"></circle></g><g class="node" data-id="router" transform="translate(955,336)"><circle r="27" class="halo"></circle><circle r="24" class="sel-ring"></circle><circle r="18" class="body" fill="#059669"></circle><text class="node-label" y="38">internal/router</text><g class="warn-badge" display="none" transform="translate(14.040000000000001,-14.040000000000001)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#059669" cx="21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="21"></circle><circle r="6" class="port" stroke="#059669" cx="-21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="-21"></circle></g><g class="node" data-id="controller" transform="translate(775,336)"><circle r="27" class="halo"></circle><circle r="24" class="sel-ring"></circle><circle r="18" class="body" fill="#059669"></circle><text class="node-label" y="38">internal/controller</text><g class="warn-badge" display="none" transform="translate(14.040000000000001,-14.040000000000001)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#059669" cx="21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="21"></circle><circle r="6" class="port" stroke="#059669" cx="-21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="-21"></circle></g><g class="node" data-id="service" transform="translate(775,210)"><circle r="27" class="halo"></circle><circle r="24" class="sel-ring"></circle><circle r="18" class="body" fill="#059669"></circle><text class="node-label" y="38">internal/service</text><g class="warn-badge" display="none" transform="translate(14.040000000000001,-14.040000000000001)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#059669" cx="21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="21"></circle><circle r="6" class="port" stroke="#059669" cx="-21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="-21"></circle></g><g class="node" data-id="source" transform="translate(955,210)"><circle r="27" class="halo"></circle><circle r="24" class="sel-ring"></circle><circle r="18" class="body" fill="#059669"></circle><text class="node-label" y="38">internal/source</text><g class="warn-badge" display="none" transform="translate(14.040000000000001,-14.040000000000001)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#059669" cx="21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="21"></circle><circle r="6" class="port" stroke="#059669" cx="-21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="-21"></circle></g><g class="node" data-id="downloader" transform="translate(1135,210)"><circle r="27" class="halo"></circle><circle r="24" class="sel-ring"></circle><circle r="18" class="body" fill="#059669"></circle><text class="node-label" y="38">internal/downloader</text><g class="warn-badge" display="none" transform="translate(14.040000000000001,-14.040000000000001)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#059669" cx="21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="21"></circle><circle r="6" class="port" stroke="#059669" cx="-21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="-21"></circle></g><g class="node" data-id="repository" transform="translate(595,210)"><circle r="27" class="halo"></circle><circle r="24" class="sel-ring"></circle><circle r="18" class="body" fill="#059669"></circle><text class="node-label" y="38">internal/repository</text><g class="warn-badge" display="none" transform="translate(14.040000000000001,-14.040000000000001)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#059669" cx="21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="21"></circle><circle r="6" class="port" stroke="#059669" cx="-21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="-21"></circle></g><g class="node" data-id="model" transform="translate(595,84)"><circle r="27" class="halo"></circle><circle r="24" class="sel-ring"></circle><circle r="18" class="body" fill="#059669"></circle><text class="node-label" y="38">internal/model</text><g class="warn-badge" display="none" transform="translate(14.040000000000001,-14.040000000000001)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#059669" cx="21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="21"></circle><circle r="6" class="port" stroke="#059669" cx="-21" cy="0"></circle><circle r="6" class="port" stroke="#059669" cx="0" cy="-21"></circle></g><g class="node" data-id="transport" transform="translate(1315,210)"><circle r="26" class="halo"></circle><circle r="23" class="sel-ring"></circle><circle r="17" class="body" fill="#0d9488"></circle><text class="node-label" y="37">internal/transport</text><g class="warn-badge" display="none" transform="translate(13.26,-13.26)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#0d9488" cx="20" cy="0"></circle><circle r="6" class="port" stroke="#0d9488" cx="0" cy="20"></circle><circle r="6" class="port" stroke="#0d9488" cx="-20" cy="0"></circle><circle r="6" class="port" stroke="#0d9488" cx="0" cy="-20"></circle></g><g class="node" data-id="wsconn" transform="translate(955,84)"><circle r="26" class="halo"></circle><circle r="23" class="sel-ring"></circle><circle r="17" class="body" fill="#0d9488"></circle><text class="node-label" y="37">internal/wsconn</text><g class="warn-badge" display="none" transform="translate(13.26,-13.26)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#0d9488" cx="20" cy="0"></circle><circle r="6" class="port" stroke="#0d9488" cx="0" cy="20"></circle><circle r="6" class="port" stroke="#0d9488" cx="-20" cy="0"></circle><circle r="6" class="port" stroke="#0d9488" cx="0" cy="-20"></circle></g><g class="node" data-id="config" transform="translate(671.477199917748,-39.629982842339416)"><circle r="26" class="halo"></circle><circle r="23" class="sel-ring"></circle><circle r="17" class="body" fill="#0d9488"></circle><text class="node-label" y="37">internal/config</text><g class="warn-badge" display="none" transform="translate(13.26,-13.26)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#0d9488" cx="20" cy="0"></circle><circle r="6" class="port" stroke="#0d9488" cx="0" cy="20"></circle><circle r="6" class="port" stroke="#0d9488" cx="-20" cy="0"></circle><circle r="6" class="port" stroke="#0d9488" cx="0" cy="-20"></circle></g><g class="node" data-id="pathutil" transform="translate(857.0767826504177,-44.04533937242297)"><circle r="26" class="halo"></circle><circle r="23" class="sel-ring"></circle><circle r="17" class="body" fill="#0d9488"></circle><text class="node-label" y="37">internal/pathutil</text><g class="warn-badge" display="none" transform="translate(13.26,-13.26)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#0d9488" cx="20" cy="0"></circle><circle r="6" class="port" stroke="#0d9488" cx="0" cy="20"></circle><circle r="6" class="port" stroke="#0d9488" cx="-20" cy="0"></circle><circle r="6" class="port" stroke="#0d9488" cx="0" cy="-20"></circle></g><g class="node" data-id="echproxy" transform="translate(1195,84)"><circle r="26" class="halo"></circle><circle r="23" class="sel-ring"></circle><circle r="17" class="body" fill="#0d9488"></circle><text class="node-label" y="37">internal/echproxy</text><g class="warn-badge" display="none" transform="translate(13.26,-13.26)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#0d9488" cx="20" cy="0"></circle><circle r="6" class="port" stroke="#0d9488" cx="0" cy="20"></circle><circle r="6" class="port" stroke="#0d9488" cx="-20" cy="0"></circle><circle r="6" class="port" stroke="#0d9488" cx="0" cy="-20"></circle></g><g class="node" data-id="ext-net" transform="translate(1315,84)"><circle r="26" class="halo"></circle><circle r="23" class="sel-ring"></circle><circle r="17" class="body" fill="#9333ea"></circle><text class="node-label" y="37">外部网络 (IPFS/ECH/BT)</text><g class="warn-badge" display="none" transform="translate(13.26,-13.26)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#9333ea" cx="20" cy="0"></circle><circle r="6" class="port" stroke="#9333ea" cx="0" cy="20"></circle><circle r="6" class="port" stroke="#9333ea" cx="-20" cy="0"></circle><circle r="6" class="port" stroke="#9333ea" cx="0" cy="-20"></circle></g><g class="node" data-id="media-node" transform="translate(1315,462)"><circle r="26" class="halo"></circle><circle r="23" class="sel-ring"></circle><circle r="17" class="body" fill="#9333ea"></circle><text class="node-label" y="37">media-node</text><g class="warn-badge" display="none" transform="translate(13.26,-13.26)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#9333ea" cx="20" cy="0"></circle><circle r="6" class="port" stroke="#9333ea" cx="0" cy="20"></circle><circle r="6" class="port" stroke="#9333ea" cx="-20" cy="0"></circle><circle r="6" class="port" stroke="#9333ea" cx="0" cy="-20"></circle></g><g class="node" data-id="core" transform="translate(155,210)"><circle r="26" class="halo"></circle><circle r="23" class="sel-ring"></circle><circle r="17" class="body" fill="#ea580c"></circle><text class="node-label" y="37">peerdrive-core</text><g class="warn-badge" display="none" transform="translate(13.26,-13.26)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#ea580c" cx="20" cy="0"></circle><circle r="6" class="port" stroke="#ea580c" cx="0" cy="20"></circle><circle r="6" class="port" stroke="#ea580c" cx="-20" cy="0"></circle><circle r="6" class="port" stroke="#ea580c" cx="0" cy="-20"></circle></g><g class="node" data-id="client" transform="translate(155,336)"><circle r="26" class="halo"></circle><circle r="23" class="sel-ring"></circle><circle r="17" class="body" fill="#ea580c"></circle><text class="node-label" y="37">peerdrive-client</text><g class="warn-badge" display="none" transform="translate(13.26,-13.26)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#ea580c" cx="20" cy="0"></circle><circle r="6" class="port" stroke="#ea580c" cx="0" cy="20"></circle><circle r="6" class="port" stroke="#ea580c" cx="-20" cy="0"></circle><circle r="6" class="port" stroke="#ea580c" cx="0" cy="-20"></circle></g><g class="node" data-id="npm-peerjs" transform="translate(335,210)"><circle r="26" class="halo"></circle><circle r="23" class="sel-ring"></circle><circle r="17" class="body" fill="#ea580c"></circle><text class="node-label" y="37">peerjs (npm)</text><g class="warn-badge" display="none" transform="translate(13.26,-13.26)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#ea580c" cx="20" cy="0"></circle><circle r="6" class="port" stroke="#ea580c" cx="0" cy="20"></circle><circle r="6" class="port" stroke="#ea580c" cx="-20" cy="0"></circle><circle r="6" class="port" stroke="#ea580c" cx="0" cy="-20"></circle></g><g class="node" data-id="front" transform="translate(245,588)"><circle r="27" class="halo"></circle><circle r="24" class="sel-ring"></circle><circle r="18" class="body" fill="#dc2626"></circle><text class="node-label" y="38">front (React SPA)</text><g class="warn-badge" display="none" transform="translate(14.040000000000001,-14.040000000000001)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#dc2626" cx="21" cy="0"></circle><circle r="6" class="port" stroke="#dc2626" cx="0" cy="21"></circle><circle r="6" class="port" stroke="#dc2626" cx="-21" cy="0"></circle><circle r="6" class="port" stroke="#dc2626" cx="0" cy="-21"></circle></g><g class="node" data-id="transport-ws" transform="translate(245,462)"><circle r="27" class="halo"></circle><circle r="24" class="sel-ring"></circle><circle r="18" class="body" fill="#dc2626"></circle><text class="node-label" y="38">platform/transport-ws</text><g class="warn-badge" display="none" transform="translate(14.040000000000001,-14.040000000000001)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#dc2626" cx="21" cy="0"></circle><circle r="6" class="port" stroke="#dc2626" cx="0" cy="21"></circle><circle r="6" class="port" stroke="#dc2626" cx="-21" cy="0"></circle><circle r="6" class="port" stroke="#dc2626" cx="0" cy="-21"></circle></g><g class="node" data-id="media" transform="translate(335,336)"><circle r="26" class="halo"></circle><circle r="23" class="sel-ring"></circle><circle r="17" class="body" fill="#ea580c"></circle><text class="node-label" y="37">peerdrive-media</text><g class="warn-badge" display="none" transform="translate(13.26,-13.26)"><circle r="6.5" fill="#dc2626" stroke="#fff" stroke-width="1.5"></circle><text y="0.5" text-anchor="middle" dominant-baseline="central" fill="#fff" font-size="8.5" font-weight="700">!</text></g><circle r="6" class="port" stroke="#ea580c" cx="20" cy="0"></circle><circle r="6" class="port" stroke="#ea580c" cx="0" cy="20"></circle><circle r="6" class="port" stroke="#ea580c" cx="-20" cy="0"></circle><circle r="6" class="port" stroke="#ea580c" cx="0" cy="-20"></circle></g></g>
+        <g id="gOverlay"></g>
+      </g>
+    </svg>
+    <div id="legend"><div class="lg-title"><span>图例</span><button id="legendCollapse" title="折叠 / 展开">−</button></div><div class="lg-body"><div class="sec" style="margin-top:4px;padding-top:0;border-top:none">节点分组</div><div class="lg-cols"><div class="lg-row"><span class="dot" style="background:#1e3a8a"></span>主入口 / 编排</div><div class="lg-row"><span class="dot" style="background:#dc2626"></span>前端</div><div class="lg-row"><span class="dot" style="background:#ea580c"></span>前端库 / npm</div><div class="lg-row"><span class="dot" style="background:#059669"></span>后端核心</div><div class="lg-row"><span class="dot" style="background:#0d9488"></span>基础设施</div><div class="lg-row"><span class="dot" style="background:#9333ea"></span>外部依赖</div></div><div class="sec">连线类型</div><div class="lg-cols"><div class="lg-row"><span class="line dash" style="border-color:#64748b"></span>代码依赖</div><div class="lg-row"><span class="line dash" style="border-color:#0ea5e9"></span>数据流</div><div class="lg-row"><span class="line dash" style="border-color:#14b8a6"></span>网络通道</div><div class="lg-row" style="gap:3px"><span class="dot" style="background:#0ea5e9" title="HTTP"></span><span class="dot" style="background:#14b8a6" title="WebSocket"></span><span class="dot" style="background:#ec4899" title="gRPC"></span><span class="dot" style="background:#8b5cf6" title="PeerJS / WebRTC"></span><span class="dot" style="background:#f59e0b" title="DHT"></span><span style="color:var(--muted-2)">协议色</span></div></div><div class="hint-line" style="margin-top:5px"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#dc2626;vertical-align:middle;margin-right:3px"></span> 红点 = 缺描述 / 缺规范</div><label class="lg-toggle"><input type="checkbox" id="toggleFlow" checked=""> 流动动画</label></div></div>
+  </div>
+  <aside id="inspector">
+    <div class="insp-head"><span class="kind-dot" id="inspDot" style="background: var(--muted-2);"></span><span id="inspTitle">属性面板</span><span id="inspSub" style="margin-left:auto;font-size:10.5px;color:var(--muted-2);font-weight:400"></span></div>
+    <div class="insp-body" id="inspBody"><div class="empty-state"><div class="big">◇</div><h3>选择一个节点或连线</h3><p>节点填「描述」，连线填「规范」<br>底部状态栏会实时统计完整度。</p><div class="mini-stats"><div class="mini-stat"><b>28</b><span>节点</span></div><div class="mini-stat"><b>45</b><span>连线</span></div><div class="mini-stat"><b style="color:var(--danger)">1</b><span>待补项</span></div></div><ul class="tips"><li><b>连线：</b>悬停节点，从四周圆点拖到另一个节点</li><li><b>平移：</b>拖动空白处；<b>缩放：</b>滚轮</li><li><b>新建：</b>双击空白处，或按 <code>N</code></li><li><b>删除：</b>选中后按 <code>Delete</code></li><li><b>整理：</b>按 <code>L</code> 自动分层布局</li></ul></div></div>
+  </aside>
+</main>
+
+<footer class="statusbar">
+  <span><b id="statNodes">28</b> 节点 <span class="sep">·</span> <b id="statEdges">45</b> 连线</span>
+  <button id="statCompleteness" title="点击查看缺失项" class="missing">描述 <b>28/28</b> · 规范 <b>44/45</b></button>
+  <span class="spacer"></span>
+  <span class="keys"><kbd>空白拖动</kbd> 平移<span class="sep">·</span><kbd>滚轮</kbd> 缩放<span class="sep">·</span><kbd>拖节点四周圆点</kbd> 连线<span class="sep">·</span><kbd>Delete</kbd> 删除<span class="sep">·</span><kbd>Ctrl+Z</kbd> 撤销</span>
+</footer>
+
+<div id="tooltip" style="display: none; left: 776px; top: 334px;"><div class="tt-title">internal/cli <span style="color:#94a3b8">→</span> internal/tray</div><div class="tt-desc">调用关系: 托盘注册 (Win)
+方向: internal/cli → internal/tray（调用方/依赖者 → 提供方/被依赖方）
+说明: 进程内直接调用/装配，不经过网络协议。</div><div class="tt-meta">代码依赖 · 标签: 托盘注册 (Win)</div></div>
+<div id="toast" class="">已建立连线，请在右侧补充「规范」</div>
+<input type="file" id="fileInput" accept=".json,application/json" hidden="">
+
+<div id="modalOverlay" hidden="">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-head"><h2 id="modalTitle">标题</h2><button class="modal-close" id="modalClose" title="关闭">×</button></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =========================================================================
+   架构编辑器（单文件 HTML）
+   · 节点：分组 + 名称 + 描述；连线：代码/数据/网络 + 协议 + 鉴权 + 规范
+   · 交互：空白拖动平移 / 滚轮缩放 / 拖节点圆点连线 / 双击空白新建
+   · 数据：localStorage 自动保存 + JSON 导入导出 + 撤销重做
+   ========================================================================= */
+
+// 示例数据（来自 peerdrive 模块关系图，运行时由构建脚本注入）
+const SEED = {
+  "project": "Peerdrive 模块与逻辑关系（示例）",
+  "nodes": [
+    {
+      "id": "server",
+      "label": "peerdrive 主二进制",
+      "group": "hub",
+      "desc": "单二进制（serve/signal/reg/all 四子命令）。内嵌前端面板 + peerjs 副本，/panel 服务。调度核心 internal/cli，平台入口分化 peerdrive/win/win7/server。",
+      "x": 955,
+      "y": 588
+    },
+    {
+      "id": "go-peerjs",
+      "label": "go-peerjs",
+      "group": "ext",
+      "desc": "github.com/Hana-ame/go-peerjs。WebRTC DataChannel 协议库：拨号 / 分片 / 增量 SHA-256。主模块 require+replace 指向本地 ./peerjs。",
+      "x": 739,
+      "y": 462
+    },
+    {
+      "id": "go-signalframe",
+      "label": "go-signalframe",
+      "group": "ext",
+      "desc": "github.com/Hana-ame/go-signalframe。信令帧协议（叶子，无依赖）。Go 侧帧真相源，peerjs 与 signalserver 共用。",
+      "x": 1171,
+      "y": 462
+    },
+    {
+      "id": "go-peerserver",
+      "label": "go-peerserver",
+      "group": "ext",
+      "desc": "github.com/Hana-ame/go-peerserver。自托管信令 + 发现服务：/discover /status /peerjs、/_signal 面板。依赖 signalframe。",
+      "x": 1027,
+      "y": 462
+    },
+    {
+      "id": "go-bt",
+      "label": "go-peerdrive-bt",
+      "group": "ext",
+      "desc": "github.com/Hana-ame/go-peerdrive-bt。BT DHT 节点发现（BEP 44/51）。基于 anacrolix/torrent。",
+      "x": 883,
+      "y": 462
+    },
+    {
+      "id": "cli",
+      "label": "internal/cli",
+      "group": "core",
+      "desc": "调度核心：serve/signal/reg/all/version 子命令分发。四个薄入口零逻辑复制，差别只在平台选项。",
+      "x": 595,
+      "y": 462
+    },
+    {
+      "id": "serverapp",
+      "label": "internal/serverapp",
+      "group": "core",
+      "desc": "主进程装配桥：BuildRouter 初始化 DB / PeerJS 服务 / source manager，再交给 router.NewRouter。主二进制不直接依赖 router，隔着一层它。",
+      "x": 1135,
+      "y": 336
+    },
+    {
+      "id": "tray",
+      "label": "internal/tray",
+      "group": "core",
+      "desc": "Windows 托盘（//go:build windows 分流）。LazyDLL 直调 user32/shell32；非 Windows 恒假、不带 Win32 代码。",
+      "x": 1075,
+      "y": 84
+    },
+    {
+      "id": "router",
+      "label": "internal/router",
+      "group": "core",
+      "desc": "HTTP 路由挂载 + admin 帧转交（gin engine ServeHTTP 复用全部 controller）。仅本地 WS 会话。",
+      "x": 955,
+      "y": 336
+    },
+    {
+      "id": "controller",
+      "label": "internal/controller",
+      "group": "core",
+      "desc": "HTTP/业务控制器：文件 / 合集 / 共享范围 / 跨节点拉取。不感知上层是 HTTP 还是 WS 转发。",
+      "x": 775,
+      "y": 336
+    },
+    {
+      "id": "service",
+      "label": "internal/service",
+      "group": "core",
+      "desc": "业务核心：node_directory（市场）/ nodeshare（共享范围）/ peerpull（跨节点拉取）/ file_service / sync_service。",
+      "x": 775,
+      "y": 210
+    },
+    {
+      "id": "source",
+      "label": "internal/source",
+      "group": "core",
+      "desc": "多源取数管理器：Source 接口 + ShaSource/URLSource/EchSource/BTSource。",
+      "x": 955,
+      "y": 210
+    },
+    {
+      "id": "downloader",
+      "label": "internal/downloader",
+      "group": "core",
+      "desc": "通用下载管线：sha256 校验 / 重试 / 限速 / 8GB 上限（int64）。",
+      "x": 1135,
+      "y": 210
+    },
+    {
+      "id": "repository",
+      "label": "internal/repository",
+      "group": "core",
+      "desc": "数据权威：file_index（唯一权威索引）+ anon_repo（合集）+ search + sync。RegisterFile 单一写入口，读路径 index-first。",
+      "x": 595,
+      "y": 210
+    },
+    {
+      "id": "model",
+      "label": "internal/model",
+      "group": "core",
+      "desc": "数据模型：AnonCollection / Provider（sha256,url）/ Level（public,unlisted,private）/ ShareScope / NodeSummary。",
+      "x": 595,
+      "y": 84
+    },
+    {
+      "id": "transport",
+      "label": "internal/transport",
+      "group": "infra",
+      "desc": "帧协议中枢：conn/inbound/outbound/share/forward.go。动词分发（req/meta/data/done/err、share/share-resp、fwd-*、admin）+ 状态机泵 + 背压。知晓帧格式，不知晓业务模型。",
+      "x": 1315,
+      "y": 210
+    },
+    {
+      "id": "wsconn",
+      "label": "internal/wsconn",
+      "group": "infra",
+      "desc": "WebSocket 连接封装：/ws/peer 升级与调度。session.ID()=='local' 才具 admin 权威。",
+      "x": 955,
+      "y": 84
+    },
+    {
+      "id": "config",
+      "label": "internal/config",
+      "group": "infra",
+      "desc": "全量环境变量读取（PEERDRIVE_* 前缀，旧名回退）。默认信令 0.peerjs.com:9000。含 AdminToken 强度校验、DiscoverMode。",
+      "x": 715,
+      "y": 84
+    },
+    {
+      "id": "pathutil",
+      "label": "internal/pathutil",
+      "group": "infra",
+      "desc": "路径安全边界：Within / SafeCopy / SafeOpenFile / SafeRemove，os.Root + Windows 8.3 短名展开。写/读两套边界判定唯一出处。",
+      "x": 835,
+      "y": 84
+    },
+    {
+      "id": "echproxy",
+      "label": "internal/echproxy",
+      "group": "infra",
+      "desc": "ECH 隧道出口代理：twimg / exhentai 域前置。echcore 为 ECH 客户端（从 ech-proxy 移植）。",
+      "x": 1195,
+      "y": 84
+    },
+    {
+      "id": "ext-net",
+      "label": "外部网络 (IPFS/ECH/BT)",
+      "group": "ext",
+      "desc": "外部互通（均无身份验证）：IPFS 网关（provider 并发试网关，HTTP）/ ECH 出口代理（HTTP/TLS 域名前置）/ BT DHT（BEP44-51）。",
+      "x": 1315,
+      "y": 84
+    },
+    {
+      "id": "media-node",
+      "label": "media-node",
+      "group": "ext",
+      "desc": "独立媒体节点（cmd/media-node，iwara 内容代理）+ ECH 验证工具（cmd/echclient）。",
+      "x": 1315,
+      "y": 462
+    },
+    {
+      "id": "core",
+      "label": "peerdrive-core",
+      "group": "lib",
+      "desc": "JS 侧单一依赖源（SSOT）：协议帧解析（{type,reqId} 与 {event,req_id,code,data} + 32B 头 PD02）/ 增量 SHA-256 / 唯一 URL 生成解析 / TransportQueue / TransferProgressHub。严禁第二份实现。",
+      "x": 155,
+      "y": 210
+    },
+    {
+      "id": "client",
+      "label": "peerdrive-client",
+      "group": "lib",
+      "desc": "零依赖浏览器消费端（ESM 源码直发，不编译）。build:panel 产出单文件 panel.html（file:// 可开）；该产物被节点内嵌并托管在 /panel。",
+      "x": 155,
+      "y": 336
+    },
+    {
+      "id": "npm-peerjs",
+      "label": "peerjs (npm)",
+      "group": "lib",
+      "desc": "浏览器 WebRTC 信令客户端（npm）。front 的运行时依赖；其 peerjs.min.js 被节点内嵌托管。",
+      "x": 335,
+      "y": 210
+    },
+    {
+      "id": "front",
+      "label": "front (React SPA)",
+      "group": "front",
+      "desc": "Vite + TailwindCSS + Vitest。构建产物内嵌进 server 二进制，/panel 服务（CI 校验内嵌副本一致）。",
+      "x": 245,
+      "y": 588
+    },
+    {
+      "id": "transport-ws",
+      "label": "platform/transport-ws",
+      "group": "front",
+      "desc": "前端 WS 会话层（client.js / index.js / status.js）：本地节点 /ws/peer 长连接 + admin 帧。",
+      "x": 245,
+      "y": 462
+    },
+    {
+      "id": "media",
+      "label": "peerdrive-media",
+      "group": "lib",
+      "desc": "PeerJS 媒体加载包：经 WebRTC DataChannel 从 Node 节点拉取 URL 资源，在 React / vanilla JS 中渲染为 <img>/<video>。依赖 peerdrive-core 重导出协议 + peerjs。",
+      "x": 335,
+      "y": 336
+    }
+  ],
+  "edges": [
+    {
+      "id": "e01",
+      "s": "server",
+      "t": "go-peerjs",
+      "label": "require+replace",
+      "kind": "code",
+      "spec": "依赖方式: 构建期依赖（require+replace）\n方向: peerdrive 主二进制 → go-peerjs（调用方/依赖者 → 提供方/被依赖方）\n说明: 模块解析期耦合；升级/替换被依赖方时必须同步验证依赖方。"
+    },
+    {
+      "id": "e02",
+      "s": "server",
+      "t": "go-bt",
+      "label": "require+replace",
+      "kind": "code",
+      "spec": "依赖方式: 构建期依赖（require+replace）\n方向: peerdrive 主二进制 → go-peerdrive-bt（调用方/依赖者 → 提供方/被依赖方）\n说明: 模块解析期耦合；升级/替换被依赖方时必须同步验证依赖方。"
+    },
+    {
+      "id": "e03",
+      "s": "server",
+      "t": "go-peerserver",
+      "label": "require+replace",
+      "kind": "code",
+      "spec": "依赖方式: 构建期依赖（require+replace）\n方向: peerdrive 主二进制 → go-peerserver（调用方/依赖者 → 提供方/被依赖方）\n说明: 模块解析期耦合；升级/替换被依赖方时必须同步验证依赖方。"
+    },
+    {
+      "id": "e04",
+      "s": "server",
+      "t": "go-signalframe",
+      "label": "indirect",
+      "kind": "code",
+      "spec": "依赖方式: 构建期依赖（indirect）\n方向: peerdrive 主二进制 → go-signalframe（调用方/依赖者 → 提供方/被依赖方）\n说明: 模块解析期耦合；升级/替换被依赖方时必须同步验证依赖方。"
+    },
+    {
+      "id": "e05",
+      "s": "go-peerjs",
+      "t": "go-signalframe",
+      "label": "require",
+      "kind": "code",
+      "spec": "依赖方式: 构建期依赖（require）\n方向: go-peerjs → go-signalframe（调用方/依赖者 → 提供方/被依赖方）\n说明: 模块解析期耦合；升级/替换被依赖方时必须同步验证依赖方。"
+    },
+    {
+      "id": "e06",
+      "s": "go-peerserver",
+      "t": "go-signalframe",
+      "label": "require",
+      "kind": "code",
+      "spec": "依赖方式: 构建期依赖（require）\n方向: go-peerserver → go-signalframe（调用方/依赖者 → 提供方/被依赖方）\n说明: 模块解析期耦合；升级/替换被依赖方时必须同步验证依赖方。"
+    },
+    {
+      "id": "e07",
+      "s": "server",
+      "t": "cli",
+      "label": "cli 调度入口",
+      "kind": "code",
+      "spec": "调用关系: cli 调度入口\n方向: peerdrive 主二进制 → internal/cli（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内直接调用/装配，不经过网络协议。"
+    },
+    {
+      "id": "e08",
+      "s": "cli",
+      "t": "serverapp",
+      "label": "BuildRouter 装配",
+      "kind": "code",
+      "spec": "调用关系: BuildRouter 装配\n方向: internal/cli → internal/serverapp（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内直接调用/装配，不经过网络协议。"
+    },
+    {
+      "id": "e09",
+      "s": "serverapp",
+      "t": "router",
+      "label": "NewRouter 构建路由",
+      "kind": "code",
+      "spec": "调用关系: NewRouter 构建路由\n方向: internal/serverapp → internal/router（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内直接调用/装配，不经过网络协议。"
+    },
+    {
+      "id": "e10",
+      "s": "serverapp",
+      "t": "config",
+      "label": "读取配置",
+      "kind": "code",
+      "spec": "调用关系: 读取配置\n方向: internal/serverapp → internal/config（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内直接调用/装配，不经过网络协议。"
+    },
+    {
+      "id": "e11",
+      "s": "cli",
+      "t": "service",
+      "label": "serve 启动编排",
+      "kind": "code",
+      "spec": "调用关系: serve 启动编排\n方向: internal/cli → internal/service（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内直接调用/装配，不经过网络协议。"
+    },
+    {
+      "id": "e12",
+      "s": "cli",
+      "t": "tray",
+      "label": "托盘注册 (Win)",
+      "kind": "code",
+      "spec": "调用关系: 托盘注册 (Win)\n方向: internal/cli → internal/tray（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内直接调用/装配，不经过网络协议。"
+    },
+    {
+      "id": "e13",
+      "s": "cli",
+      "t": "config",
+      "label": "读取配置",
+      "kind": "code",
+      "spec": "调用关系: 读取配置\n方向: internal/cli → internal/config（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内直接调用/装配，不经过网络协议。"
+    },
+    {
+      "id": "e14",
+      "s": "router",
+      "t": "controller",
+      "label": "挂载 + admin 转交",
+      "kind": "code",
+      "spec": "调用关系: 挂载 + admin 转交\n方向: internal/router → internal/controller（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内直接调用/装配，不经过网络协议。"
+    },
+    {
+      "id": "e15",
+      "s": "controller",
+      "t": "service",
+      "label": "业务编排",
+      "kind": "code",
+      "spec": "调用关系: 业务编排\n方向: internal/controller → internal/service（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内直接调用/装配，不经过网络协议。"
+    },
+    {
+      "id": "e16",
+      "s": "service",
+      "t": "config",
+      "label": "读取配置",
+      "kind": "code",
+      "spec": "调用关系: 读取配置\n方向: internal/service → internal/config（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内直接调用/装配，不经过网络协议。"
+    },
+    {
+      "id": "e17",
+      "s": "service",
+      "t": "pathutil",
+      "label": "安全边界",
+      "kind": "code",
+      "spec": "调用关系: 安全边界\n方向: internal/service → internal/pathutil（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内直接调用/装配，不经过网络协议。"
+    },
+    {
+      "id": "e18",
+      "s": "repository",
+      "t": "pathutil",
+      "label": "边界约束 (概念)",
+      "kind": "code",
+      "spec": "调用关系: 边界约束 (概念)\n方向: internal/repository → internal/pathutil（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内直接调用/装配，不经过网络协议。"
+    },
+    {
+      "id": "e19",
+      "s": "repository",
+      "t": "model",
+      "label": "数据模型",
+      "kind": "code",
+      "spec": "调用关系: 数据模型\n方向: internal/repository → internal/model（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内直接调用/装配，不经过网络协议。"
+    },
+    {
+      "id": "e20",
+      "s": "source",
+      "t": "echproxy",
+      "label": "ECH 源 (接口注入)",
+      "kind": "code",
+      "spec": "调用关系: ECH 源 (接口注入)\n方向: internal/source → internal/echproxy（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内直接调用/装配，不经过网络协议。"
+    },
+    {
+      "id": "e21",
+      "s": "transport",
+      "t": "go-peerjs",
+      "label": "数据面 (WebRTC)",
+      "kind": "code",
+      "spec": "调用关系: 数据面 (WebRTC)\n方向: internal/transport → go-peerjs（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内直接调用/装配，不经过网络协议。"
+    },
+    {
+      "id": "e22",
+      "s": "transport",
+      "t": "wsconn",
+      "label": "管理面 (WS)",
+      "kind": "code",
+      "spec": "调用关系: 管理面 (WS)\n方向: internal/transport → internal/wsconn（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内直接调用/装配，不经过网络协议。"
+    },
+    {
+      "id": "e23",
+      "s": "service",
+      "t": "repository",
+      "label": "file_index 读写",
+      "kind": "data",
+      "spec": "数据流: file_index 读写\n方向: internal/service → internal/repository（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内数据传递，不构成网络协议边界。"
+    },
+    {
+      "id": "e24",
+      "s": "service",
+      "t": "source",
+      "label": "多源取数",
+      "kind": "data",
+      "spec": "数据流: 多源取数\n方向: internal/service → internal/source（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内数据传递，不构成网络协议边界。"
+    },
+    {
+      "id": "e25",
+      "s": "source",
+      "t": "downloader",
+      "label": "下载管线",
+      "kind": "data",
+      "spec": "数据流: 下载管线\n方向: internal/source → internal/downloader（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内数据传递，不构成网络协议边界。"
+    },
+    {
+      "id": "e26",
+      "s": "downloader",
+      "t": "repository",
+      "label": "注册 index",
+      "kind": "data",
+      "spec": "数据流: 注册 index\n方向: internal/downloader → internal/repository（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内数据传递，不构成网络协议边界。"
+    },
+    {
+      "id": "e27",
+      "s": "transport",
+      "t": "service",
+      "label": "帧→业务 (Session)",
+      "kind": "data",
+      "spec": "数据流: 帧→业务 (Session)\n方向: internal/transport → internal/service（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内数据传递，不构成网络协议边界。"
+    },
+    {
+      "id": "e28",
+      "s": "service",
+      "t": "transport",
+      "label": "业务→帧响应",
+      "kind": "data",
+      "spec": "数据流: 业务→帧响应\n方向: internal/service → internal/transport（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内数据传递，不构成网络协议边界。"
+    },
+    {
+      "id": "e29",
+      "s": "client",
+      "t": "core",
+      "label": "重导出 core",
+      "kind": "code",
+      "spec": "依赖方式: 构建期依赖（重导出 core）\n方向: peerdrive-client → peerdrive-core（调用方/依赖者 → 提供方/被依赖方）\n说明: 模块解析期耦合；升级/替换被依赖方时必须同步验证依赖方。"
+    },
+    {
+      "id": "e30",
+      "s": "front",
+      "t": "core",
+      "label": "import/重导出 core",
+      "kind": "code",
+      "spec": "依赖方式: 构建期依赖（import/重导出 core）\n方向: front (React SPA) → peerdrive-core（调用方/依赖者 → 提供方/被依赖方）\n说明: 模块解析期耦合；升级/替换被依赖方时必须同步验证依赖方。"
+    },
+    {
+      "id": "e31",
+      "s": "front",
+      "t": "client",
+      "label": "dep",
+      "kind": "code",
+      "spec": "依赖方式: 构建期依赖（dep）\n方向: front (React SPA) → peerdrive-client（调用方/依赖者 → 提供方/被依赖方）\n说明: 模块解析期耦合；升级/替换被依赖方时必须同步验证依赖方。"
+    },
+    {
+      "id": "e32",
+      "s": "front",
+      "t": "npm-peerjs",
+      "label": "dep",
+      "kind": "code",
+      "spec": "依赖方式: 构建期依赖（dep）\n方向: front (React SPA) → peerjs (npm)（调用方/依赖者 → 提供方/被依赖方）\n说明: 模块解析期耦合；升级/替换被依赖方时必须同步验证依赖方。"
+    },
+    {
+      "id": "e33",
+      "s": "front",
+      "t": "transport-ws",
+      "label": "platform 会话",
+      "kind": "code",
+      "spec": "调用关系: platform 会话\n方向: front (React SPA) → platform/transport-ws（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内直接调用/装配，不经过网络协议。"
+    },
+    {
+      "id": "e34",
+      "s": "transport-ws",
+      "t": "client",
+      "label": "WS 会话 + admin",
+      "kind": "code",
+      "spec": "调用关系: WS 会话 + admin\n方向: platform/transport-ws → peerdrive-client（调用方/依赖者 → 提供方/被依赖方）\n说明: 进程内直接调用/装配，不经过网络协议。"
+    },
+    {
+      "id": "e35",
+      "s": "server",
+      "t": "client",
+      "label": "内嵌 panel.html（/panel 托管）",
+      "kind": "code",
+      "spec": "依赖方式: 构建期依赖（内嵌 panel.html（/panel 托管））\n方向: peerdrive 主二进制 → peerdrive-client（调用方/依赖者 → 提供方/被依赖方）\n说明: 模块解析期耦合；升级/替换被依赖方时必须同步验证依赖方。"
+    },
+    {
+      "id": "e36",
+      "s": "server",
+      "t": "npm-peerjs",
+      "label": "内嵌 peerjs.min.js（/peerjs.min.js）",
+      "kind": "code",
+      "spec": "依赖方式: 构建期依赖（内嵌 peerjs.min.js（/peerjs.min.js））\n方向: peerdrive 主二进制 → peerjs (npm)（调用方/依赖者 → 提供方/被依赖方）\n说明: 模块解析期耦合；升级/替换被依赖方时必须同步验证依赖方。"
+    },
+    {
+      "id": "e37",
+      "s": "front",
+      "t": "server",
+      "label": "管理面 + 文件 API",
+      "kind": "net",
+      "spec": "协议: HTTP（请求-响应）\n鉴权: 有身份验证\n用途: 管理面 + 文件 API\n方向: front (React SPA) → peerdrive 主二进制（调用方/依赖者 → 提供方/被依赖方）",
+      "proto": "http",
+      "auth": "yes"
+    },
+    {
+      "id": "e38",
+      "s": "front",
+      "t": "server",
+      "label": "WS 本地会话",
+      "kind": "net",
+      "spec": "协议: WebSocket（双向长连接）\n鉴权: 有身份验证\n用途: WS 本地会话\n方向: front (React SPA) → peerdrive 主二进制（调用方/依赖者 → 提供方/被依赖方）",
+      "proto": "ws",
+      "auth": "yes"
+    },
+    {
+      "id": "e39",
+      "s": "server",
+      "t": "go-peerserver",
+      "label": "/discover /status 发现 API",
+      "kind": "net",
+      "spec": "协议: HTTP（请求-响应）\n鉴权: 无身份验证\n用途: /discover /status 发现 API\n方向: peerdrive 主二进制 → go-peerserver（调用方/依赖者 → 提供方/被依赖方）",
+      "proto": "http",
+      "auth": "no"
+    },
+    {
+      "id": "e40",
+      "s": "server",
+      "t": "go-peerserver",
+      "label": "/peerjs 信令",
+      "kind": "net",
+      "spec": "协议: WebSocket（双向长连接）\n鉴权: 无身份验证\n用途: /peerjs 信令\n方向: peerdrive 主二进制 → go-peerserver（调用方/依赖者 → 提供方/被依赖方）",
+      "proto": "ws",
+      "auth": "no"
+    },
+    {
+      "id": "e41",
+      "s": "server",
+      "t": "go-bt",
+      "label": "DHT 节点发现",
+      "kind": "net",
+      "spec": "协议: BitTorrent DHT（BEP 44/51）\n鉴权: 无身份验证\n用途: DHT 节点发现\n方向: peerdrive 主二进制 → go-peerdrive-bt（调用方/依赖者 → 提供方/被依赖方）",
+      "proto": "dht",
+      "auth": "no"
+    },
+    {
+      "id": "e42",
+      "s": "server",
+      "t": "media-node",
+      "label": "ECH 前置代理",
+      "kind": "net",
+      "spec": "协议: HTTP（请求-响应）\n鉴权: 无身份验证\n用途: ECH 前置代理\n方向: peerdrive 主二进制 → media-node（调用方/依赖者 → 提供方/被依赖方）",
+      "proto": "http",
+      "auth": "no"
+    },
+    {
+      "id": "e43",
+      "s": "source",
+      "t": "ext-net",
+      "label": "IPFS 网关取数",
+      "kind": "net",
+      "spec": "协议: HTTP（请求-响应）\n鉴权: 无身份验证\n用途: IPFS 网关取数\n方向: internal/source → 外部网络 (IPFS/ECH/BT)（调用方/依赖者 → 提供方/被依赖方）",
+      "proto": "http",
+      "auth": "no"
+    },
+    {
+      "id": "e44",
+      "s": "go-bt",
+      "t": "ext-net",
+      "label": "BEP 44/51",
+      "kind": "net",
+      "spec": "协议: BitTorrent DHT（BEP 44/51）\n鉴权: 无身份验证\n用途: BEP 44/51\n方向: go-peerdrive-bt → 外部网络 (IPFS/ECH/BT)（调用方/依赖者 → 提供方/被依赖方）",
+      "proto": "dht",
+      "auth": "no"
+    },
+    {
+      "id": "e45",
+      "s": "server",
+      "t": "transport",
+      "label": "P2P 数据面",
+      "kind": "net",
+      "spec": "协议: PeerJS / WebRTC DataChannel（P2P）\n鉴权: PSK 可选（配置后校验）\n用途: P2P 数据面\n方向: peerdrive 主二进制 → internal/transport（调用方/依赖者 → 提供方/被依赖方）",
+      "proto": "peerjs",
+      "auth": "opt"
+    }
+  ]
+};
+
+const NS = 'http://www.w3.org/2000/svg';
+const LS_KEY = 'arch-editor-v1';
+const SAVE_VERSION = 1;
+
+const GROUPS = [
+  { id:'hub',   name:'主入口 / 编排', color:'#1e3a8a', r:23 },
+  { id:'front', name:'前端',          color:'#dc2626', r:18 },
+  { id:'lib',   name:'前端库 / npm',  color:'#ea580c', r:17 },
+  { id:'core',  name:'后端核心',      color:'#059669', r:18 },
+  { id:'infra', name:'基础设施',      color:'#0d9488', r:17 },
+  { id:'ext',   name:'外部依赖',      color:'#9333ea', r:17 },
+];
+
+const KINDS = [
+  { id:'code', name:'代码依赖', desc:'import / require / 进程内调用' },
+  { id:'data', name:'数据流',   desc:'进程内数据传递' },
+  { id:'net',  name:'网络通道', desc:'跨进程 / 跨机器的协议接口' },
+];
+
+const PROTOS = [
+  { id:'http',   name:'HTTP',            color:'#0ea5e9' },
+  { id:'ws',     name:'WebSocket',       color:'#14b8a6' },
+  { id:'grpc',   name:'gRPC',            color:'#ec4899' },
+  { id:'peerjs', name:'PeerJS / WebRTC', color:'#8b5cf6' },
+  { id:'dht',    name:'DHT',             color:'#f59e0b' },
+  { id:'mqtt',   name:'MQTT',            color:'#0891b2' },
+  { id:'other',  name:'其他',            color:'#64748b' },
+];
+
+const AUTHS = [
+  { id:'yes', name:'有身份验证' },
+  { id:'no',  name:'无身份验证' },
+  { id:'opt', name:'PSK 可选' },
+];
+
+// ---------------- 工具 ----------------
+const $ = sel => document.querySelector(sel);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function svgEl(tag, attrs, text) {
+  const el = document.createElementNS(NS, tag);
+  if (attrs) for (const k in attrs) { if (attrs[k] != null) el.setAttribute(k, attrs[k]); }
+  if (text != null) el.textContent = text;
+  return el;
+}
+function fmtTime(d) {
+  d = d || new Date();
+  return d.toLocaleTimeString('zh-CN', { hour12:false, hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+let measureCtx = null;
+function measureText(text, font) {
+  if (!measureCtx) measureCtx = document.createElement('canvas').getContext('2d');
+  measureCtx.font = font || '11.5px "Segoe UI","PingFang SC","Microsoft YaHei",sans-serif';
+  return measureCtx.measureText(text).width;
+}
+const groupById = id => GROUPS.find(g => g.id === id) || GROUPS[3];
+const protoById = id => PROTOS.find(p => p.id === id) || PROTOS[PROTOS.length - 1];
+const kindById  = id => KINDS.find(k => k.id === id) || KINDS[0];
+const authName  = id => (AUTHS.find(a => a.id === id) || AUTHS[1]).name;
+const nodeR = n => groupById(n.group).r;
+const groupColor = n => groupById(n.group).color;
+function edgeColor(e) {
+  if (e.kind === 'net') return protoById(e.proto).color;
+  return e.kind === 'data' ? '#0ea5e9' : '#64748b';
+}
+function edgeLabelText(e) {
+  if (e.label) return e.label;
+  if (e.kind === 'net') return protoById(e.proto).name + ' 通道';
+  return kindById(e.kind).name;
+}
+function edgeMarker(e) {
+  return 'arr-' + (e.kind === 'net' ? 'p_' + (e.proto || 'other') : e.kind);
+}
+
+// ---------------- 运行时状态 ----------------
+let state = { project:'未命名架构', nodes:[], edges:[] };
+let nodeMap = new Map(), edgeMap = new Map();
+let sel = null;                 // { type:'node'|'edge', id }
+let view = { scale:1, tx:0, ty:0 };
+let showLabels = false;
+let hover = null;               // { type, id }
+let history = [], redoStack = [];
+let lastKind = 'code';          // 新建连线默认类型
+let dragging = false;           // 拖拽节点 / 拉连线中
+let saveTimer = null;
+let editBurst = false, editBurstTimer = null;
+const els = { nodes:new Map(), edges:new Map() };
+
+const canvas = $('#canvas');
+const world = $('#world');
+const gEdges = $('#gEdges');
+const gEdgeLabels = $('#gEdgeLabels');
+const gNodes = $('#gNodes');
+const gOverlay = $('#gOverlay');
+const canvasWrap = $('#canvasWrap');
+const tooltip = $('#tooltip');
+const modalOverlay = $('#modalOverlay');
+
+function rebuildMaps() {
+  nodeMap = new Map(state.nodes.map(n => [n.id, n]));
+  edgeMap = new Map(state.edges.map(e => [e.id, e]));
+}
+function serializeGraph() {
+  return {
+    project: state.project,
+    nodes: state.nodes.map(n => ({ id:n.id, label:n.label, group:n.group, desc:n.desc, x:n.x, y:n.y })),
+    edges: state.edges.map(e => {
+      const o = { id:e.id, s:e.s, t:e.t, label:e.label, kind:e.kind, spec:e.spec };
+      if (e.kind === 'net') { o.proto = e.proto; o.auth = e.auth; }
+      return o;
+    }),
+  };
+}
+function nextId(prefix, list) {
+  let max = 0;
+  const re = new RegExp('^' + prefix + '(\\d+)$');
+  list.forEach(x => { const m = re.exec(x.id); if (m) max = Math.max(max, +m[1]); });
+  let id = prefix + (max + 1);
+  const ids = new Set(list.map(x => x.id));
+  while (ids.has(id)) { max++; id = prefix + (max + 1); }
+  return id;
+}
+
+// ---------------- 数据校验 / 导入 ----------------
+function normalizeData(d) {
+  if (!d || typeof d !== 'object') throw new Error('不是有效的 JSON 对象');
+  if (!Array.isArray(d.nodes) || !Array.isArray(d.edges)) throw new Error('缺少 nodes / edges 数组');
+  const nids = new Set();
+  const nodes = d.nodes.map((n, i) => {
+    if (!n || typeof n !== 'object') throw new Error('nodes[' + i + '] 无效');
+    const id = String(n.id == null ? 'n' + (i + 1) : n.id);
+    if (!id || nids.has(id)) throw new Error('节点 id 缺失或重复: ' + id);
+    nids.add(id);
+    return {
+      id,
+      label: String(n.label == null ? id : n.label),
+      group: GROUPS.some(g => g.id === n.group) ? n.group : 'core',
+      desc: String(n.desc == null ? '' : n.desc),
+      x: Number.isFinite(+n.x) ? +n.x : (i % 6) * 150,
+      y: Number.isFinite(+n.y) ? +n.y : Math.floor(i / 6) * 130,
+    };
+  });
+  const eids = new Set();
+  const edges = d.edges.map((e, i) => {
+    if (!e || typeof e !== 'object') throw new Error('edges[' + i + '] 无效');
+    const id = String(e.id == null ? 'e' + (i + 1) : e.id);
+    if (!id || eids.has(id)) throw new Error('连线 id 缺失或重复: ' + id);
+    eids.add(id);
+    const s = String(e.s == null ? '' : e.s), t = String(e.t == null ? '' : e.t);
+    if (!nids.has(s) || !nids.has(t)) throw new Error('连线 ' + id + ' 引用了不存在的节点');
+    const kind = ['code', 'data', 'net'].includes(e.kind) ? e.kind : 'code';
+    const edge = { id, s, t, label: String(e.label == null ? '' : e.label), kind, spec: String(e.spec == null ? '' : e.spec) };
+    if (kind === 'net') {
+      edge.proto = PROTOS.some(p => p.id === e.proto) ? e.proto : 'other';
+      edge.auth = AUTHS.some(a => a.id === e.auth) ? e.auth : 'no';
+    }
+    return edge;
+  });
+  return { project: String(d.project == null ? '未命名架构' : d.project), nodes, edges };
+}
+
+function loadInitialData() {
+  let raw = null;
+  try { raw = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch (_) { raw = null; }
+  let data = null;
+  if (raw) {
+    try { data = normalizeData(raw); } catch (err) { console.warn('本地存档无法读取，回退到示例数据', err); }
+  }
+  if (!data && SEED) {
+    try { data = normalizeData(SEED); } catch (err) { console.error('示例数据无效', err); }
+  }
+  if (!data) data = { project:'未命名架构', nodes:[], edges:[] };
+  state = { project:data.project, nodes:data.nodes, edges:data.edges };
+  rebuildMaps();
+}
+
+// ---------------- 自动保存 / 撤销 ----------------
+function scheduleSave() {
+  const el = $('#saveState');
+  if (el) el.textContent = '保存中…';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNow, 400);
+}
+function saveNow() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(Object.assign({ version:SAVE_VERSION }, serializeGraph())));
+    const el = $('#saveState');
+    if (el) el.textContent = '已自动保存 · ' + fmtTime();
+  } catch (err) {
+    const el = $('#saveState');
+    if (el) el.textContent = '自动保存失败';
+    console.warn(err);
+  }
+}
+function snapshot() { return JSON.stringify(serializeGraph()); }
+function pushHistory() {
+  const snap = snapshot();
+  if (history.length && history[history.length - 1] === snap) { redoStack.length = 0; updateHistoryButtons(); return; }
+  history.push(snap);
+  if (history.length > 100) history.shift();
+  redoStack.length = 0;
+  updateHistoryButtons();
+}
+function applySnapshot(str) {
+  const d = JSON.parse(str);
+  state = { project:d.project, nodes:d.nodes, edges:d.edges };
+  rebuildMaps();
+  if (sel && !(sel.type === 'node' ? nodeMap.has(sel.id) : edgeMap.has(sel.id))) sel = null;
+  renderAll();
+  renderInspector();
+  scheduleSave();
+}
+function undo() {
+  if (!history.length) return;
+  redoStack.push(snapshot());
+  applySnapshot(history.pop());
+  updateHistoryButtons();
+  toast('已撤销');
+}
+function redo() {
+  if (!redoStack.length) return;
+  history.push(snapshot());
+  applySnapshot(redoStack.pop());
+  updateHistoryButtons();
+  toast('已重做');
+}
+function updateHistoryButtons() {
+  const u = $('#btnUndo'), r = $('#btnRedo');
+  if (u) u.disabled = history.length === 0;
+  if (r) r.disabled = redoStack.length === 0;
+}
+
+// ---------------- SVG defs（网格 + 箭头） ----------------
+const EDGE_PALETTE = [
+  { id:'code', color:'#64748b' },
+  { id:'data', color:'#0ea5e9' },
+].concat(PROTOS.map(p => ({ id:'p_' + p.id, color:p.color })));
+
+function buildDefs() {
+  let s = '<pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse">' +
+          '<circle cx="1.2" cy="1.2" r="1.1" fill="#cbd5e1"/></pattern>';
+  EDGE_PALETTE.forEach(({ id, color }) => {
+    s += '<marker id="arr-' + id + '" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="7" markerHeight="7" orient="auto">' +
+         '<path d="M0 0 L10 5 L0 10 z" fill="' + color + '"/></marker>';
+  });
+  $('#defs').innerHTML = s;
+}
+
+// ---------------- 视图（平移 / 缩放 / 适应） ----------------
+function applyView() {
+  world.setAttribute('transform', 'translate(' + view.tx + ',' + view.ty + ') scale(' + view.scale + ')');
+  const pat = document.getElementById('grid');
+  if (pat) pat.setAttribute('patternTransform', 'translate(' + view.tx + ',' + view.ty + ') scale(' + view.scale + ')');
+  const pct = $('#zoomPct');
+  if (pct) pct.textContent = Math.round(view.scale * 100) + '%';
+}
+function screenToWorld(cx, cy) {
+  const r = canvas.getBoundingClientRect();
+  return { x:(cx - r.left - view.tx) / view.scale, y:(cy - r.top - view.ty) / view.scale };
+}
+function zoomAt(cx, cy, factor) {
+  const ns = clamp(view.scale * factor, 0.15, 3.5);
+  if (ns === view.scale) return;
+  const r = canvas.getBoundingClientRect();
+  const wx = (cx - r.left - view.tx) / view.scale;
+  const wy = (cy - r.top - view.ty) / view.scale;
+  view.tx = cx - r.left - wx * ns;
+  view.ty = cy - r.top - wy * ns;
+  view.scale = ns;
+  applyView();
+}
+function contentBounds() {
+  if (!state.nodes.length) return { x0:-220, y0:-140, x1:220, y1:140 };
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  state.nodes.forEach(n => {
+    const r = nodeR(n);
+    const halfW = Math.max(r, measureText(n.label) / 2 + 6);
+    x0 = Math.min(x0, n.x - halfW); x1 = Math.max(x1, n.x + halfW);
+    y0 = Math.min(y0, n.y - r - 8); y1 = Math.max(y1, n.y + r + 26);
+  });
+  return { x0, y0, x1, y1 };
+}
+function fitView() {
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width < 20 || rect.height < 20) return;
+  const b = contentBounds();
+  const pad = 70;
+  const bw = Math.max(1, b.x1 - b.x0), bh = Math.max(1, b.y1 - b.y0);
+  const s = clamp(Math.min((rect.width - pad * 2) / bw, (rect.height - pad * 2) / bh, 1.6), 0.15, 2.2);
+  view.scale = s;
+  view.tx = rect.width / 2 - ((b.x0 + b.x1) / 2) * s;
+  view.ty = rect.height / 2 - ((b.y0 + b.y1) / 2) * s;
+  applyView();
+  applyAutoLegend();
+}
+function viewportCenterWorld() {
+  const r = canvas.getBoundingClientRect();
+  return { x:(r.width / 2 - view.tx) / view.scale, y:(r.height / 2 - view.ty) / view.scale };
+}
+function centerOnNode(n, minScale) {
+  const r = canvas.getBoundingClientRect();
+  const s = Math.max(view.scale, minScale || 0.8);
+  view.scale = s;
+  view.tx = r.width / 2 - n.x * s;
+  view.ty = r.height / 2 - n.y * s;
+  applyView();
+}
+function focusNode(id) {
+  const n = nodeMap.get(id);
+  if (!n) return;
+  selectNode(id);
+  centerOnNode(n, 0.85);
+}
+function focusEdge(id) {
+  const e = edgeMap.get(id);
+  if (!e) return;
+  const s = nodeMap.get(e.s), t = nodeMap.get(e.t);
+  selectEdge(id);
+  if (s && t) centerOnNode({ x:(s.x + t.x) / 2, y:(s.y + t.y) / 2 }, 0.85);
+}
+
+// ---------------- 连线几何 ----------------
+function pointOnQuad(sx, sy, cx, cy, ex, ey, t) {
+  const mt = 1 - t;
+  return { x:mt * mt * sx + 2 * mt * t * cx + t * t * ex, y:mt * mt * sy + 2 * mt * t * cy + t * t * ey };
+}
+function edgeGeometry(e) {
+  const s = nodeMap.get(e.s), t = nodeMap.get(e.t);
+  if (!s || !t) return null;
+  const rS = nodeR(s), rT = nodeR(t);
+  if (s === t) {
+    const r = rS;
+    const d = 'M ' + s.x + ' ' + (s.y - r) +
+      ' C ' + (s.x + r * 2.8) + ' ' + (s.y - r * 2.3) + ', ' + (s.x + r * 2.8) + ' ' + (s.y + r * 2.3) + ', ' + s.x + ' ' + (s.y + r);
+    return { d, start:{ x:s.x, y:s.y - r }, end:{ x:s.x, y:s.y + r }, mid:{ x:s.x + r * 2.1, y:s.y } };
+  }
+  const dx = t.x - s.x, dy = t.y - s.y;
+  const dist = Math.hypot(dx, dy) || 1;
+  const ux = dx / dist, uy = dy / dist;
+  const off = e._par || 0;
+  const start = { x:s.x + ux * (rS + 3), y:s.y + uy * (rS + 3) };
+  const end   = { x:t.x - ux * (rT + 11), y:t.y - uy * (rT + 11) };
+  const mx = (start.x + end.x) / 2, my = (start.y + end.y) / 2;
+  const px = -uy, py = ux;
+  const cx = mx + px * off * 2, cy = my + py * off * 2;
+  const d = 'M ' + start.x.toFixed(2) + ' ' + start.y.toFixed(2) +
+            ' Q ' + cx.toFixed(2) + ' ' + cy.toFixed(2) + ' ' + end.x.toFixed(2) + ' ' + end.y.toFixed(2);
+  const mid = pointOnQuad(start.x, start.y, cx, cy, end.x, end.y, 0.5);
+  return { d, start, end, mid };
+}
+function computeParallel() {
+  const groups = new Map();
+  state.edges.forEach(e => {
+    const k = [e.s, e.t].sort().join('|');
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(e);
+  });
+  groups.forEach(list => {
+    list.forEach((e, i) => { e._par = list.length > 1 ? (i - (list.length - 1) / 2) * 28 : 0; });
+  });
+}
+
+// ---------------- 渲染 ----------------
+function warnBadgeNode() {
+  const g = svgEl('g', { class:'warn-badge', display:'none' });
+  g.append(
+    svgEl('circle', { r:6.5, fill:'#dc2626', stroke:'#fff', 'stroke-width':1.5 }),
+    svgEl('text', { y:0.5, 'text-anchor':'middle', 'dominant-baseline':'central', fill:'#fff', 'font-size':8.5, 'font-weight':700 }, '!')
+  );
+  return g;
+}
+
+function renderAll() {
+  computeParallel();
+  els.nodes.clear();
+  els.edges.clear();
+  gEdges.innerHTML = '';
+  gEdgeLabels.innerHTML = '';
+  gNodes.innerHTML = '';
+  gOverlay.innerHTML = '';
+
+  // ---- 连线 ----
+  state.edges.forEach(e => {
+    if (!nodeMap.has(e.s) || !nodeMap.has(e.t)) return;
+    const hit = svgEl('path', { class:'edge-hit' });
+    const path = svgEl('path', { class:'edge ' + e.kind, 'marker-end':'url(#' + edgeMarker(e) + ')' });
+    path.style.stroke = edgeColor(e);
+    const label = svgEl('text', { class:'edge-label' }, edgeLabelText(e));
+    const warn = svgEl('g', { class:'warn-badge', display:'none' });
+    warn.append(
+      svgEl('circle', { r:6.5, fill:'#dc2626', stroke:'#fff', 'stroke-width':1.5 }),
+      svgEl('text', { y:0.5, 'text-anchor':'middle', 'dominant-baseline':'central', fill:'#fff', 'font-size':8.5, 'font-weight':700 }, '!')
+    );
+    gEdges.append(hit, path);
+    gEdgeLabels.append(label, warn);
+    els.edges.set(e.id, { hit, path, label, warn });
+
+    hit.addEventListener('pointerenter', ev => {
+      if (dragging) return;
+      setHover('edge', e.id);
+      showEdgeTooltip(e, ev);
+    });
+    hit.addEventListener('pointerleave', () => {
+      if (dragging) return;
+      setHover(null);
+      hideTooltip();
+    });
+    hit.addEventListener('pointermove', ev => {
+      if (!dragging && hover && hover.type === 'edge' && hover.id === e.id) moveTooltip(ev.clientX, ev.clientY);
+    });
+    hit.addEventListener('pointerdown', ev => {
+      if (ev.button !== 0) return;
+      ev.stopPropagation();
+      hideTooltip();
+      selectEdge(e.id);
+    });
+  });
+
+  // ---- 节点 ----
+  state.nodes.forEach(n => {
+    const r = nodeR(n);
+    const color = groupColor(n);
+    const grp = svgEl('g', { class:'node', 'data-id':n.id });
+    const halo = svgEl('circle', { r:r + 9, class:'halo' });
+    const ring = svgEl('circle', { r:r + 6, class:'sel-ring' });
+    const body = svgEl('circle', { r, class:'body', fill:color });
+    const label = svgEl('text', { class:'node-label', y:r + 20 }, n.label);
+    const warn = warnBadgeNode();
+    grp.append(halo, ring, body, label, warn);
+
+    const ports = [];
+    [[1, 0], [0, 1], [-1, 0], [0, -1]].forEach(([dx, dy]) => {
+      const port = svgEl('circle', { r:6, class:'port', stroke:color, cx:dx * (r + 3), cy:dy * (r + 3) });
+      port.addEventListener('pointerdown', ev => startEdgeDrag(ev, n));
+      grp.appendChild(port);
+      ports.push({ el:port, dx, dy });
+    });
+
+    body.addEventListener('pointerdown', ev => startNodeDrag(ev, n));
+    grp.addEventListener('dblclick', ev => {
+      ev.stopPropagation();
+      selectNode(n.id);
+      setTimeout(() => { const f = document.getElementById('f_label'); if (f) { f.focus(); f.select(); } }, 0);
+    });
+    grp.addEventListener('pointerenter', ev => {
+      if (dragging) return;
+      setHover('node', n.id);
+      showNodeTooltip(n, ev);
+    });
+    grp.addEventListener('pointerleave', () => {
+      if (dragging) return;
+      setHover(null);
+      hideTooltip();
+    });
+
+    gNodes.appendChild(grp);
+    els.nodes.set(n.id, { g:grp, halo, ring, body, label, warn, ports });
+  });
+
+  refreshGeometry();
+  applySelection();
+  updateStatus();
+  if (hover) setHover(hover.type, hover.id);
+}
+
+function refreshGeometry() {
+  state.nodes.forEach(n => {
+    const rec = els.nodes.get(n.id);
+    if (!rec) return;
+    const r = nodeR(n), color = groupColor(n);
+    rec.g.setAttribute('transform', 'translate(' + n.x + ',' + n.y + ')');
+    rec.halo.setAttribute('r', r + 9);
+    rec.ring.setAttribute('r', r + 6);
+    rec.body.setAttribute('r', r);
+    rec.body.setAttribute('fill', color);
+    rec.label.setAttribute('y', r + 20);
+    rec.warn.setAttribute('transform', 'translate(' + (r * 0.78) + ',' + (-r * 0.78) + ')');
+    rec.ports.forEach(p => {
+      p.el.setAttribute('cx', p.dx * (r + 3));
+      p.el.setAttribute('cy', p.dy * (r + 3));
+      p.el.setAttribute('stroke', color);
+    });
+  });
+  state.edges.forEach(e => {
+    const rec = els.edges.get(e.id);
+    if (!rec) return;
+    const geo = edgeGeometry(e);
+    if (!geo) return;
+    rec.hit.setAttribute('d', geo.d);
+    rec.path.setAttribute('d', geo.d);
+    rec.label.setAttribute('x', geo.mid.x.toFixed(1));
+    rec.label.setAttribute('y', (geo.mid.y - 5).toFixed(1));
+    rec.warn.setAttribute('transform', 'translate(' + geo.mid.x.toFixed(1) + ',' + (geo.mid.y + 11).toFixed(1) + ')');
+  });
+}
+
+// ---------------- 选择 / 悬停 ----------------
+function applySelection() {
+  els.nodes.forEach((rec, id) => rec.g.classList.toggle('selected', !!(sel && sel.type === 'node' && sel.id === id)));
+  els.edges.forEach((rec, id) => {
+    const on = !!(sel && sel.type === 'edge' && sel.id === id);
+    rec.path.classList.toggle('sel', on);
+    rec.label.classList.toggle('sel', on);
+  });
+  updateLabelVisibility();
+}
+function updateLabelVisibility() {
+  els.edges.forEach((rec, id) => {
+    const e = edgeMap.get(id);
+    let show = showLabels;
+    if (sel && sel.type === 'edge' && sel.id === id) show = true;
+    if (hover) {
+      if (hover.type === 'edge' && hover.id === id) show = true;
+      if (hover.type === 'node' && e && (e.s === hover.id || e.t === hover.id)) show = true;
+    }
+    rec.label.classList.toggle('show', show);
+  });
+}
+function setHover(type, id) {
+  hover = type ? { type, id } : null;
+  const nodeIds = new Set(), edgeIds = new Set();
+  if (hover) {
+    if (hover.type === 'node') {
+      nodeIds.add(id);
+      state.edges.forEach(e => {
+        if (e.s === id || e.t === id) { edgeIds.add(e.id); nodeIds.add(e.s); nodeIds.add(e.t); }
+      });
+    } else {
+      const e = edgeMap.get(id);
+      if (e) { edgeIds.add(id); nodeIds.add(e.s); nodeIds.add(e.t); }
+    }
+  }
+  els.nodes.forEach((rec, nid) => {
+    rec.g.classList.toggle('dim', !!hover && !nodeIds.has(nid));
+    rec.g.classList.toggle('hl', !!hover && nodeIds.has(nid));
+  });
+  els.edges.forEach((rec, eid) => {
+    rec.path.classList.toggle('dim', !!hover && !edgeIds.has(eid));
+    rec.path.classList.toggle('hl', !!hover && edgeIds.has(eid));
+  });
+  updateLabelVisibility();
+}
+
+function selectNode(id) {
+  if (!nodeMap.has(id)) return;
+  sel = { type:'node', id };
+  const rec = els.nodes.get(id);
+  if (rec) gNodes.appendChild(rec.g);          // 置顶
+  applySelection();
+  renderInspector();
+}
+function selectEdge(id) {
+  if (!edgeMap.has(id)) return;
+  sel = { type:'edge', id };
+  applySelection();
+  renderInspector();
+}
+function clearSelection() {
+  if (!sel) return;
+  sel = null;
+  applySelection();
+  renderInspector();
+}
+
+// ---------------- 悬浮提示 ----------------
+function moveTooltip(cx, cy) {
+  if (!tooltip) return;
+  const pad = 16, w = tooltip.offsetWidth, h = tooltip.offsetHeight;
+  let x = cx + pad, y = cy + pad;
+  if (x + w > window.innerWidth - 8) x = cx - w - pad;
+  if (y + h > window.innerHeight - 8) y = cy - h - pad;
+  tooltip.style.left = Math.max(8, x) + 'px';
+  tooltip.style.top = Math.max(8, y) + 'px';
+}
+function showTip(html, cx, cy) {
+  tooltip.innerHTML = html;
+  tooltip.style.display = 'block';
+  moveTooltip(cx, cy);
+}
+function hideTooltip() { tooltip.style.display = 'none'; }
+
+function showNodeTooltip(n, ev) {
+  const g = groupById(n.group);
+  const out = state.edges.filter(e => e.s === n.id).length;
+  const inc = state.edges.filter(e => e.t === n.id).length;
+  const desc = n.desc.trim() ? esc(n.desc) : '<span style="color:#fca5a5">（未填写描述：点击节点，在右侧面板补充）</span>';
+  showTip(
+    '<div class="tt-title">' + esc(n.label) + '<span class="tt-chip">' + esc(g.name) + '</span></div>' +
+    '<div class="tt-desc">' + desc + '</div>' +
+    '<div class="tt-meta">出边 ' + out + ' · 入边 ' + inc + ' · 双击节点可改名</div>',
+    ev.clientX, ev.clientY
+  );
+}
+function showEdgeTooltip(e, ev) {
+  const s = nodeMap.get(e.s), t = nodeMap.get(e.t);
+  const spec = e.spec.trim() ? esc(e.spec) : '<span style="color:#fca5a5">（未填写规范：点击连线，在右侧面板补充）</span>';
+  let meta = kindById(e.kind).name;
+  if (e.kind === 'net') meta += ' · ' + protoById(e.proto).name + ' · ' + authName(e.auth);
+  if (e.label) meta += ' · 标签: ' + e.label;
+  showTip(
+    '<div class="tt-title">' + esc(s ? s.label : e.s) + ' <span style="color:#94a3b8">→</span> ' + esc(t ? t.label : e.t) + '</div>' +
+    '<div class="tt-desc">' + spec + '</div>' +
+    '<div class="tt-meta">' + esc(meta) + '</div>',
+    ev.clientX, ev.clientY
+  );
+}
+
+// ---------------- 完整度 / 状态栏 / 图例 ----------------
+function updateCompleteness() {
+  const missNodes = state.nodes.filter(n => !n.desc.trim());
+  const missEdges = state.edges.filter(e => !e.spec.trim());
+  els.nodes.forEach((rec, id) => {
+    const n = nodeMap.get(id);
+    rec.warn.setAttribute('display', n && !n.desc.trim() ? '' : 'none');
+  });
+  els.edges.forEach((rec, id) => {
+    const e = edgeMap.get(id);
+    rec.warn.setAttribute('display', e && !e.spec.trim() ? '' : 'none');
+  });
+  const totalN = state.nodes.length, totalE = state.edges.length;
+  const btn = $('#statCompleteness');
+  if (btn) {
+    btn.innerHTML = '描述 <b>' + (totalN - missNodes.length) + '/' + totalN + '</b> · 规范 <b>' + (totalE - missEdges.length) + '/' + totalE + '</b>';
+    btn.classList.toggle('missing', missNodes.length > 0 || missEdges.length > 0);
+  }
+  return { missNodes, missEdges };
+}
+function updateStatus() {
+  const a = $('#statNodes'), b = $('#statEdges');
+  if (a) a.textContent = state.nodes.length;
+  if (b) b.textContent = state.edges.length;
+  updateCompleteness();
+}
+
+let toastTimer = null;
+function toast(msg, type) {
+  const el = $('#toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'show' + (type ? ' ' + type : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ''; }, 2600);
+}
+
+let legendAuto = true;
+function setLegendCollapsed(collapsed) {
+  const legend = $('#legend'), btn = $('#legendCollapse');
+  if (!legend) return;
+  legend.classList.toggle('collapsed', collapsed);
+  if (btn) btn.textContent = collapsed ? '+' : '−';
+}
+function legendOverlapsNodes() {
+  const legend = $('#legend');
+  if (!legend) return false;
+  const lr = legend.getBoundingClientRect();
+  for (const n of state.nodes) {
+    const rec = els.nodes.get(n.id);
+    if (!rec) continue;
+    const b = rec.g.getBoundingClientRect();
+    if (!(b.x > lr.right || b.right < lr.x || b.y > lr.bottom || b.bottom < lr.y)) return true;
+  }
+  return false;
+}
+function applyAutoLegend() {
+  if (!legendAuto) return;
+  const legend = $('#legend');
+  if (!legend) return;
+  const wasCollapsed = legend.classList.contains('collapsed');
+  if (wasCollapsed) setLegendCollapsed(false);       // 先按展开状态测量
+  setLegendCollapsed(legendOverlapsNodes());
+}
+function renderLegend() {
+  const legend = $('#legend');
+  let h = '<div class="lg-title"><span>图例</span><button id="legendCollapse" title="折叠 / 展开">−</button></div><div class="lg-body">';
+  h += '<div class="sec" style="margin-top:4px;padding-top:0;border-top:none">节点分组</div>';
+  h += '<div class="lg-cols">';
+  GROUPS.forEach(g => {
+    h += '<div class="lg-row"><span class="dot" style="background:' + g.color + '"></span>' + esc(g.name) + '</div>';
+  });
+  h += '</div>';
+  h += '<div class="sec">连线类型</div>';
+  h += '<div class="lg-cols">';
+  h += '<div class="lg-row"><span class="line dash" style="border-color:#64748b"></span>代码依赖</div>';
+  h += '<div class="lg-row"><span class="line dash" style="border-color:#0ea5e9"></span>数据流</div>';
+  h += '<div class="lg-row"><span class="line dash" style="border-color:#14b8a6"></span>网络通道</div>';
+  h += '<div class="lg-row" style="gap:3px">';
+  PROTOS.slice(0, 5).forEach(p => { h += '<span class="dot" style="background:' + p.color + '" title="' + esc(p.name) + '"></span>'; });
+  h += '<span style="color:var(--muted-2)">协议色</span></div>';
+  h += '</div>';
+  h += '<div class="hint-line" style="margin-top:5px"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#dc2626;vertical-align:middle;margin-right:3px"></span> 红点 = 缺描述 / 缺规范</div>';
+  h += '<label class="lg-toggle"><input type="checkbox" id="toggleFlow" checked> 流动动画</label>';
+  h += '</div>';
+  legend.innerHTML = h;
+  $('#legendCollapse').addEventListener('click', () => {
+    legendAuto = false;
+    legend.classList.toggle('collapsed');
+    $('#legendCollapse').textContent = legend.classList.contains('collapsed') ? '+' : '−';
+  });
+  $('#toggleFlow').addEventListener('change', e => {
+    document.body.classList.toggle('flow', e.target.checked);
+  });
+  document.body.classList.add('flow');
+}
+
+// ---------------- 交互：编辑操作 ----------------
+function noteEditBegin() {
+  if (editBurst) return;
+  editBurst = true;
+  pushHistory();
+  clearTimeout(editBurstTimer);
+  editBurstTimer = setTimeout(() => { editBurst = false; }, 1200);
+}
+function resetEditBurst() {
+  clearTimeout(editBurstTimer);
+  editBurst = false;
+}
+
+function addNodeAt(pt, opts) {
+  opts = opts || {};
+  const n = {
+    id: nextId('n', state.nodes),
+    label: opts.label || '新节点',
+    group: opts.group || 'core',
+    desc: opts.desc || '',
+    x: Math.round(pt.x), y: Math.round(pt.y),
+  };
+  pushHistory();
+  state.nodes.push(n);
+  rebuildMaps();
+  renderAll();
+  selectNode(n.id);
+  scheduleSave();
+  setTimeout(() => { const f = document.getElementById('f_label'); if (f) { f.focus(); f.select(); } }, 0);
+  return n;
+}
+function addNodeDefault() {
+  const c = viewportCenterWorld();
+  const i = state.nodes.length;
+  return addNodeAt({ x:c.x + ((i % 5) - 2) * 36, y:c.y + (Math.floor(i / 5) % 3 - 1) * 36 });
+}
+function createEdge(sId, tId) {
+  if (sId === tId) { toast('不能连接自身', 'warn'); return null; }
+  if (!nodeMap.has(sId) || !nodeMap.has(tId)) return null;
+  const e = { id:nextId('e', state.edges), s:sId, t:tId, label:'新连线', kind:lastKind, spec:'' };
+  if (lastKind === 'net') { e.proto = 'http'; e.auth = 'no'; }
+  pushHistory();
+  state.edges.push(e);
+  rebuildMaps();
+  renderAll();
+  selectEdge(e.id);
+  scheduleSave();
+  toast('已建立连线，请在右侧补充「规范」', 'warn');
+  setTimeout(() => { const f = document.getElementById('f_label'); if (f) { f.focus(); f.select(); } }, 0);
+  return e;
+}
+function deleteSelection() {
+  if (!sel) return;
+  if (sel.type === 'node') {
+    const n = nodeMap.get(sel.id);
+    if (!n) return;
+    const cnt = state.edges.filter(e => e.s === n.id || e.t === n.id).length;
+    pushHistory();
+    state.nodes = state.nodes.filter(x => x.id !== n.id);
+    state.edges = state.edges.filter(e => e.s !== n.id && e.t !== n.id);
+    sel = null;
+    rebuildMaps();
+    renderAll();
+    renderInspector();
+    scheduleSave();
+    toast('已删除节点「' + n.label + '」及其 ' + cnt + ' 条连线');
+  } else {
+    const e = edgeMap.get(sel.id);
+    if (!e) return;
+    pushHistory();
+    state.edges = state.edges.filter(x => x.id !== e.id);
+    sel = null;
+    rebuildMaps();
+    renderAll();
+    renderInspector();
+    scheduleSave();
+    toast('已删除连线');
+  }
+}
+function duplicateSelection() {
+  if (sel && sel.type === 'node') {
+    const n = nodeMap.get(sel.id);
+    if (!n) return;
+    addNodeAt({ x:n.x + 44, y:n.y + 44 }, { label:n.label + ' 副本', group:n.group, desc:n.desc });
+  } else if (sel && sel.type === 'edge') {
+    const e = edgeMap.get(sel.id);
+    if (!e) return;
+    pushHistory();
+    const copy = Object.assign({}, e, { id:nextId('e', state.edges) });
+    state.edges.push(copy);
+    rebuildMaps();
+    renderAll();
+    selectEdge(copy.id);
+    scheduleSave();
+    toast('已复制连线');
+  }
+}
+function swapEdgeDirection(id) {
+  const e = edgeMap.get(id);
+  if (!e) return;
+  pushHistory();
+  const tmp = e.s; e.s = e.t; e.t = tmp;
+  renderAll();
+  renderInspector();
+  scheduleSave();
+  toast('已交换连线方向');
+}
+
+// ---------------- 交互：拖拽节点 ----------------
+function startNodeDrag(ev, node) {
+  if (ev.button !== 0) return;
+  ev.stopPropagation();
+  ev.preventDefault();
+  hideTooltip();
+  setHover(null);
+  selectNode(node.id);
+  const start = screenToWorld(ev.clientX, ev.clientY);
+  const ox = node.x, oy = node.y;
+  const rec = els.nodes.get(node.id);
+  let moved = false;
+  dragging = true;
+  canvasWrap.classList.add('panning');
+  if (rec) rec.g.classList.add('dragging');
+  const onMove = e => {
+    const p = screenToWorld(e.clientX, e.clientY);
+    const dx = p.x - start.x, dy = p.y - start.y;
+    if (!moved && Math.hypot(dx, dy) > 2) { moved = true; pushHistory(); }
+    node.x = ox + dx;
+    node.y = oy + dy;
+    refreshGeometry();
+  };
+  const onUp = () => {
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    window.removeEventListener('pointercancel', onUp);
+    dragging = false;
+    canvasWrap.classList.remove('panning');
+    if (rec) rec.g.classList.remove('dragging');
+    if (moved) scheduleSave();
+  };
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onUp);
+}
+
+// ---------------- 交互：从节点圆点拉出连线 ----------------
+function nodeAtScreen(cx, cy) {
+  const el = document.elementFromPoint(cx, cy);
+  if (el && el.closest) {
+    const g = el.closest('g.node');
+    if (g && g.dataset.id && nodeMap.has(g.dataset.id)) return nodeMap.get(g.dataset.id);
+  }
+  const p = screenToWorld(cx, cy);
+  let best = null, bd = Infinity;
+  state.nodes.forEach(n => {
+    const d = Math.hypot(n.x - p.x, n.y - p.y) - nodeR(n);
+    if (d < bd) { bd = d; best = n; }
+  });
+  return bd <= 18 ? best : null;
+}
+function startEdgeDrag(ev, fromNode) {
+  if (ev.button !== 0) return;
+  ev.stopPropagation();
+  ev.preventDefault();
+  hideTooltip();
+  setHover(null);
+  const preview = svgEl('path', { class:'edge-preview' });
+  gOverlay.appendChild(preview);
+  let target = null;
+  let moved = false;
+  const startX = ev.clientX, startY = ev.clientY;
+  dragging = true;
+  const setTarget = cand => {
+    const next = cand && cand.id !== fromNode.id ? cand : null;
+    if (next === target) return;
+    if (target) { const r = els.nodes.get(target.id); if (r) r.g.classList.remove('drop-target'); }
+    target = next;
+    if (target) { const r = els.nodes.get(target.id); if (r) r.g.classList.add('drop-target'); }
+  };
+  const onMove = e => {
+    if (!moved && Math.hypot(e.clientX - startX, e.clientY - startY) > 3) moved = true;
+    const p = screenToWorld(e.clientX, e.clientY);
+    const dx = p.x - fromNode.x, dy = p.y - fromNode.y;
+    const d = Math.hypot(dx, dy) || 1;
+    const r = nodeR(fromNode) + 3;
+    preview.setAttribute('d', 'M ' + (fromNode.x + dx / d * r) + ' ' + (fromNode.y + dy / d * r) + ' L ' + p.x + ' ' + p.y);
+    setTarget(nodeAtScreen(e.clientX, e.clientY));
+  };
+  const finish = commit => {
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    window.removeEventListener('pointercancel', onCancel);
+    dragging = false;
+    preview.remove();
+    if (target) { const r = els.nodes.get(target.id); if (r) r.g.classList.remove('drop-target'); }
+    if (commit && target) createEdge(fromNode.id, target.id);
+  };
+  const onUp = e => {
+    const cand = nodeAtScreen(e.clientX, e.clientY);
+    if (cand && cand.id !== fromNode.id) { setTarget(cand); finish(true); }
+    else {
+      finish(false);
+      if (moved) toast('拖到另一个节点上即可建立连线', 'warn');
+    }
+  };
+  const onCancel = () => finish(false);
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onCancel);
+}
+
+// ---------------- 交互：画布平移 / 缩放 / 双击新建 ----------------
+function bindCanvasInteractions() {
+  canvas.addEventListener('pointerdown', ev => {
+    if (ev.button !== 0 && ev.button !== 1) return;
+    if (!(ev.target === canvas || ev.target === document.getElementById('bg'))) return;
+    ev.preventDefault();
+    hideTooltip();
+    setHover(null);
+    const sx = ev.clientX, sy = ev.clientY, otx = view.tx, oty = view.ty;
+    let moved = false;
+    dragging = true;
+    canvasWrap.classList.add('panning');
+    const onMove = e => {
+      if (!moved && Math.hypot(e.clientX - sx, e.clientY - sy) > 2) moved = true;
+      view.tx = otx + (e.clientX - sx);
+      view.ty = oty + (e.clientY - sy);
+      applyView();
+    };
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+      dragging = false;
+      canvasWrap.classList.remove('panning');
+      if (!moved) clearSelection();
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+  });
+
+  canvas.addEventListener('dblclick', ev => {
+    if (!(ev.target === canvas || ev.target === document.getElementById('bg'))) return;
+    addNodeAt(screenToWorld(ev.clientX, ev.clientY));
+  });
+
+  canvas.addEventListener('wheel', ev => {
+    ev.preventDefault();
+    zoomAt(ev.clientX, ev.clientY, ev.deltaY < 0 ? 1.12 : 1 / 1.12);
+  }, { passive:false });
+}
+
+// ---------------- 键盘快捷键 ----------------
+function onKeyDown(ev) {
+  const t = ev.target;
+  const typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+  if (ev.key === 'Escape') {
+    if (!modalOverlay.hidden) { closeModal(); return; }
+    if (typing) { t.blur(); return; }
+    if (sel) clearSelection();
+    return;
+  }
+  if (typing) return;
+  if ((ev.key === 'Delete' || ev.key === 'Backspace') && sel) { ev.preventDefault(); deleteSelection(); return; }
+  if ((ev.ctrlKey || ev.metaKey) && !ev.altKey) {
+    const k = (ev.key || '').toLowerCase();
+    if (k === 'z') { ev.preventDefault(); ev.shiftKey ? redo() : undo(); return; }
+    if (k === 'y') { ev.preventDefault(); redo(); return; }
+    if (k === 's') { ev.preventDefault(); exportJSON(); return; }
+    if (k === 'd') { ev.preventDefault(); duplicateSelection(); return; }
+    return;
+  }
+  if (ev.key === 'n' || ev.key === 'N') { ev.preventDefault(); addNodeDefault(); }
+  if (ev.key === 'f' || ev.key === 'F') { ev.preventDefault(); fitView(); }
+  if (ev.key === 'l' || ev.key === 'L') { ev.preventDefault(); autoLayout(); }
+}
+
+// ---------------- 属性面板 ----------------
+function renderInspector() {
+  const dot = $('#inspDot'), title = $('#inspTitle'), sub = $('#inspSub'), body = $('#inspBody');
+  if (!dot || !body) return;
+  if (!sel) {
+    dot.style.background = 'var(--muted-2)';
+    title.textContent = '属性面板';
+    sub.textContent = '';
+    body.innerHTML = emptyInspectorHTML();
+    return;
+  }
+  if (sel.type === 'node') {
+    const n = nodeMap.get(sel.id);
+    if (!n) { sel = null; return renderInspector(); }
+    renderNodeInspector(n);
+    title.textContent = '节点属性';
+    sub.textContent = '双击节点可直接改名';
+    dot.style.background = groupColor(n);
+  } else {
+    const e = edgeMap.get(sel.id);
+    if (!e) { sel = null; return renderInspector(); }
+    renderEdgeInspector(e);
+    title.textContent = '连线属性';
+    sub.textContent = kindById(e.kind).name;
+    dot.style.background = edgeColor(e);
+  }
+}
+
+function emptyInspectorHTML() {
+  const missNodes = state.nodes.filter(n => !n.desc.trim()).length;
+  const missEdges = state.edges.filter(e => !e.spec.trim()).length;
+  return '<div class="empty-state">' +
+    '<div class="big">◇</div>' +
+    '<h3>选择一个节点或连线</h3>' +
+    '<p>节点填「描述」，连线填「规范」<br>底部状态栏会实时统计完整度。</p>' +
+    '<div class="mini-stats">' +
+      '<div class="mini-stat"><b>' + state.nodes.length + '</b><span>节点</span></div>' +
+      '<div class="mini-stat"><b>' + state.edges.length + '</b><span>连线</span></div>' +
+      '<div class="mini-stat"><b style="color:' + (missNodes + missEdges ? 'var(--danger)' : 'var(--ok)') + '">' + (missNodes + missEdges) + '</b><span>待补项</span></div>' +
+    '</div>' +
+    '<ul class="tips">' +
+      '<li><b>连线：</b>悬停节点，从四周圆点拖到另一个节点</li>' +
+      '<li><b>平移：</b>拖动空白处；<b>缩放：</b>滚轮</li>' +
+      '<li><b>新建：</b>双击空白处，或按 <code>N</code></li>' +
+      '<li><b>删除：</b>选中后按 <code>Delete</code></li>' +
+      '<li><b>整理：</b>按 <code>L</code> 自动分层布局</li>' +
+    '</ul>' +
+    '</div>';
+}
+
+function connListHTML(list, dir) {
+  if (!list.length) return '<div class="hint" style="font-size:10.5px;color:var(--muted-2);padding:2px 6px">暂无</div>';
+  return list.map(e => {
+    const other = nodeMap.get(dir === 'out' ? e.t : e.s);
+    return '<button class="conn" data-edge="' + esc(e.id) + '">' +
+      '<span class="arrow">' + (dir === 'out' ? '→' : '←') + '</span>' +
+      '<span class="nm">' + esc(other ? other.label : (dir === 'out' ? e.t : e.s)) + '</span>' +
+      '<span class="lbl">' + esc(edgeLabelText(e)) + '</span></button>';
+  }).join('');
+}
+
+function renderNodeInspector(n) {
+  const out = state.edges.filter(e => e.s === n.id);
+  const inc = state.edges.filter(e => e.t === n.id);
+  $('#inspBody').innerHTML =
+    '<div class="field"><div class="cap">名称 <span class="req">*</span></div>' +
+      '<input type="text" id="f_label" value="' + esc(n.label) + '" maxlength="80"></div>' +
+    '<div class="field"><div class="cap">分组</div>' +
+      '<select id="f_group">' + GROUPS.map(g => '<option value="' + g.id + '"' + (g.id === n.group ? ' selected' : '') + '>' + esc(g.name) + '</option>').join('') + '</select></div>' +
+    '<div class="field' + (n.desc.trim() ? '' : ' bad') + '" id="wrap_desc"><div class="cap">描述 <span class="req">*</span><span class="count" id="f_desc_count">' + n.desc.length + '</span></div>' +
+      '<textarea id="f_desc" rows="6" placeholder="这个节点负责什么？关键职责、边界、依赖约束……">' + esc(n.desc) + '</textarea>' +
+      '<div class="hint">必填；悬停节点时显示。留空会在节点上标红点。</div></div>' +
+    '<div class="conn-section"><h4>出边 · ' + out.length + '</h4><div class="conn-list">' + connListHTML(out, 'out') + '</div></div>' +
+    '<div class="conn-section"><h4>入边 · ' + inc.length + '</h4><div class="conn-list">' + connListHTML(inc, 'in') + '</div></div>' +
+    '<div class="insp-actions">' +
+      '<button class="btn" id="btnDuplicateNode">复制节点</button>' +
+      '<button class="btn danger" id="btnDeleteNode">删除节点</button></div>';
+
+  const fLabel = $('#f_label'), fGroup = $('#f_group'), fDesc = $('#f_desc');
+  fLabel.addEventListener('input', e => {
+    noteEditBegin();
+    n.label = e.target.value;
+    const rec = els.nodes.get(n.id);
+    if (rec) rec.label.textContent = n.label;
+    scheduleSave();
+  });
+  fLabel.addEventListener('blur', resetEditBurst);
+  fGroup.addEventListener('change', e => {
+    pushHistory();
+    n.group = e.target.value;
+    renderAll();
+    renderInspector();
+    scheduleSave();
+  });
+  fDesc.addEventListener('input', e => {
+    noteEditBegin();
+    n.desc = e.target.value;
+    $('#f_desc_count').textContent = n.desc.length;
+    $('#wrap_desc').classList.toggle('bad', !n.desc.trim());
+    updateCompleteness();
+    scheduleSave();
+  });
+  fDesc.addEventListener('blur', resetEditBurst);
+  $('#inspBody').querySelectorAll('.conn').forEach(btn => {
+    btn.addEventListener('click', () => selectEdge(btn.dataset.edge));
+  });
+  $('#btnDuplicateNode').addEventListener('click', duplicateSelection);
+  $('#btnDeleteNode').addEventListener('click', deleteSelection);
+}
+
+function renderEdgeInspector(e) {
+  const s = nodeMap.get(e.s), t = nodeMap.get(e.t);
+  const isNet = e.kind === 'net';
+  $('#inspBody').innerHTML =
+    '<div class="endpoints">' +
+      '<button class="node-chip" data-goto="' + esc(e.s) + '"><span class="dot" style="background:' + (s ? groupColor(s) : '#94a3b8') + '"></span>' + esc(s ? s.label : e.s) + '</button>' +
+      '<span class="arrow">→</span>' +
+      '<button class="node-chip" data-goto="' + esc(e.t) + '"><span class="dot" style="background:' + (t ? groupColor(t) : '#94a3b8') + '"></span>' + esc(t ? t.label : e.t) + '</button>' +
+    '</div>' +
+    '<div class="field"><div class="cap">标签</div><input type="text" id="f_label" value="' + esc(e.label) + '" maxlength="60" placeholder="画布上显示的短标签"></div>' +
+    '<div class="row2">' +
+      '<div class="field"><div class="cap">类型</div><select id="f_kind">' + KINDS.map(k => '<option value="' + k.id + '"' + (k.id === e.kind ? ' selected' : '') + '>' + esc(k.name) + '</option>').join('') + '</select></div>' +
+      '<div class="field" id="wrap_auth"' + (isNet ? '' : ' style="display:none"') + '><div class="cap">鉴权</div><select id="f_auth">' + AUTHS.map(a => '<option value="' + a.id + '"' + (a.id === e.auth ? ' selected' : '') + '>' + esc(a.name) + '</option>').join('') + '</select></div>' +
+    '</div>' +
+    '<div class="field" id="wrap_proto"' + (isNet ? '' : ' style="display:none"') + '><div class="cap">协议</div><select id="f_proto">' + PROTOS.map(p => '<option value="' + p.id + '"' + (p.id === e.proto ? ' selected' : '') + '>' + esc(p.name) + '</option>').join('') + '</select></div>' +
+    '<div class="field' + (e.spec.trim() ? '' : ' bad') + '" id="wrap_spec"><div class="cap">规范 <span class="req">*</span><span class="count" id="f_spec_count">' + e.spec.length + '</span></div>' +
+      '<textarea id="f_spec" rows="8" placeholder="接口 / 交互规范，例如：&#10;GET /api/files?sha=… 返回 JSON&#10;鉴权：AdminToken&#10;超时 30s；失败重试 2 次&#10;错误码 4xx / 5xx 语义……">' + esc(e.spec) + '</textarea>' +
+      '<div class="hint">必填；悬停连线时显示。留空会在连线上标红点。</div></div>' +
+    '<div class="insp-actions">' +
+      '<button class="btn" id="btnSwapEdge">交换方向</button>' +
+      '<button class="btn danger" id="btnDeleteEdge">删除连线</button></div>';
+
+  const fLabel = $('#f_label'), fKind = $('#f_kind'), fAuth = $('#f_auth'), fProto = $('#f_proto'), fSpec = $('#f_spec');
+  fLabel.addEventListener('input', e2 => {
+    noteEditBegin();
+    e.label = e2.target.value;
+    const rec = els.edges.get(e.id);
+    if (rec) rec.label.textContent = edgeLabelText(e);
+    scheduleSave();
+  });
+  fLabel.addEventListener('blur', resetEditBurst);
+  fKind.addEventListener('change', e2 => {
+    pushHistory();
+    e.kind = e2.target.value;
+    lastKind = e.kind;
+    if (e.kind === 'net') { e.proto = e.proto || 'http'; e.auth = e.auth || 'no'; }
+    renderAll();
+    renderInspector();
+    scheduleSave();
+  });
+  if (fAuth) fAuth.addEventListener('change', e2 => {
+    pushHistory();
+    e.auth = e2.target.value;
+    renderAll();
+    renderInspector();
+    scheduleSave();
+  });
+  if (fProto) fProto.addEventListener('change', e2 => {
+    pushHistory();
+    e.proto = e2.target.value;
+    renderAll();
+    renderInspector();
+    scheduleSave();
+  });
+  fSpec.addEventListener('input', e2 => {
+    noteEditBegin();
+    e.spec = e2.target.value;
+    $('#f_spec_count').textContent = e.spec.length;
+    $('#wrap_spec').classList.toggle('bad', !e.spec.trim());
+    updateCompleteness();
+    scheduleSave();
+  });
+  fSpec.addEventListener('blur', resetEditBurst);
+  $('#inspBody').querySelectorAll('[data-goto]').forEach(btn => {
+    btn.addEventListener('click', () => focusNode(btn.dataset.goto));
+  });
+  $('#btnSwapEdge').addEventListener('click', () => swapEdgeDirection(e.id));
+  $('#btnDeleteEdge').addEventListener('click', deleteSelection);
+}
+
+// ---------------- 自动布局 ----------------
+function autoLayout() {
+  if (!state.nodes.length) { toast('画布上没有节点'); return; }
+  pushHistory();
+  const out = new Map();
+  state.edges.forEach(e => {
+    if (!out.has(e.s)) out.set(e.s, []);
+    out.get(e.s).push(e.t);
+  });
+  const level = new Map(), visiting = new Set();
+  function lv(id, depth) {
+    if (level.has(id)) return level.get(id);
+    if (visiting.has(id) || depth > 60) return 0;
+    visiting.add(id);
+    let best = -1;
+    (out.get(id) || []).forEach(t => {
+      if (t !== id && nodeMap.has(t)) best = Math.max(best, lv(t, depth + 1));
+    });
+    visiting.delete(id);
+    const v = best < 0 ? 0 : best + 1;
+    level.set(id, v);
+    return v;
+  }
+  state.nodes.forEach(n => lv(n.id, 0));
+  let maxLv = 0;
+  state.nodes.forEach(n => { maxLv = Math.max(maxLv, level.get(n.id) || 0); });
+  const rows = Array.from({ length:maxLv + 1 }, () => []);
+  state.nodes.forEach(n => rows[level.get(n.id) || 0].push(n));
+  const groupOrder = { hub:0, front:1, lib:2, core:3, infra:4, ext:5 };
+  const byGroupThenLabel = (a, b) => ((groupOrder[a.group] - groupOrder[b.group]) || a.label.localeCompare(b.label, 'zh-CN'));
+  rows.forEach(row => row.sort(byGroupThenLabel));
+  const gapX = 172, gapY = 156;
+  const posX = new Map();
+  const applyRowX = row => {
+    const start = -((row.length - 1) * gapX) / 2;
+    row.forEach((n, i) => posX.set(n.id, start + i * gapX));
+  };
+  rows.forEach(applyRowX);
+  for (let pass = 0; pass < 6; pass++) {
+    rows.forEach((row, ri) => {
+      row.forEach(n => {
+        const neigh = [];
+        state.edges.forEach(e => {
+          if (e.s === n.id) {
+            const t = nodeMap.get(e.t);
+            if (t && (level.get(t.id) || 0) !== ri) neigh.push(posX.get(t.id) || 0);
+          } else if (e.t === n.id) {
+            const s = nodeMap.get(e.s);
+            if (s && (level.get(s.id) || 0) !== ri) neigh.push(posX.get(s.id) || 0);
+          }
+        });
+        n._bary = neigh.length ? neigh.reduce((a, b) => a + b, 0) / neigh.length : (posX.get(n.id) || 0);
+      });
+      row.sort((a, b) => (a._bary - b._bary) || byGroupThenLabel(a, b));
+      applyRowX(row);
+    });
+  }
+  rows.forEach((row, ri) => row.forEach(n => {
+    n.x = Math.round(posX.get(n.id));
+    n.y = Math.round((ri - maxLv / 2) * gapY);
+  }));
+  state.nodes.forEach(n => { delete n._bary; });
+  renderAll();
+  renderInspector();
+  fitView();
+  scheduleSave();
+  toast('已按依赖关系分层整理（Ctrl+Z 可撤销）');
+}
+
+// ---------------- 弹窗 / 检查 ----------------
+function openModal(title, bodyHTML, footHTML, onMount) {
+  $('#modalTitle').textContent = title;
+  $('#modalBody').innerHTML = bodyHTML;
+  $('#modalFoot').innerHTML = footHTML || '';
+  modalOverlay.hidden = false;
+  if (onMount) onMount();
+}
+function closeModal() {
+  modalOverlay.hidden = true;
+  $('#modalBody').innerHTML = '';
+  $('#modalFoot').innerHTML = '';
+}
+function confirmAction(title, msg, onOk) {
+  openModal(title, '<p>' + msg + '</p>',
+    '<button class="btn" id="cfCancel" style="border:1px solid var(--border)">取消</button>' +
+    '<button class="btn danger" id="cfOk" style="border:1px solid #fecaca">确认</button>',
+    () => {
+      $('#cfCancel').addEventListener('click', closeModal);
+      $('#cfOk').addEventListener('click', () => { closeModal(); onOk(); });
+    });
+}
+
+function openCheckModal() {
+  const { missNodes, missEdges } = updateCompleteness();
+  let h = '';
+  if (!missNodes.length && !missEdges.length) {
+    h += '<div class="check-ok">✓ 全部节点都有描述，全部连线都有规范。</div>';
+  }
+  h += '<div class="check-stat">节点 <b>' + state.nodes.length + '</b> · 连线 <b>' + state.edges.length +
+       '</b> · 缺描述 <b>' + missNodes.length + '</b> · 缺规范 <b>' + missEdges.length + '</b></div>';
+  if (missNodes.length) {
+    h += '<h3>缺少描述的节点（' + missNodes.length + '）</h3><div class="missing-list">' +
+      missNodes.map(n => '<button class="chip-btn red" data-focus-node="' + esc(n.id) + '">' + esc(n.label) + '</button>').join('') + '</div>';
+  }
+  if (missEdges.length) {
+    h += '<h3>缺少规范的连线（' + missEdges.length + '）</h3><div class="missing-list">' +
+      missEdges.map(e => {
+        const s = nodeMap.get(e.s), t = nodeMap.get(e.t);
+        return '<button class="chip-btn red" data-focus-edge="' + esc(e.id) + '">' +
+          esc((s ? s.label : e.s) + ' → ' + (t ? t.label : e.t)) + '</button>';
+      }).join('') + '</div>';
+  }
+  openModal('完整度检查', h, '<button class="btn" id="checkClose" style="border:1px solid var(--border)">关闭</button>', () => {
+    $('#checkClose').addEventListener('click', closeModal);
+    $('#modalBody').addEventListener('click', ev => {
+      const nb = ev.target.closest('[data-focus-node]');
+      const eb = ev.target.closest('[data-focus-edge]');
+      if (nb) { closeModal(); focusNode(nb.dataset.focusNode); }
+      else if (eb) { closeModal(); focusEdge(eb.dataset.focusEdge); }
+    });
+  });
+}
+
+function openMenuModal() {
+  const h =
+    '<h3>画布</h3>' +
+    '<p><button class="btn" data-act="blank" style="border:1px solid var(--border);margin:2px 6px 2px 0">新建空白画布</button>' +
+    '<button class="btn" data-act="seed" style="border:1px solid var(--border);margin:2px 0">恢复示例（Peerdrive）</button></p>' +
+    '<h3>数据</h3>' +
+    '<p><button class="btn" data-act="export" style="border:1px solid var(--border);margin:2px 6px 2px 0">导出 JSON</button>' +
+    '<button class="btn" data-act="import" style="border:1px solid var(--border);margin:2px 0">导入 JSON</button></p>' +
+    '<h3>操作与快捷键</h3>' +
+    '<div class="kbd-grid">' +
+      '<kbd>空白拖动</kbd><span>平移画布</span>' +
+      '<kbd>滚轮</kbd><span>以光标为中心缩放</span>' +
+      '<kbd>拖节点圆点</kbd><span>从节点拉出连线，松开在目标节点上</span>' +
+      '<kbd>双击空白</kbd><span>在该位置新建节点</span>' +
+      '<kbd>双击节点</kbd><span>聚焦名称输入框</span>' +
+      '<kbd>Delete</kbd><span>删除选中节点 / 连线</span>' +
+      '<kbd>Ctrl+Z / Ctrl+Shift+Z</kbd><span>撤销 / 重做</span>' +
+      '<kbd>Ctrl+S</kbd><span>导出 JSON</span>' +
+      '<kbd>N / L / F</kbd><span>新建节点 / 整理布局 / 适应视图</span>' +
+    '</div>' +
+    '<h3>数据约定</h3>' +
+    '<p>每个节点应有「描述」，每条连线应有「规范」；留空的项会在画布上标红点，并在状态栏与「检查」中统计。数据自动保存在浏览器 localStorage，也可导出 JSON 备份。</p>';
+  openModal('更多操作', h, '<button class="btn" id="menuClose" style="border:1px solid var(--border)">关闭</button>', () => {
+    $('#menuClose').addEventListener('click', closeModal);
+    $('#modalBody').addEventListener('click', ev => {
+      const btn = ev.target.closest('[data-act]');
+      if (!btn) return;
+      const act = btn.dataset.act;
+      closeModal();
+      if (act === 'blank') clearCanvas();
+      else if (act === 'seed') restoreSeed();
+      else if (act === 'export') exportJSON();
+      else if (act === 'import') $('#fileInput').click();
+    });
+  });
+}
+
+// ---------------- 导入 / 导出 ----------------
+function exportJSON() {
+  const data = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    project: state.project,
+    nodes: state.nodes.map(n => ({ id:n.id, label:n.label, group:n.group, desc:n.desc, x:n.x, y:n.y })),
+    edges: state.edges.map(e => {
+      const o = { id:e.id, s:e.s, t:e.t, label:e.label, kind:e.kind, spec:e.spec };
+      if (e.kind === 'net') { o.proto = e.proto; o.auth = e.auth; }
+      return o;
+    }),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const slug = (state.project || 'architecture').replace(/[\\/:*?"<>|\s]+/g, '-').slice(0, 60) || 'architecture';
+  a.href = url;
+  a.download = slug + '-' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('已导出 JSON（含节点描述与连线规范）');
+}
+function onImportFile(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  ev.target.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const d = normalizeData(JSON.parse(String(reader.result)));
+      pushHistory();
+      state = { project:d.project, nodes:d.nodes, edges:d.edges };
+      sel = null;
+      rebuildMaps();
+      renderAll();
+      renderInspector();
+      fitView();
+      scheduleSave();
+      toast('已导入 ' + d.nodes.length + ' 个节点 / ' + d.edges.length + ' 条连线');
+    } catch (err) {
+      toast('导入失败：' + err.message, 'err');
+    }
+  };
+  reader.onerror = () => toast('读取文件失败', 'err');
+  reader.readAsText(file, 'utf-8');
+}
+
+function clearCanvas() {
+  if (!state.nodes.length && !state.edges.length) { toast('画布已经是空的'); return; }
+  confirmAction('新建空白画布',
+    '将清空当前 ' + state.nodes.length + ' 个节点 / ' + state.edges.length + ' 条连线（可用 Ctrl+Z 撤销）。',
+    () => {
+      pushHistory();
+      state = { project:'未命名架构', nodes:[], edges:[] };
+      sel = null;
+      rebuildMaps();
+      renderAll();
+      renderInspector();
+      view = { scale:1, tx:0, ty:0 };
+      applyView();
+      $('#projectName').value = state.project;
+      scheduleSave();
+      toast('已新建空白画布');
+    });
+}
+function restoreSeed() {
+  if (!SEED) { toast('示例数据不可用', 'err'); return; }
+  confirmAction('恢复示例数据', '将用 Peerdrive 示例图覆盖当前画布（可用 Ctrl+Z 撤销）。', () => {
+    pushHistory();
+    const d = normalizeData(SEED);
+    state = { project:d.project, nodes:d.nodes, edges:d.edges };
+    sel = null;
+    rebuildMaps();
+    renderAll();
+    renderInspector();
+    $('#projectName').value = state.project;
+    fitView();
+    scheduleSave();
+    toast('已恢复示例数据');
+  });
+}
+
+// ---------------- 顶栏绑定 / 初始化 ----------------
+function bindToolbar() {
+  $('#btnUndo').addEventListener('click', undo);
+  $('#btnRedo').addEventListener('click', redo);
+  $('#btnAddNode').addEventListener('click', addNodeDefault);
+  $('#btnLayout').addEventListener('click', autoLayout);
+  $('#btnFit').addEventListener('click', fitView);
+  $('#btnZoomIn').addEventListener('click', () => {
+    const r = canvas.getBoundingClientRect();
+    zoomAt(r.left + r.width / 2, r.top + r.height / 2, 1.2);
+  });
+  $('#btnZoomOut').addEventListener('click', () => {
+    const r = canvas.getBoundingClientRect();
+    zoomAt(r.left + r.width / 2, r.top + r.height / 2, 1 / 1.2);
+  });
+  $('#toggleLabels').addEventListener('change', e => {
+    showLabels = e.target.checked;
+    updateLabelVisibility();
+  });
+  $('#btnCheck').addEventListener('click', openCheckModal);
+  $('#btnExport').addEventListener('click', exportJSON);
+  $('#btnImport').addEventListener('click', () => $('#fileInput').click());
+  $('#fileInput').addEventListener('change', onImportFile);
+  $('#btnMenu').addEventListener('click', openMenuModal);
+  $('#statCompleteness').addEventListener('click', openCheckModal);
+  $('#modalClose').addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', ev => { if (ev.target === modalOverlay) closeModal(); });
+  $('#projectName').addEventListener('input', e => {
+    state.project = e.target.value;
+    document.title = (state.project || '未命名架构') + ' · 架构编辑器';
+    scheduleSave();
+  });
+  window.addEventListener('keydown', onKeyDown);
+  window.addEventListener('beforeunload', saveNow);
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { fitView(); }, 180);
+  });
+}
+
+function init() {
+  buildDefs();
+  loadInitialData();
+  document.title = (state.project || '未命名架构') + ' · 架构编辑器';
+  $('#projectName').value = state.project;
+  renderLegend();
+  bindToolbar();
+  bindCanvasInteractions();
+  renderAll();
+  renderInspector();
+  updateHistoryButtons();
+  view = { scale:1, tx:0, ty:0 };
+  applyView();
+  requestAnimationFrame(() => fitView());
+  $('#saveState').textContent = '本地自动保存已开启';
+
+  // 调试 / 自动化接口（不影响正常使用）
+  window.__archEditor = {
+    getState: () => JSON.parse(JSON.stringify({
+      project:state.project, nodes:state.nodes, edges:state.edges,
+      sel, view, history:history.length, redo:redoStack.length,
+    })),
+    stats: () => ({
+      nodes:state.nodes.length,
+      edges:state.edges.length,
+      descMissing:state.nodes.filter(n => !n.desc.trim()).length,
+      specMissing:state.edges.filter(e => !e.spec.trim()).length,
+    }),
+    selectNode, selectEdge, clearSelection, focusNode, focusEdge,
+    addNodeAt, addNodeDefault, createEdge, deleteSelection,
+    undo, redo, fitView, autoLayout, exportJSON, openCheckModal,
+    screenToWorld, nodeAtScreen,
+    setState: d => {
+      const nd = normalizeData(d);
+      pushHistory();
+      state = { project:nd.project, nodes:nd.nodes, edges:nd.edges };
+      sel = null;
+      rebuildMaps();
+      renderAll();
+      renderInspector();
+      fitView();
+    },
+  };
+}
+
+init();
+
+</script>
+
+
+</body></html>
